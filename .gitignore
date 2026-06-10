@@ -1,0 +1,29 @@
+# IDE
+.vscode/*
+!.vscode/extensions.json
+
+# Node / Frontend
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+*.egg
+.venv/
+venv/
+
+# Environment
+.env
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db

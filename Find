@@ -1,0 +1,375 @@
+backend/.gitignore:app.egg-info
+backend/.gitignore:*.pyc
+backend/.gitignore:.coverage
+backend/.gitignore:htmlcov
+backend/.gitignore:.cache
+backend/pyproject.toml:[project]
+backend/pyproject.toml:name = "app"
+backend/pyproject.toml:version = "0.1.0"
+backend/pyproject.toml:description = ""
+backend/pyproject.toml:requires-python = ">=3.10,<4.0"
+backend/pyproject.toml:dependencies = [
+backend/pyproject.toml:    "fastapi[standard]<1.0.0,>=0.114.2",
+backend/pyproject.toml:    "python-multipart<1.0.0,>=0.0.27",
+backend/pyproject.toml:    "email-validator<3.0.0.0,>=2.1.0.post1",
+backend/pyproject.toml:    "tenacity<9.0.0,>=8.2.3",
+backend/pyproject.toml:    "pydantic>2.0",
+backend/pyproject.toml:    "emails<1.0,>=0.6",
+backend/pyproject.toml:    "jinja2<4.0.0,>=3.1.4",
+backend/pyproject.toml:    "alembic<2.0.0,>=1.12.1",
+backend/pyproject.toml:    "httpx<1.0.0,>=0.25.1",
+backend/pyproject.toml:    "psycopg[binary]<4.0.0,>=3.1.13",
+backend/pyproject.toml:    "sqlmodel<1.0.0,>=0.0.21",
+backend/pyproject.toml:    "pydantic-settings<3.0.0,>=2.2.1",
+backend/pyproject.toml:    "sentry-sdk[fastapi]>=2.0.0,<3.0.0",
+backend/pyproject.toml:    "pyjwt<3.0.0,>=2.8.0",
+backend/pyproject.toml:    "pwdlib[argon2,bcrypt]>=0.3.0",
+backend/pyproject.toml:]
+backend/pyproject.toml:
+backend/pyproject.toml:[dependency-groups]
+backend/pyproject.toml:dev = [
+backend/pyproject.toml:    "pytest<8.0.0,>=7.4.3",
+backend/pyproject.toml:    "mypy<2.0.0,>=1.8.0",
+backend/pyproject.toml:    "ty>=0.0.25",
+backend/pyproject.toml:    "ruff<1.0.0,>=0.2.2",
+backend/pyproject.toml:    "prek>=0.2.24,<1.0.0",
+backend/pyproject.toml:    "coverage<8.0.0,>=7.4.3",
+backend/pyproject.toml:]
+backend/pyproject.toml:
+backend/pyproject.toml:[build-system]
+backend/pyproject.toml:requires = ["hatchling"]
+backend/pyproject.toml:build-backend = "hatchling.build"
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.mypy]
+backend/pyproject.toml:strict = true
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.ruff]
+backend/pyproject.toml:target-version = "py310"
+backend/pyproject.toml:exclude = ["alembic"]
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.ruff.lint]
+backend/pyproject.toml:select = [
+backend/pyproject.toml:    "E",  # pycodestyle errors
+backend/pyproject.toml:    "W",  # pycodestyle warnings
+backend/pyproject.toml:    "F",  # pyflakes
+backend/pyproject.toml:    "I",  # isort
+backend/pyproject.toml:    "B",  # flake8-bugbear
+backend/pyproject.toml:    "C4",  # flake8-comprehensions
+backend/pyproject.toml:    "UP",  # pyupgrade
+backend/pyproject.toml:    "ARG001", # unused arguments in functions
+backend/pyproject.toml:    "T201",   # print statements are not allowed
+backend/pyproject.toml:]
+backend/pyproject.toml:ignore = [
+backend/pyproject.toml:    "E501",  # line too long, handled by black
+backend/pyproject.toml:    "B008",  # do not perform function calls in argument defaults
+backend/pyproject.toml:    "W191",  # indentation contains tabs
+backend/pyproject.toml:    "B904",  # Allow raising exceptions without from e, for HTTPException
+backend/pyproject.toml:]
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.ruff.lint.pyupgrade]
+backend/pyproject.toml:# Preserve types, even if a file imports `from __future__ import annotations`.
+backend/pyproject.toml:keep-runtime-typing = true
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.coverage.run]
+backend/pyproject.toml:source = ["app"]
+backend/pyproject.toml:dynamic_context = "test_function"
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.coverage.report]
+backend/pyproject.toml:show_missing = true
+backend/pyproject.toml:sort = "-Cover"
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.coverage.html]
+backend/pyproject.toml:show_contexts = true
+backend/pyproject.toml:
+backend/pyproject.toml:[tool.ty.terminal]
+backend/pyproject.toml:error-on-warning = true
+backend/README.md:# FastAPI Project - Backend
+backend/README.md:
+backend/README.md:## Requirements
+backend/README.md:
+backend/README.md:* [Docker](https://www.docker.com/).
+backend/README.md:* [uv](https://docs.astral.sh/uv/) for Python package and environment management.
+backend/README.md:
+backend/README.md:## Docker Compose
+backend/README.md:
+backend/README.md:Start the local development environment with Docker Compose following the guide in [../development.md](../development.md).
+backend/README.md:
+backend/README.md:## General Workflow
+backend/README.md:
+backend/README.md:By default, the dependencies are managed with [uv](https://docs.astral.sh/uv/), go there and install it.
+backend/README.md:
+backend/README.md:From `./backend/` you can install all the dependencies with:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ uv sync
+backend/README.md:```
+backend/README.md:
+backend/README.md:Then you can activate the virtual environment with:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:```
+backend/README.md:
+backend/README.md:
+backend/README.md:Modify or add SQLModel models for data and SQL tables in `./backend/app/models.py`, API endpoints in `./backend/app/api/`, CRUD (Create, Read, Update, Delete) utils in `./backend/app/crud.py`.
+backend/README.md:
+backend/README.md:## VS Code
+backend/README.md:
+backend/README.md:There are already configurations in place to run the backend through the VS Code debugger, so that you can use breakpoints, pause and explore variables, etc.
+backend/README.md:
+backend/README.md:The setup is also already configured so you can run the tests through the VS Code Python tests tab.
+backend/README.md:
+backend/README.md:## Docker Compose Override
+backend/README.md:
+backend/README.md:During development, you can change Docker Compose settings that will only affect the local development environment in the file `compose.override.yml`.
+backend/README.md:
+backend/README.md:The changes to that file only affect the local development environment, not the production environment. So, you can add "temporary" changes that help the development workflow.
+backend/README.md:
+backend/README.md:For example, the directory with the backend code is synchronized in the Docker container, copying the code you change live to the directory inside the container. That allows you to test your changes right away, without having to build the Docker image again. It should only be done during development, for production, you should build the Docker image with a recent version of the backend code. But during development, it allows you to iterate very fast.
+backend/README.md:
+backend/README.md:There is also a command override that runs `fastapi run --reload` instead of the default `fastapi run`. It starts a single server process (instead of multiple, as would be for production) and reloads the process whenever the code changes. Have in mind that if you have a syntax error and save the Python file, it will break and exit, and the container will stop. After that, you can restart the container by fixing the error and running again:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ docker compose watch
+backend/README.md:```
+backend/README.md:
+backend/README.md:There is also a commented out `command` override, you can uncomment it and comment the default one. It makes the backend container run a process that does "nothing", but keeps the container alive. That allows you to get inside your running container and execute commands inside, for example a Python interpreter to test installed dependencies, or start the development server that reloads when it detects changes.
+backend/README.md:
+backend/README.md:To get inside the container with a `bash` session you can start the stack with:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ docker compose watch
+backend/README.md:```
+backend/README.md:
+backend/README.md:and then in another terminal, `exec` inside the running container:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ docker compose exec backend bash
+backend/README.md:```
+backend/README.md:
+backend/README.md:You should see an output like:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:root@7f2607af31c3:/app#
+backend/README.md:```
+backend/README.md:
+backend/README.md:that means that you are in a `bash` session inside your container, as a `root` user, under the `/app` directory, this directory has another directory called "app" inside, that's where your code lives inside the container: `/app/app`.
+backend/README.md:
+backend/README.md:There you can use the `fastapi run --reload` command to run the debug live reloading server.
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ fastapi run --reload app/main.py
+backend/README.md:```
+backend/README.md:
+backend/README.md:...it will look like:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:root@7f2607af31c3:/app# fastapi run --reload app/main.py
+backend/README.md:```
+backend/README.md:
+backend/README.md:and then hit enter. That runs the live reloading server that auto reloads when it detects code changes.
+backend/README.md:
+backend/README.md:Nevertheless, if it doesn't detect a change but a syntax error, it will just stop with an error. But as the container is still alive and you are in a Bash session, you can quickly restart it after fixing the error, running the same command ("up arrow" and "Enter").
+backend/README.md:
+backend/README.md:...this previous detail is what makes it useful to have the container alive doing nothing and then, in a Bash session, make it run the live reload server.
+backend/README.md:
+backend/README.md:## Backend tests
+backend/README.md:
+backend/README.md:To test the backend run:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ bash ./scripts/test.sh
+backend/README.md:```
+backend/README.md:
+backend/README.md:The tests run with Pytest, modify and add tests to `./backend/tests/`.
+backend/README.md:
+backend/README.md:If you use GitHub Actions the tests will run automatically.
+backend/README.md:
+backend/README.md:### Test running stack
+backend/README.md:
+backend/README.md:If your stack is already up and you just want to run the tests, you can use:
+backend/README.md:
+backend/README.md:```bash
+backend/README.md:docker compose exec backend bash scripts/tests-start.sh
+backend/README.md:```
+backend/README.md:
+backend/README.md:That `/app/scripts/tests-start.sh` script just calls `pytest` after making sure that the rest of the stack is running. If you need to pass extra arguments to `pytest`, you can pass them to that command and they will be forwarded.
+backend/README.md:
+backend/README.md:For example, to stop on first error:
+backend/README.md:
+backend/README.md:```bash
+backend/README.md:docker compose exec backend bash scripts/tests-start.sh -x
+backend/README.md:```
+backend/README.md:
+backend/README.md:### Test Coverage
+backend/README.md:
+backend/README.md:When the tests are run, a file `htmlcov/index.html` is generated, you can open it in your browser to see the coverage of the tests.
+backend/README.md:
+backend/README.md:## Migrations
+backend/README.md:
+backend/README.md:As during local development your app directory is mounted as a volume inside the container, you can also run the migrations with `alembic` commands inside the container and the migration code will be in your app directory (instead of being only inside the container). So you can add it to your git repository.
+backend/README.md:
+backend/README.md:Make sure you create a "revision" of your models and that you "upgrade" your database with that revision every time you change them. As this is what will update the tables in your database. Otherwise, your application will have errors.
+backend/README.md:
+backend/README.md:* Start an interactive session in the backend container:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ docker compose exec backend bash
+backend/README.md:```
+backend/README.md:
+backend/README.md:* Alembic is already configured to import your SQLModel models from `./backend/app/models.py`.
+backend/README.md:
+backend/README.md:* After changing a model (for example, adding a column), inside the container, create a revision, e.g.:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ alembic revision --autogenerate -m "Add column last_name to User model"
+backend/README.md:```
+backend/README.md:
+backend/README.md:* Commit to the git repository the files generated in the alembic directory.
+backend/README.md:
+backend/README.md:* After creating the revision, run the migration in the database (this is what will actually change the database):
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ alembic upgrade head
+backend/README.md:```
+backend/README.md:
+backend/README.md:If you don't want to use migrations at all, uncomment the lines in the file at `./backend/app/core/db.py` that end in:
+backend/README.md:
+backend/README.md:```python
+backend/README.md:SQLModel.metadata.create_all(engine)
+backend/README.md:```
+backend/README.md:
+backend/README.md:and comment the line in the file `scripts/prestart.sh` that contains:
+backend/README.md:
+backend/README.md:```console
+backend/README.md:$ alembic upgrade head
+backend/README.md:```
+backend/README.md:
+backend/README.md:If you don't want to start with the default models and want to remove them / modify them, from the beginning, without having any previous revision, you can remove the revision files (`.py` Python files) under `./backend/app/alembic/versions/`. And then create a first migration as described above.
+backend/README.md:
+backend/README.md:## Email Templates
+backend/README.md:
+backend/README.md:The email templates are in `./backend/app/email-templates/`. Here, there are two directories: `build` and `src`. The `src` directory contains the source files that are used to build the final email templates. The `build` directory contains the final email templates that are used by the application.
+backend/README.md:
+backend/README.md:Before continuing, ensure you have the [MJML extension](https://github.com/mjmlio/vscode-mjml) installed in your VS Code.
+backend/README.md:
+backend/README.md:Once you have the MJML extension installed, you can create a new email template in the `src` directory. After creating the new email template and with the `.mjml` file open in your editor, open the command palette with `Ctrl+Shift+P` and search for `MJML: Export to HTML`. This will convert the `.mjml` file to a `.html` file and now you can save it in the build directory.
+backend/.dockerignore:# Python
+backend/.dockerignore:app.egg-info
+backend/.dockerignore:*.pyc
+backend/.dockerignore:.coverage
+backend/.dockerignore:htmlcov
+backend/Dockerfile:FROM python:3.10
+backend/Dockerfile:
+backend/Dockerfile:ENV PYTHONUNBUFFERED=1
+backend/Dockerfile:
+backend/Dockerfile:# Install uv
+backend/Dockerfile:# Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
+backend/Dockerfile:COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/
+backend/Dockerfile:
+backend/Dockerfile:# Compile bytecode
+backend/Dockerfile:# Ref: https://docs.astral.sh/uv/guides/integration/docker/#compiling-bytecode
+backend/Dockerfile:ENV UV_COMPILE_BYTECODE=1
+backend/Dockerfile:
+backend/Dockerfile:# uv Cache
+backend/Dockerfile:# Ref: https://docs.astral.sh/uv/guides/integration/docker/#caching
+backend/Dockerfile:ENV UV_LINK_MODE=copy
+backend/Dockerfile:
+backend/Dockerfile:WORKDIR /app/
+backend/Dockerfile:
+backend/Dockerfile:# Place executables in the environment at the front of the path
+backend/Dockerfile:# Ref: https://docs.astral.sh/uv/guides/integration/docker/#using-the-environment
+backend/Dockerfile:
+backend/Dockerfile:# Install dependencies
+backend/Dockerfile:# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+backend/Dockerfile:RUN --mount=type=cache,target=/root/.cache/uv \
+backend/Dockerfile:    --mount=type=bind,source=uv.lock,target=uv.lock \
+backend/Dockerfile:    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+backend/Dockerfile:    uv sync --frozen --no-install-workspace --package app
+backend/Dockerfile:
+backend/Dockerfile:COPY ./backend/scripts /app/backend/scripts
+backend/Dockerfile:
+backend/Dockerfile:COPY ./backend/pyproject.toml ./backend/alembic.ini /app/backend/
+backend/Dockerfile:
+backend/Dockerfile:COPY ./backend/app /app/backend/app
+backend/Dockerfile:
+backend/Dockerfile:# Sync the project
+backend/Dockerfile:# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+backend/Dockerfile:RUN --mount=type=cache,target=/root/.cache/uv \
+backend/Dockerfile:    --mount=type=bind,source=uv.lock,target=uv.lock \
+backend/Dockerfile:    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+backend/Dockerfile:    uv sync --frozen --package app
+backend/Dockerfile:
+backend/Dockerfile:WORKDIR /app/backend/
+backend/Dockerfile:
+backend/Dockerfile:CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
+backend/alembic.ini:# A generic, single database configuration.
+backend/alembic.ini:
+backend/alembic.ini:[alembic]
+backend/alembic.ini:# path to migration scripts
+backend/alembic.ini:script_location = app/alembic
+backend/alembic.ini:
+backend/alembic.ini:# template used to generate migration files
+backend/alembic.ini:# file_template = %%(rev)s_%%(slug)s
+backend/alembic.ini:
+backend/alembic.ini:# timezone to use when rendering the date
+backend/alembic.ini:# within the migration file as well as the filename.
+backend/alembic.ini:# string value is passed to dateutil.tz.gettz()
+backend/alembic.ini:# leave blank for localtime
+backend/alembic.ini:# timezone =
+backend/alembic.ini:
+backend/alembic.ini:# max length of characters to apply to the
+backend/alembic.ini:# "slug" field
+backend/alembic.ini:#truncate_slug_length = 40
+backend/alembic.ini:
+backend/alembic.ini:# set to 'true' to run the environment during
+backend/alembic.ini:# the 'revision' command, regardless of autogenerate
+backend/alembic.ini:# revision_environment = false
+backend/alembic.ini:
+backend/alembic.ini:# set to 'true' to allow .pyc and .pyo files without
+backend/alembic.ini:# a source .py file to be detected as revisions in the
+backend/alembic.ini:# versions/ directory
+backend/alembic.ini:# sourceless = false
+backend/alembic.ini:
+backend/alembic.ini:# version location specification; this defaults
+backend/alembic.ini:# to alembic/versions.  When using multiple version
+backend/alembic.ini:# directories, initial revisions must be specified with --version-path
+backend/alembic.ini:# version_locations = %(here)s/bar %(here)s/bat alembic/versions
+backend/alembic.ini:
+backend/alembic.ini:# the output encoding used when revision files
+backend/alembic.ini:# are written from script.py.mako
+backend/alembic.ini:# output_encoding = utf-8
+backend/alembic.ini:
+backend/alembic.ini:# Logging configuration
+backend/alembic.ini:[loggers]
+backend/alembic.ini:keys = root,sqlalchemy,alembic
+backend/alembic.ini:
+backend/alembic.ini:[handlers]
+backend/alembic.ini:keys = console
+backend/alembic.ini:
+backend/alembic.ini:[formatters]
+backend/alembic.ini:keys = generic
+backend/alembic.ini:
+backend/alembic.ini:[logger_root]
+backend/alembic.ini:level = WARN
+backend/alembic.ini:handlers = console
+backend/alembic.ini:qualname =
+backend/alembic.ini:
+backend/alembic.ini:[logger_sqlalchemy]
+backend/alembic.ini:level = WARN
+backend/alembic.ini:handlers =
+backend/alembic.ini:qualname = sqlalchemy.engine
+backend/alembic.ini:
+backend/alembic.ini:[logger_alembic]
+backend/alembic.ini:level = INFO
+backend/alembic.ini:handlers =
+backend/alembic.ini:qualname = alembic
+backend/alembic.ini:
+backend/alembic.ini:[handler_console]
+backend/alembic.ini:class = StreamHandler
+backend/alembic.ini:args = (sys.stderr,)
+backend/alembic.ini:level = NOTSET
+backend/alembic.ini:formatter = generic
+backend/alembic.ini:
+backend/alembic.ini:[formatter_generic]
+backend/alembic.ini:format = %(levelname)-5.5s [%(name)s] %(message)s
+backend/alembic.ini:datefmt = %H:%M:%S
