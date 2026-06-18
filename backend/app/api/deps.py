@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from sqlmodel import Session
 
 from app.core import security
+from app.core.audit import set_actor, set_session_actor
 from app.core.config import settings
 from app.core.db import engine
 from app.core.exceptions import (
@@ -47,6 +48,13 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
         raise NotFoundError("Utilisateur non trouvé")
     if not user.is_active:
         raise AccountInactiveError("Compte utilisateur inactif")
+    set_actor(actor_id=user.id, name=user.full_name, email=user.email)
+    set_session_actor(
+        session,
+        actor_id=user.id,
+        name=user.full_name,
+        email=user.email,
+    )
     return user
 
 

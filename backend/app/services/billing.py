@@ -23,6 +23,8 @@ from app.models.lis import (
     InvoicePublic,
     InvoiceReissueRequest,
     InvoiceSummaryPublic,
+    Order,
+    OrderStatus,
     PaymentCollect,
     PaymentMethod,
     PaymentMethodPublic,
@@ -283,6 +285,11 @@ def collect_payment(
     invoice = billing_repo.get_for_update(session=session, invoice_id=invoice_id)
     if invoice is None or invoice.is_voided:
         raise NotFoundError("Facture active non trouvée")
+    order = session.get(Order, invoice.order_id)
+    if order is not None and order.status == OrderStatus.cancelled:
+        raise ConflictError(
+            "Un paiement ne peut pas être enregistré sur une demande annulée"
+        )
     payment_method = session.get(PaymentMethod, payment_in.payment_method_id)
     if payment_method is None or payment_method.is_deleted:
         raise BusinessRuleError("Méthode de paiement non disponible")
@@ -324,7 +331,7 @@ def refund_payment(
     available = _money(payment.amount - refunded)
     if request.amount > available:
         raise BusinessRuleError("Le remboursement dépasse le montant remboursable")
-    billing_repo.create(
+    refund = billing_repo.create(
         session=session,
         db_obj=PaymentRefund(
             payment_id=payment.id,
@@ -341,7 +348,7 @@ def refund_payment(
     session.add(
         AuditLog(
             table_name="payment_refunds",
-            record_id=payment.id,
+            record_id=refund.id,
             action=AuditAction.insert,
             new_values={
                 "amount": str(_money(request.amount)),
@@ -364,6 +371,11 @@ def reissue_invoice(
     invoice = billing_repo.get_for_update(session=session, invoice_id=invoice_id)
     if invoice is None or invoice.is_voided:
         raise NotFoundError("Facture active non trouvée")
+    order = session.get(Order, invoice.order_id)
+    if order is not None and order.status == OrderStatus.cancelled:
+        raise ConflictError(
+            "Une facture liée à une demande annulée ne peut pas être réémise"
+        )
     items = billing_repo.get_order_items(session=session, order_id=invoice.order_id)
     total = _money(sum((item.price_charged for item, _ in items), Decimal("0")))
     discount = _money(request.discount)

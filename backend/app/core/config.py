@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
+    TRUSTED_PROXY_IPS: Annotated[list[str] | str, BeforeValidator(parse_cors)] = []
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -55,6 +56,15 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
+    MINIO_ENDPOINT: str = "minio:9000"
+    MINIO_PUBLIC_ENDPOINT: str = "localhost:9000"
+    MINIO_ACCESS_KEY: str = "keneyalab"
+    MINIO_SECRET_KEY: str = "keneyalab-secret"
+    MINIO_BUCKET: str = "keneyalab-results"
+    MINIO_REGION: str = "us-east-1"
+    MINIO_SECURE: bool = False
+    RESULT_IMAGE_MAX_BYTES: int = 10 * 1024 * 1024
+    RESULT_IMAGE_URL_EXPIRE_SECONDS: int = 900
 
     @computed_field  # type: ignore[prop-decorator]
     @property

@@ -15,8 +15,10 @@ from app.models import (
     CatalogDetailPublic,
     CatalogSummariesPublic,
     CatalogType,
+    OrderCancelRequest,
     OrderCreate,
     OrderDetailPublic,
+    OrderItemAnalyteCustomizeRequest,
     OrderListPublic,
     OrderPreviewPublic,
     OrderPreviewRequest,
@@ -263,6 +265,51 @@ def update_order(
         performed_by_id=current_user.id,
         can_override_prices=_can(session, current_user, "order_items", "edit"),
         can_discount=_can(session, current_user, "invoices", "edit"),
+    )
+
+
+@router.post(
+    "/{id}/cancel",
+    dependencies=[
+        Depends(require_permission("orders", "cancel")),
+        Depends(require_permission("payments", "refund")),
+    ],
+    response_model=OrderDetailPublic,
+)
+def cancel_order(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+    cancel_in: OrderCancelRequest,
+) -> Any:
+    return order_service.cancel_order(
+        session=session,
+        order_id=id,
+        request=cancel_in,
+        performed_by_id=current_user.id,
+    )
+
+
+@router.put(
+    "/{id}/items/{item_id}/analytes",
+    dependencies=[Depends(require_permission("orders", "edit"))],
+    response_model=OrderDetailPublic,
+)
+def customize_order_item_analytes(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+    item_id: uuid.UUID,
+    request_in: OrderItemAnalyteCustomizeRequest,
+) -> Any:
+    return order_service.customize_order_item_analytes(
+        session=session,
+        order_id=id,
+        item_id=item_id,
+        request=request_in,
+        performed_by_id=current_user.id,
     )
 
 

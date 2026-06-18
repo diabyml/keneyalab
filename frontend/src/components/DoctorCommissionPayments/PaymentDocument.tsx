@@ -3,6 +3,10 @@ import type {
   DoctorCommissionPaymentLinePublic,
 } from "@/client"
 import {
+  LabDocumentFooter,
+  LabDocumentHeader,
+} from "@/components/Common/LabDocumentIdentity"
+import {
   Table,
   TableBody,
   TableCell,
@@ -39,15 +43,14 @@ export function PaymentDocument({
 }: Props) {
   return (
     <article className="commission-payment-document mx-auto max-w-4xl space-y-6 bg-background p-6 print:max-w-none print:p-0">
-      <header className="border-b pb-5 text-center">
+      <div>
         {preview && (
-          <div className="mb-3 font-semibold tracking-wide text-destructive">
+          <div className="mb-3 text-center font-semibold tracking-wide text-destructive">
             APERÇU - NON PAYÉ
           </div>
         )}
-        <h1 className="text-2xl font-bold">Paiement de commissions</h1>
-        <p className="mt-1 text-muted-foreground">Keneya Lab</p>
-      </header>
+        <LabDocumentHeader title="Paiement de commissions" />
+      </div>
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <Field label="Médecin" value={doctorName} />
         <Field
@@ -108,6 +111,7 @@ export function PaymentDocument({
           <p className="whitespace-pre-wrap text-muted-foreground">{note}</p>
         </div>
       )}
+      <LabDocumentFooter />
     </article>
   )
 }

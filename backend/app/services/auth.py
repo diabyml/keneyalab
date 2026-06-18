@@ -5,9 +5,11 @@ from datetime import timedelta
 from sqlmodel import Session
 
 from app.core import security
+from app.core.audit import add_event
 from app.core.config import settings
 from app.core.exceptions import AccountInactiveError, AuthenticationError
 from app.models.auth import NewPassword, Token
+from app.models.lis import AuditAction, AuditCategory
 from app.models.rbac import PermissionPublic
 from app.models.user import User
 from app.repositories import user as user_repo
@@ -67,9 +69,34 @@ def login(*, session: Session, email: str, password: str) -> Token:
     Raises AuthenticationError on bad credentials.
     Raises AccountInactiveError on deactivated account.
     """
-    user = authenticate(session=session, email=email, password=password)
+    try:
+        user = authenticate(session=session, email=email, password=password)
+    except (AuthenticationError, AccountInactiveError) as exc:
+        add_event(
+            session,
+            table_name="authentication",
+            action=AuditAction.login_failed,
+            category=AuditCategory.security,
+            record_label=email,
+            metadata={"email": email, "reason": exc.message},
+        )
+        session.commit()
+        raise
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     permissions = permission_service.get_user_permissions(session=session, user=user)
+    add_event(
+        session,
+        table_name="authentication",
+        action=AuditAction.login_success,
+        category=AuditCategory.security,
+        record_id=user.id,
+        record_label=user.full_name or user.email,
+        metadata={"email": user.email},
+        actor_id=user.id,
+        actor_name=user.full_name,
+        actor_email=user.email,
+    )
+    session.commit()
     return Token(
         access_token=security.create_access_token(
             user.id, expires_delta=access_token_expires
@@ -95,6 +122,16 @@ def recover_password(*, session: Session, email: str) -> None:
             subject=email_data.subject,
             html_content=email_data.html_content,
         )
+    add_event(
+        session,
+        table_name="authentication",
+        action=AuditAction.password_recovery,
+        category=AuditCategory.security,
+        record_id=user.id if user else None,
+        record_label=email,
+        metadata={"email": email, "account_found": user is not None},
+    )
+    session.commit()
 
 
 def reset_password(*, session: Session, body: NewPassword) -> None:
@@ -124,3 +161,16 @@ def reset_password(*, session: Session, body: NewPassword) -> None:
     )
     session.commit()
     session.refresh(user)
+    add_event(
+        session,
+        table_name="authentication",
+        action=AuditAction.password_reset,
+        category=AuditCategory.security,
+        record_id=user.id,
+        record_label=user.full_name or user.email,
+        metadata={"email": user.email, "method": "recovery_token"},
+        actor_id=user.id,
+        actor_name=user.full_name,
+        actor_email=user.email,
+    )
+    session.commit()

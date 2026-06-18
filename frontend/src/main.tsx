@@ -10,10 +10,15 @@ import ReactDOM from "react-dom/client"
 import { ApiError, OpenAPI } from "./client"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
+import { TooltipProvider } from "./components/ui/tooltip"
 import "./index.css"
 import { routeTree } from "./routeTree.gen"
 
-OpenAPI.BASE = import.meta.env.VITE_API_URL
+const apiBaseUrl =
+  import.meta.env.VITE_API_URL ||
+  `http://${window.location.hostname || "localhost"}:8000`
+
+OpenAPI.BASE = apiBaseUrl.replace(/\/$/, "")
 OpenAPI.TOKEN = async () => {
   return localStorage.getItem("access_token") || ""
 }
@@ -45,8 +50,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        <Toaster richColors closeButton />
+        <TooltipProvider>
+          <RouterProvider router={router} />
+          <Toaster richColors closeButton />
+        </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>,

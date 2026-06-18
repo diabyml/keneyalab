@@ -44,6 +44,61 @@ export type AnalyteUpdate = {
     calculation_formula?: (string | null);
 };
 
+export type AuditAction = 'insert' | 'update' | 'delete' | 'login_success' | 'login_failed' | 'password_recovery' | 'password_reset';
+
+export type AuditActorPublic = {
+    id: string;
+    name?: (string | null);
+    email?: (string | null);
+};
+
+export type AuditActorsPublic = {
+    data: Array<AuditActorPublic>;
+};
+
+export type AuditCategory = 'clinical' | 'workflow' | 'finance' | 'configuration' | 'security' | 'system';
+
+export type AuditLogPublic = {
+    id: string;
+    table_name: string;
+    record_id?: (string | null);
+    action: AuditAction;
+    category: AuditCategory;
+    record_label?: (string | null);
+    old_values?: (unknown | null);
+    new_values?: (unknown | null);
+    metadata?: (unknown | null);
+    performed_by_id?: (string | null);
+    actor_name?: (string | null);
+    actor_email?: (string | null);
+    request_id?: (string | null);
+    correlation_id?: (string | null);
+    source: string;
+    ip_address?: (string | null);
+    user_agent?: (string | null);
+    http_method?: (string | null);
+    http_path?: (string | null);
+    performed_at?: (string | null);
+    created_at?: (string | null);
+};
+
+export type AuditLogsPublic = {
+    data: Array<AuditLogPublic>;
+    count: number;
+};
+
+export type AuditSummaryPublic = {
+    total: number;
+    inserts: number;
+    updates: number;
+    deletes: number;
+    security_events: number;
+};
+
+export type Body_lab_settings_upload_lab_logo = {
+    file: (Blob | File);
+};
+
 export type Body_login_login_access_token = {
     grant_type?: (string | null);
     username: string;
@@ -51,6 +106,18 @@ export type Body_login_login_access_token = {
     scope?: string;
     client_id?: (string | null);
     client_secret?: (string | null);
+};
+
+export type Body_results_correct_verified_image_result = {
+    reason: string;
+    file: (Blob | File);
+};
+
+export type Body_results_upload_result_image = {
+    order_item_id: string;
+    analyte_id: string;
+    specimen_id: string;
+    file: (Blob | File);
 };
 
 export type CatalogCreate = {
@@ -248,6 +315,127 @@ export type ConsistencyRuleUpdate = {
     error_message?: (string | null);
     severity?: (RuleSeverity | null);
     analyte_ids?: (Array<(string)> | null);
+};
+
+export type CriticalMethod = 'call' | 'sms' | 'in_app' | 'email';
+
+export type CriticalNotificationAcknowledge = {
+    notes?: (string | null);
+};
+
+export type CriticalNotificationCountPublic = {
+    count: number;
+};
+
+export type CriticalNotificationCreate = {
+    notified_to_id: string;
+    method: CriticalMethod;
+    notes?: (string | null);
+};
+
+export type CriticalNotificationDetailPublic = {
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    analyte_result_id: string;
+    notified_by_id: string;
+    notified_to_id: string;
+    method: CriticalMethod;
+    notes?: (string | null);
+    notified_at?: (string | null);
+    acknowledged: boolean;
+    acknowledged_at?: (string | null);
+    acknowledged_by_id?: (string | null);
+    accession_number: string;
+    patient_name: string;
+    analyte_code: string;
+    analyte_name: string;
+    result_value?: (string | null);
+    notified_by_name: string;
+    notified_to_name: string;
+    acknowledged_by_name?: (string | null);
+};
+
+export type CriticalNotificationListPublic = {
+    data: Array<CriticalNotificationDetailPublic>;
+    count: number;
+};
+
+export type CriticalRecipientPublic = {
+    id: string;
+    name: string;
+    email: string;
+};
+
+export type CriticalRecipientsPublic = {
+    data: Array<CriticalRecipientPublic>;
+    count: number;
+};
+
+export type DashboardActionPublic = {
+    key: string;
+    label: string;
+    description: string;
+    href: string;
+    priority?: number;
+};
+
+export type DashboardCriticalPublic = {
+    metrics?: Array<DashboardMetricPublic>;
+    latest?: Array<CriticalNotificationDetailPublic>;
+};
+
+export type DashboardFinancePublic = {
+    metrics?: Array<DashboardMetricPublic>;
+};
+
+export type DashboardMetricPublic = {
+    key: string;
+    label: string;
+    value: (number | string);
+    unit?: (string | null);
+};
+
+export type DashboardOrdersPublic = {
+    metrics?: Array<DashboardMetricPublic>;
+    status_breakdown?: Array<DashboardStatusPointPublic>;
+    recent?: Array<OrderListItemPublic>;
+};
+
+export type DashboardPublic = {
+    generated_at: string;
+    created_from: string;
+    created_to: string;
+    orders?: (DashboardOrdersPublic | null);
+    specimens?: (DashboardSpecimensPublic | null);
+    results?: (DashboardResultsPublic | null);
+    critical?: (DashboardCriticalPublic | null);
+    finance?: (DashboardFinancePublic | null);
+    trends?: Array<DashboardTrendPointPublic>;
+    quick_actions?: Array<DashboardActionPublic>;
+};
+
+export type DashboardResultsPublic = {
+    metrics?: Array<DashboardMetricPublic>;
+};
+
+export type DashboardSpecimensPublic = {
+    metrics?: Array<DashboardMetricPublic>;
+    oldest_waiting?: (SpecimenQueueItemPublic | null);
+};
+
+export type DashboardStatusPointPublic = {
+    key: string;
+    label: string;
+    count: number;
+};
+
+export type DashboardTrendPointPublic = {
+    label: string;
+    orders?: number;
+    specimens?: number;
+    results?: number;
+    revenue?: string;
 };
 
 export type DiscountAllocationPolicy = 'proportional' | 'non_insured_first' | 'insured_first';
@@ -727,6 +915,59 @@ export type ItemUpdate = {
     description?: (string | null);
 };
 
+export type LabSettingsPublic = {
+    id: number;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    display_name?: string;
+    legal_name?: (string | null);
+    slogan?: (string | null);
+    address?: (string | null);
+    city?: (string | null);
+    postal_code?: (string | null);
+    country?: (string | null);
+    primary_phone?: (string | null);
+    secondary_phone?: (string | null);
+    email?: (string | null);
+    website?: (string | null);
+    registration_number?: (string | null);
+    laboratory_license?: (string | null);
+    tax_id?: (string | null);
+    bank_name?: (string | null);
+    bank_account_holder?: (string | null);
+    bank_account_number?: (string | null);
+    payment_instructions?: (string | null);
+    director_name?: (string | null);
+    director_title?: (string | null);
+    document_footer?: (string | null);
+    logo_url?: (string | null);
+    updated_by_id?: (string | null);
+};
+
+export type LabSettingsUpdate = {
+    display_name?: (string | null);
+    legal_name?: (string | null);
+    slogan?: (string | null);
+    address?: (string | null);
+    city?: (string | null);
+    postal_code?: (string | null);
+    country?: (string | null);
+    primary_phone?: (string | null);
+    secondary_phone?: (string | null);
+    email?: (string | null);
+    website?: (string | null);
+    registration_number?: (string | null);
+    laboratory_license?: (string | null);
+    tax_id?: (string | null);
+    bank_name?: (string | null);
+    bank_account_holder?: (string | null);
+    bank_account_number?: (string | null);
+    payment_instructions?: (string | null);
+    director_name?: (string | null);
+    director_title?: (string | null);
+    document_footer?: (string | null);
+};
+
 export type Message = {
     message: string;
 };
@@ -736,6 +977,22 @@ export type NewPassword = {
     new_password: string;
 };
 
+export type OrderAnalyteDetailPublic = {
+    analyte_id: string;
+    analyte_code: string;
+    analyte_name: string;
+    analyte_data_type: AnalyteDataType;
+    unit_name?: (string | null);
+    sort_order: number;
+    has_result?: boolean;
+    has_verified_result?: boolean;
+};
+
+export type OrderCancelRequest = {
+    reason: string;
+    expected_revision: number;
+};
+
 export type OrderCreate = {
     patient_id: string;
     doctor_id?: (string | null);
@@ -743,6 +1000,7 @@ export type OrderCreate = {
     patient_context_id?: (string | null);
     notes?: (string | null);
     catalog_ids: Array<(string)>;
+    item_analytes?: Array<OrderItemAnalyteSelection>;
     line_overrides?: Array<OrderLineOverride>;
     discount?: (number | string);
     discount_reason?: (string | null);
@@ -777,6 +1035,17 @@ export type OrderDetailPublic = {
     payments?: Array<PaymentTransactionPublic>;
 };
 
+export type OrderItemAnalyteCustomizeRequest = {
+    analyte_ids: Array<(string)>;
+    reason?: (string | null);
+    expected_revision: number;
+};
+
+export type OrderItemAnalyteSelection = {
+    catalog_id: string;
+    analyte_ids: Array<(string)>;
+};
+
 export type OrderItemDetailPublic = {
     id: string;
     created_at?: (string | null);
@@ -796,6 +1065,7 @@ export type OrderItemDetailPublic = {
     catalog_code: string;
     catalog_name: string;
     specimen_ids?: Array<(string)>;
+    analytes?: Array<OrderAnalyteDetailPublic>;
 };
 
 export type OrderLineOverride = {
@@ -838,6 +1108,7 @@ export type OrderPreviewItemPublic = {
     insurance_provider_name?: (string | null);
     price_override_reason?: (string | null);
     source_catalog_ids?: Array<(string)>;
+    analytes?: Array<OrderAnalyteDetailPublic>;
 };
 
 export type OrderPreviewPublic = {
@@ -857,6 +1128,7 @@ export type OrderPreviewRequest = {
     patient_context_id?: (string | null);
     notes?: (string | null);
     catalog_ids: Array<(string)>;
+    item_analytes?: Array<OrderItemAnalyteSelection>;
     line_overrides?: Array<OrderLineOverride>;
     discount?: (number | string);
     discount_reason?: (string | null);
@@ -926,6 +1198,7 @@ export type OrderUpdate = {
     patient_context_id?: (string | null);
     notes?: (string | null);
     catalog_ids: Array<(string)>;
+    item_analytes?: Array<OrderItemAnalyteSelection>;
     line_overrides?: Array<OrderLineOverride>;
     discount?: (number | string);
     discount_reason?: (string | null);
@@ -1179,6 +1452,184 @@ export type RejectionReasonsPublic = {
 
 export type RejectionReasonUpdate = {
     name?: (string | null);
+};
+
+export type ResultAnalyteWorkspacePublic = {
+    result_id?: (string | null);
+    analyte_id: string;
+    analyte_code: string;
+    analyte_name: string;
+    data_type: AnalyteDataType;
+    unit_name?: (string | null);
+    options_data?: (unknown | null);
+    reference_text?: (string | null);
+    is_calculated?: boolean;
+    specimen_id: string;
+    specimen_type_name: string;
+    result_value?: (string | null);
+    image_url?: (string | null);
+    status?: ResultStatus;
+    validation_rule_id?: (string | null);
+    validation?: (ResultValidationOutcomePublic | null);
+    is_abnormal?: boolean;
+    is_critical?: boolean;
+    delta_flag?: boolean;
+    resulted_by_name?: (string | null);
+    resulted_at?: (string | null);
+    verified_by_name?: (string | null);
+    verified_at?: (string | null);
+    verification_eligible?: boolean;
+    verification_blocker?: (string | null);
+    escalation_required?: boolean;
+    critical_notifications?: Array<CriticalNotificationDetailPublic>;
+    comments?: Array<ResultCommentDetailPublic>;
+    corrections?: Array<ResultCorrectionHistoryPublic>;
+};
+
+export type ResultBulkEntryRequest = {
+    order_item_id: string;
+    values: Array<ResultEntryValue>;
+};
+
+export type ResultBulkVerificationPublic = {
+    workspace: ResultWorkspacePublic;
+    verified_count?: number;
+    skipped_count?: number;
+    verified_result_ids?: Array<(string)>;
+    skipped?: Array<ResultVerificationSkipPublic>;
+};
+
+export type ResultCommentDetailPublic = {
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    analyte_result_id: string;
+    user_id: string;
+    comment: string;
+    user_name: string;
+};
+
+export type ResultCommentRequest = {
+    comment: string;
+};
+
+export type ResultConsistencyOutcomePublic = {
+    rule_id: string;
+    name: string;
+    severity: RuleSeverity;
+    message: string;
+};
+
+export type ResultCorrectionHistoryPublic = {
+    id: string;
+    old_value?: (string | null);
+    new_value?: (string | null);
+    reason: string;
+    performed_by_name?: (string | null);
+    performed_at?: (string | null);
+};
+
+export type ResultCorrectionRequest = {
+    result_value: string;
+    reason: string;
+    instrument_id?: (string | null);
+};
+
+export type ResultEntryValue = {
+    analyte_id: string;
+    specimen_id: string;
+    result_value: string;
+    instrument_id?: (string | null);
+};
+
+export type ResultQueueItemPublic = {
+    order_id: string;
+    accession_number: string;
+    patient_id: string;
+    patient_identifier: string;
+    patient_name: string;
+    order_status: OrderStatus;
+    category_summary: string;
+    total_count: number;
+    resulted_count: number;
+    verified_count: number;
+    abnormal_count: number;
+    critical_count: number;
+    created_at?: (string | null);
+};
+
+export type ResultQueuePublic = {
+    data: Array<ResultQueueItemPublic>;
+    count: number;
+};
+
+export type ResultReflexOutcomePublic = {
+    rule_id: string;
+    catalog_id: string;
+    catalog_code: string;
+    catalog_name: string;
+    added: boolean;
+};
+
+export type ResultStatus = 'pending' | 'resulted' | 'verified' | 'rejected';
+
+export type ResultSubmissionPublic = {
+    workspace: ResultWorkspacePublic;
+    saved_result_ids?: Array<(string)>;
+    critical_result_ids?: Array<(string)>;
+    consistency_outcomes?: Array<ResultConsistencyOutcomePublic>;
+    reflex_outcomes?: Array<ResultReflexOutcomePublic>;
+};
+
+export type ResultTestWorkspacePublic = {
+    order_item_id: string;
+    catalog_id: string;
+    catalog_code: string;
+    catalog_name: string;
+    category_id?: (string | null);
+    category_name?: (string | null);
+    is_reflex_added?: boolean;
+    analytes?: Array<ResultAnalyteWorkspacePublic>;
+    resulted_count?: number;
+    verified_count?: number;
+};
+
+export type ResultValidationOutcomePublic = {
+    classification: string;
+    message: string;
+    is_abnormal?: boolean;
+    is_critical?: boolean;
+    delta_flag?: boolean;
+};
+
+export type ResultVerificationSkipPublic = {
+    result_id?: (string | null);
+    order_item_id: string;
+    analyte_id: string;
+    specimen_id: string;
+    analyte_name: string;
+    message: string;
+};
+
+export type ResultWorkspacePublic = {
+    order_id: string;
+    revision_number?: number;
+    accession_number: string;
+    patient_id: string;
+    patient_identifier: string;
+    patient_name: string;
+    patient_date_of_birth: string;
+    patient_gender: GenderType;
+    patient_context_id?: (string | null);
+    patient_context_name?: (string | null);
+    doctor_name?: (string | null);
+    order_status: OrderStatus;
+    tests?: Array<ResultTestWorkspacePublic>;
+    total_count?: number;
+    resulted_count?: number;
+    verified_count?: number;
+    consistency_outcomes?: Array<ResultConsistencyOutcomePublic>;
+    reflex_outcomes?: Array<ResultReflexOutcomePublic>;
 };
 
 export type RoleCreate = {
@@ -1567,6 +2018,71 @@ export type AnalytesRestoreAnalyteData = {
 
 export type AnalytesRestoreAnalyteResponse = (AnalytePublic);
 
+export type AuditLogsReadAuditLogsData = {
+    action?: (AuditAction | null);
+    category?: (AuditCategory | null);
+    correlationId?: (string | null);
+    limit?: number;
+    performedById?: (string | null);
+    performedFrom?: (string | null);
+    performedTo?: (string | null);
+    recordId?: (string | null);
+    requestId?: (string | null);
+    search?: (string | null);
+    skip?: number;
+    sortBy?: (string | null);
+    sortOrder?: SortOrder;
+    source?: (string | null);
+    tableName?: (string | null);
+};
+
+export type AuditLogsReadAuditLogsResponse = (AuditLogsPublic);
+
+export type AuditLogsReadAuditSummaryData = {
+    action?: (AuditAction | null);
+    category?: (AuditCategory | null);
+    correlationId?: (string | null);
+    performedById?: (string | null);
+    performedFrom?: (string | null);
+    performedTo?: (string | null);
+    recordId?: (string | null);
+    requestId?: (string | null);
+    search?: (string | null);
+    source?: (string | null);
+    tableName?: (string | null);
+};
+
+export type AuditLogsReadAuditSummaryResponse = (AuditSummaryPublic);
+
+export type AuditLogsReadAuditActorsData = {
+    limit?: number;
+    search?: (string | null);
+};
+
+export type AuditLogsReadAuditActorsResponse = (AuditActorsPublic);
+
+export type AuditLogsExportAuditLogsData = {
+    action?: (AuditAction | null);
+    category?: (AuditCategory | null);
+    correlationId?: (string | null);
+    performedById?: (string | null);
+    performedFrom?: (string | null);
+    performedTo?: (string | null);
+    recordId?: (string | null);
+    requestId?: (string | null);
+    search?: (string | null);
+    source?: (string | null);
+    tableName?: (string | null);
+};
+
+export type AuditLogsExportAuditLogsResponse = (unknown);
+
+export type AuditLogsReadAuditLogData = {
+    auditId: string;
+};
+
+export type AuditLogsReadAuditLogResponse = (AuditLogPublic);
+
 export type AutomatedRulesReadConsistencyRulesData = {
     analyteId?: (string | null);
     includeDeleted?: boolean;
@@ -1818,6 +2334,52 @@ export type CategoriesRestoreCategoryData = {
 };
 
 export type CategoriesRestoreCategoryResponse = (CategoryPublic);
+
+export type CriticalNotificationsReadCriticalNotificationsData = {
+    acknowledged?: (boolean | null);
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+};
+
+export type CriticalNotificationsReadCriticalNotificationsResponse = (CriticalNotificationListPublic);
+
+export type CriticalNotificationsReadUnacknowledgedCountResponse = (CriticalNotificationCountPublic);
+
+export type CriticalNotificationsReadCriticalRecipientsData = {
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+};
+
+export type CriticalNotificationsReadCriticalRecipientsResponse = (CriticalRecipientsPublic);
+
+export type CriticalNotificationsCreateCriticalNotificationData = {
+    requestBody: CriticalNotificationCreate;
+    resultId: string;
+};
+
+export type CriticalNotificationsCreateCriticalNotificationResponse = (CriticalNotificationDetailPublic);
+
+export type CriticalNotificationsReadCriticalNotificationData = {
+    notificationId: string;
+};
+
+export type CriticalNotificationsReadCriticalNotificationResponse = (CriticalNotificationDetailPublic);
+
+export type CriticalNotificationsAcknowledgeCriticalNotificationData = {
+    notificationId: string;
+    requestBody: CriticalNotificationAcknowledge;
+};
+
+export type CriticalNotificationsAcknowledgeCriticalNotificationResponse = (CriticalNotificationDetailPublic);
+
+export type DashboardReadDashboardData = {
+    createdFrom?: (string | null);
+    createdTo?: (string | null);
+};
+
+export type DashboardReadDashboardResponse = (DashboardPublic);
 
 export type DoctorCommissionConfigsUpdateDoctorCommissionConfigData = {
     id: string;
@@ -2171,6 +2733,22 @@ export type ItemsDeleteItemData = {
 
 export type ItemsDeleteItemResponse = (Message);
 
+export type LabSettingsReadLabSettingsResponse = (LabSettingsPublic);
+
+export type LabSettingsUpdateLabSettingsData = {
+    requestBody: LabSettingsUpdate;
+};
+
+export type LabSettingsUpdateLabSettingsResponse = (LabSettingsPublic);
+
+export type LabSettingsUploadLabLogoData = {
+    formData: Body_lab_settings_upload_lab_logo;
+};
+
+export type LabSettingsUploadLabLogoResponse = (LabSettingsPublic);
+
+export type LabSettingsDeleteLabLogoResponse = (LabSettingsPublic);
+
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;
 };
@@ -2263,6 +2841,21 @@ export type OrdersPreviewOrderUpdateData = {
 };
 
 export type OrdersPreviewOrderUpdateResponse = (OrderPreviewPublic);
+
+export type OrdersCancelOrderData = {
+    id: string;
+    requestBody: OrderCancelRequest;
+};
+
+export type OrdersCancelOrderResponse = (OrderDetailPublic);
+
+export type OrdersCustomizeOrderItemAnalytesData = {
+    id: string;
+    itemId: string;
+    requestBody: OrderItemAnalyteCustomizeRequest;
+};
+
+export type OrdersCustomizeOrderItemAnalytesResponse = (OrderDetailPublic);
 
 export type OrdersReadOrderRevisionsData = {
     id: string;
@@ -2564,6 +3157,73 @@ export type RejectionReasonsRestoreRejectionReasonData = {
 };
 
 export type RejectionReasonsRestoreRejectionReasonResponse = (RejectionReasonPublic);
+
+export type ResultsReadResultQueueData = {
+    categoryId?: (string | null);
+    createdFrom?: (string | null);
+    createdTo?: (string | null);
+    flagged?: (boolean | null);
+    limit?: number;
+    mode?: 'entry' | 'verification';
+    search?: (string | null);
+    skip?: number;
+    sortOrder?: SortOrder;
+};
+
+export type ResultsReadResultQueueResponse = (ResultQueuePublic);
+
+export type ResultsReadResultWorkspaceData = {
+    orderId: string;
+};
+
+export type ResultsReadResultWorkspaceResponse = (ResultWorkspacePublic);
+
+export type ResultsEnterResultsData = {
+    orderId: string;
+    requestBody: ResultBulkEntryRequest;
+};
+
+export type ResultsEnterResultsResponse = (ResultSubmissionPublic);
+
+export type ResultsUploadResultImageData = {
+    formData: Body_results_upload_result_image;
+    orderId: string;
+};
+
+export type ResultsUploadResultImageResponse = (ResultSubmissionPublic);
+
+export type ResultsAddResultCommentData = {
+    requestBody: ResultCommentRequest;
+    resultId: string;
+};
+
+export type ResultsAddResultCommentResponse = (ResultCommentDetailPublic);
+
+export type ResultsCorrectVerifiedResultData = {
+    requestBody: ResultCorrectionRequest;
+    resultId: string;
+};
+
+export type ResultsCorrectVerifiedResultResponse = (ResultWorkspacePublic);
+
+export type ResultsCorrectVerifiedImageResultData = {
+    formData: Body_results_correct_verified_image_result;
+    resultId: string;
+};
+
+export type ResultsCorrectVerifiedImageResultResponse = (ResultWorkspacePublic);
+
+export type ResultsVerifyResultData = {
+    resultId: string;
+};
+
+export type ResultsVerifyResultResponse = (ResultWorkspacePublic);
+
+export type ResultsVerifyOrderData = {
+    orderId: string;
+};
+
+export type ResultsVerifyOrderResponse = (ResultBulkVerificationPublic);
 
 export type SpecimensReadSpecimenTypeOptionsData = {
     limit?: number;

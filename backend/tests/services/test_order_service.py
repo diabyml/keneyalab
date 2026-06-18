@@ -1,8 +1,11 @@
+import uuid
 from datetime import date
 from decimal import Decimal
 
+import pytest
 from sqlmodel import Session, select
 
+from app.core.exceptions import ConflictError
 from app.models import User
 from app.models.lis import (
     AnalyteResult,
@@ -13,6 +16,7 @@ from app.models.lis import (
     CustomerCredit,
     DiscountAllocationPolicy,
     Doctor,
+    DoctorCommissionAdjustment,
     DoctorCommissionConfig,
     DoctorCommissionEntry,
     FinanceSettings,
@@ -23,17 +27,24 @@ from app.models.lis import (
     InvoiceBalanceTransfer,
     InvoiceReissueRequest,
     Order,
+    OrderCancelRequest,
     OrderCreate,
     OrderItem,
     OrderItemSpecimen,
     OrderRevision,
+    OrderStatus,
     OrderUpdate,
     Patient,
     PatientInsurance,
     PaymentCollect,
     PaymentMethod,
+    PaymentRefund,
     PaymentRefundCreate,
+    PaymentStatus,
+    PayoutStatus,
     RejectionReason,
+    Report,
+    ReportChannel,
     SpecimenRejectRequest,
     SpecimenStatus,
     SpecimenType,
@@ -45,12 +56,59 @@ from app.services.billing import (
 )
 from app.services.catalog import get_catalogs
 from app.services.order import (
+    cancel_order,
     create_order,
     get_order_detail,
     preview_order,
     update_order,
 )
 from app.services.specimen import collect_all, reject
+
+
+def _cancellable_order(db: Session, *, doctor: Doctor | None = None):
+    suffix = uuid.uuid4().hex[:8].upper()
+    patient = Patient(
+        identifier=f"PAT-CANCEL-{suffix}",
+        first_name="Awa",
+        last_name="Cancel",
+        date_of_birth=date(1990, 1, 1),
+        gender=GenderType.female,
+    )
+    specimen_type = SpecimenType(
+        name=f"Sérum annulation {suffix}",
+        color="#ef4444",
+    )
+    catalog = Catalog(
+        type=CatalogType.item,
+        code=f"CANCEL-{suffix}",
+        name=f"Test annulation {suffix}",
+        price=Decimal("1000.00"),
+    )
+    db.add_all([patient, specimen_type, catalog])
+    db.flush()
+    db.add(
+        CatalogSpecimenRequirement(
+            catalog_id=catalog.id,
+            specimen_type_id=specimen_type.id,
+            volume_ml=Decimal("2.00"),
+        )
+    )
+    db.commit()
+    user = db.exec(select(User)).first()
+    assert user is not None
+    order = create_order(
+        session=db,
+        request=OrderCreate(
+            patient_id=patient.id,
+            doctor_id=doctor.id if doctor else None,
+            catalog_ids=[catalog.id],
+        ),
+        created_by_id=user.id,
+        can_override_prices=True,
+        can_discount=True,
+        can_collect_payment=True,
+    )
+    return order, user, patient, specimen_type, catalog
 
 
 def test_order_creation_expands_panel_and_deduplicates_specimens(db: Session) -> None:
@@ -348,6 +406,148 @@ def test_order_catalog_options_exclude_empty_panels(db: Session) -> None:
     assert empty_panel.id not in {item.id for item in items}
     db.delete(empty_panel)
     db.commit()
+
+
+def test_cancel_order_refunds_payments_and_voids_reports(db: Session) -> None:
+    order, user, _patient, _specimen_type, _catalog = _cancellable_order(db)
+    invoice = db.exec(
+        select(Invoice).where(
+            Invoice.order_id == order.id,
+            Invoice.is_voided == False,  # noqa: E712
+        )
+    ).one()
+    method = db.exec(
+        select(PaymentMethod).where(PaymentMethod.is_deleted == False)  # noqa: E712
+    ).first()
+    assert method is not None
+    invoice_detail = collect_payment(
+        session=db,
+        invoice_id=invoice.id,
+        payment_in=PaymentCollect(
+            amount=Decimal("1000.00"),
+            payment_method_id=method.id,
+        ),
+        collected_by_id=user.id,
+    )
+    payment = invoice_detail.payments[0]
+    db.add(
+        Report(
+            order_id=order.id,
+            channel=ReportChannel.print,
+            released_by_id=user.id,
+        )
+    )
+    db.commit()
+
+    cancelled = cancel_order(
+        session=db,
+        order_id=order.id,
+        request=OrderCancelRequest(
+            reason="Demande créée par erreur",
+            expected_revision=order.revision_number,
+        ),
+        performed_by_id=user.id,
+    )
+
+    assert cancelled.status == OrderStatus.cancelled
+    assert cancelled.revision_number == 2
+    assert cancelled.invoice.is_voided is False
+    assert cancelled.invoice.payment_status == PaymentStatus.refunded
+    assert cancelled.invoice.amount_paid == Decimal("0.00")
+    refund = db.exec(
+        select(PaymentRefund).where(PaymentRefund.payment_id == payment.id)
+    ).one()
+    assert refund.amount == Decimal("1000.00")
+    assert refund.payment_method_id == method.id
+    report = db.exec(select(Report).where(Report.order_id == order.id)).one()
+    assert report.is_voided is True
+    revision = db.exec(
+        select(OrderRevision).where(OrderRevision.order_id == order.id)
+    ).one()
+    assert revision.effects["refund_total"] == "1000.00"
+    assert revision.effects["voided_report_count"] == 1
+
+
+def test_cancel_order_rejects_repeated_and_stale_requests(db: Session) -> None:
+    order, user, _patient, _specimen_type, _catalog = _cancellable_order(db)
+
+    with pytest.raises(ConflictError):
+        cancel_order(
+            session=db,
+            order_id=order.id,
+            request=OrderCancelRequest(
+                reason="Révision obsolète",
+                expected_revision=order.revision_number + 1,
+            ),
+            performed_by_id=user.id,
+        )
+    db.rollback()
+
+    cancel_order(
+        session=db,
+        order_id=order.id,
+        request=OrderCancelRequest(
+            reason="Demande créée par erreur",
+            expected_revision=order.revision_number,
+        ),
+        performed_by_id=user.id,
+    )
+    with pytest.raises(ConflictError):
+        cancel_order(
+            session=db,
+            order_id=order.id,
+            request=OrderCancelRequest(
+                reason="Nouvelle tentative",
+                expected_revision=order.revision_number + 1,
+            ),
+            performed_by_id=user.id,
+        )
+
+
+def test_cancel_order_creates_negative_paid_commission_adjustment(
+    db: Session,
+) -> None:
+    doctor = Doctor(first_name="Moussa", last_name="Commission")
+    config = DoctorCommissionConfig(
+        doctor_id=doctor.id,
+        commission_rate=Decimal("0.1000"),
+        insurance_commission_rate=Decimal("0.0500"),
+        effective_from=date.today(),
+    )
+    db.add(doctor)
+    db.flush()
+    config.doctor_id = doctor.id
+    db.add(config)
+    db.commit()
+    order, user, _patient, _specimen_type, _catalog = _cancellable_order(
+        db, doctor=doctor
+    )
+    entry = db.exec(
+        select(DoctorCommissionEntry).where(
+            DoctorCommissionEntry.order_id == order.id
+        )
+    ).one()
+    entry.payout_status = PayoutStatus.paid
+    db.add(entry)
+    db.commit()
+
+    cancel_order(
+        session=db,
+        order_id=order.id,
+        request=OrderCancelRequest(
+            reason="Annulation avec commission payée",
+            expected_revision=order.revision_number,
+        ),
+        performed_by_id=user.id,
+    )
+
+    adjustment = db.exec(
+        select(DoctorCommissionAdjustment).where(
+            DoctorCommissionAdjustment.commission_entry_id == entry.id
+        )
+    ).one()
+    assert adjustment.amount == -entry.commission_amount
+    assert adjustment.is_settled is False
 
 
 def test_order_creation_splits_mixed_doctor_commission(db: Session) -> None:

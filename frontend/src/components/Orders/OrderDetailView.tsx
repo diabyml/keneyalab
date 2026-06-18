@@ -10,16 +10,30 @@ import {
   ReceiptText,
   ShieldCheck,
   TestTube,
+  XCircle,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import type { OrderDetailPublic } from "@/client"
 import { InvoicesService, OrdersService, SpecimensService } from "@/client"
+import {
+  LabDocumentFooter,
+  LabDocumentHeader,
+  LabDocumentName,
+} from "@/components/Common/LabDocumentIdentity"
 import { CollectAllSpecimensDialog } from "@/components/Specimens/CollectAllSpecimensDialog"
 import { SpecimenCollectionSheet } from "@/components/Specimens/SpecimenCollectionSheet"
 import { SPECIMEN_STATUS_LABELS } from "@/components/Specimens/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
@@ -31,11 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { usePermission } from "@/hooks/usePermission"
 import { handleError } from "@/utils"
@@ -57,6 +67,8 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const canCollectSpecimens = usePermission("specimens", "collect")
   const canEnterResults = usePermission("results", "enter")
   const canEditOrder = usePermission("orders", "edit")
+  const canCancelOrder = usePermission("orders", "cancel")
+  const canRefundPayment = usePermission("payments", "refund")
   const canViewAudit = usePermission("audit", "view")
   const [printTarget, setPrintTarget] = useState<"receipt" | "labels" | null>(
     null,
@@ -65,6 +77,8 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const [paymentMethodId, setPaymentMethodId] = useState("")
   const [collectionSheetOpen, setCollectionSheetOpen] = useState(false)
   const [collectAllOpen, setCollectAllOpen] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState("")
   const orderQuery = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => OrdersService.readOrder({ id: orderId }),
@@ -112,6 +126,34 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
     },
     onError: handleError.bind(showErrorToast),
   })
+  const cancelMutation = useMutation({
+    mutationFn: () =>
+      OrdersService.cancelOrder({
+        id: orderId,
+        requestBody: {
+          reason: cancelReason.trim(),
+          expected_revision: orderQuery.data!.revision_number ?? 1,
+        },
+      }),
+    onSuccess: (updated) => {
+      showSuccessToast("Demande annulée")
+      setCancelOpen(false)
+      setCancelReason("")
+      queryClient.setQueryData(["order", orderId], updated)
+      queryClient.invalidateQueries({ queryKey: ["orders"] })
+      queryClient.invalidateQueries({ queryKey: ["invoices"] })
+      queryClient.invalidateQueries({
+        queryKey: ["invoice", updated.invoice.id],
+      })
+      queryClient.invalidateQueries({ queryKey: ["result-queue"] })
+      queryClient.invalidateQueries({ queryKey: ["collection-queue"] })
+      queryClient.invalidateQueries({
+        queryKey: ["doctor-commission-payments"],
+      })
+      queryClient.invalidateQueries({ queryKey: ["order-revisions", orderId] })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
 
   const order = orderQuery.data
   if (orderQuery.isLoading) {
@@ -130,6 +172,12 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const pendingCount = activeSpecimens.filter(
     (specimen) => specimen.status === "pending",
   ).length
+  const isCancelled = order.status === "cancelled"
+  const canCancel =
+    !isCancelled &&
+    canCancelOrder &&
+    canRefundPayment &&
+    !cancelMutation.isPending
 
   return (
     <>
@@ -156,7 +204,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {canEditOrder && (
+            {canEditOrder && !isCancelled && (
               <Button variant="outline" asChild>
                 <Link to="/orders/$orderId/edit" params={{ orderId }}>
                   <Pencil className="size-4" />
@@ -164,7 +212,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
                 </Link>
               </Button>
             )}
-            {canCollectSpecimens && pendingCount > 0 && (
+            {canCollectSpecimens && !isCancelled && pendingCount > 0 && (
               <>
                 <Button
                   variant="outline"
@@ -179,18 +227,23 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
                 </Button>
               </>
             )}
-            {canEnterResults && order.status === "collected" && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button disabled>
-                      <Microscope className="size-4" />
-                      Saisir les résultats
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Module de résultats à venir</TooltipContent>
-              </Tooltip>
+            {canEnterResults &&
+              !isCancelled &&
+              ["collected", "in_progress", "partial_results"].includes(
+                order.status,
+              ) && (
+                <Button asChild>
+                  <Link to="/results/$orderId" params={{ orderId }}>
+                    <Microscope className="size-4" />
+                    Saisir les résultats
+                  </Link>
+                </Button>
+              )}
+            {canCancel && (
+              <Button variant="destructive" onClick={() => setCancelOpen(true)}>
+                <XCircle className="size-4" />
+                Annuler
+              </Button>
             )}
             <Button variant="outline" onClick={() => setPrintTarget("labels")}>
               <Printer className="size-4" />
@@ -337,7 +390,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
               ))}
             </section>
 
-            {canCollectPayment && balance > 0 && (
+            {canCollectPayment && !isCancelled && balance > 0 && (
               <section className="space-y-3 rounded-md border p-4">
                 <div className="flex items-center gap-2 font-semibold">
                   <CreditCard className="size-4" />
@@ -402,7 +455,75 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
         pendingCount={pendingCount}
         balanceDue={specimenWorkspaceQuery.data?.balance_due}
       />
+      <OrderCancelDialog
+        open={cancelOpen}
+        reason={cancelReason}
+        accessionNumber={order.accession_number}
+        loading={cancelMutation.isPending}
+        onReasonChange={setCancelReason}
+        onOpenChange={(open) => {
+          setCancelOpen(open)
+          if (!open) setCancelReason("")
+        }}
+        onConfirm={() => cancelMutation.mutate()}
+      />
     </>
+  )
+}
+
+function OrderCancelDialog({
+  open,
+  reason,
+  accessionNumber,
+  loading,
+  onReasonChange,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean
+  reason: string
+  accessionNumber: string
+  loading: boolean
+  onReasonChange: (value: string) => void
+  onOpenChange: (open: boolean) => void
+  onConfirm: () => void
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Annuler la demande {accessionNumber}</DialogTitle>
+          <DialogDescription>
+            Les paiements seront remboursés automatiquement avec leur méthode
+            d'origine. Les résultats et prélèvements resteront dans
+            l'historique.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="cancel-reason">Motif d'annulation *</Label>
+          <Textarea
+            id="cancel-reason"
+            value={reason}
+            onChange={(event) => onReasonChange(event.currentTarget.value)}
+            placeholder="Indiquer le motif de l'annulation..."
+            autoFocus
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+          <LoadingButton
+            variant="destructive"
+            loading={loading}
+            disabled={!reason.trim()}
+            onClick={onConfirm}
+          >
+            Annuler la demande
+          </LoadingButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -411,11 +532,7 @@ function ThermalReceipt({ order }: { order: OrderDetailPublic }) {
     Number(order.invoice.net_amount) - Number(order.invoice.amount_paid)
   return (
     <article className="thermal-receipt print-only">
-      <header className="text-center">
-        <h1 className="text-base font-bold">KENEYA LAB</h1>
-        <p>Laboratoire d'analyses médicales</p>
-        <p>Facture / reçu</p>
-      </header>
+      <LabDocumentHeader title="Facture / reçu" compact />
       <Separator className="my-2" />
       <div>Demande : {order.accession_number}</div>
       <div>Date : {formatDateTime(order.created_at)}</div>
@@ -484,7 +601,7 @@ function ThermalReceipt({ order }: { order: OrderDetailPublic }) {
       <div className="my-3">
         <Code128Barcode value={order.accession_number} />
       </div>
-      <p className="text-center">Merci pour votre confiance.</p>
+      <LabDocumentFooter compact />
     </article>
   )
 }
@@ -494,6 +611,9 @@ function SpecimenLabels({ order }: { order: OrderDetailPublic }) {
     <section className="specimen-labels print-only">
       {(order.specimens ?? []).map((specimen) => (
         <article key={specimen.id} className="specimen-label">
+          <div className="mb-1 truncate text-center text-[8px] font-semibold uppercase">
+            <LabDocumentName />
+          </div>
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="font-bold">{order.patient_name}</div>

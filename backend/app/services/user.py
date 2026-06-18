@@ -5,6 +5,7 @@ import uuid
 from sqlmodel import Session
 
 from app.core import security
+from app.core.audit import add_event
 from app.core.config import settings
 from app.core.exceptions import (
     BusinessRuleError,
@@ -12,6 +13,7 @@ from app.core.exceptions import (
     ForbiddenError,
     NotFoundError,
 )
+from app.models.lis import AuditAction, AuditCategory
 from app.models.user import User, UserCreate, UserUpdate, UserUpdateMe
 from app.repositories import user as user_repo
 from app.services.permission import assign_default_roles, check_permission
@@ -117,6 +119,16 @@ def update_password_me(
         db_user=current_user,
         update_data={},
         extra_data={"hashed_password": hashed},
+    )
+    session.commit()
+    add_event(
+        session,
+        table_name="authentication",
+        action=AuditAction.password_reset,
+        category=AuditCategory.security,
+        record_id=current_user.id,
+        record_label=current_user.full_name or current_user.email,
+        metadata={"email": current_user.email, "method": "authenticated_change"},
     )
     session.commit()
 

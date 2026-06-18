@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import useAuth from "@/hooks/useAuth"
+import { DashboardView } from "@/components/Dashboard/DashboardView"
 
 export const Route = createFileRoute("/_layout/")({
   component: Dashboard,
@@ -13,20 +13,6 @@ export const Route = createFileRoute("/_layout/")({
   }),
 })
 
-function DashboardContent() {
-  const { user: currentUser } = useAuth()
-
-  return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Bonjour, {currentUser?.full_name || currentUser?.email}
-        </h1>
-      </div>
-    </div>
-  )
-}
-
 function Dashboard() {
-  return <DashboardContent />
+  return <DashboardView />
 }

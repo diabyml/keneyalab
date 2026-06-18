@@ -8,6 +8,8 @@ from sqlmodel import Session, col, select
 
 from app.core.exceptions import BusinessRuleError, ConflictError, NotFoundError
 from app.models.lis import (
+    Analyte,
+    AnalyteResult,
     AuditAction,
     AuditLog,
     Catalog,
@@ -25,10 +27,13 @@ from app.models.lis import (
     Invoice,
     InvoiceBalanceTransfer,
     Order,
+    OrderAnalyteDetailPublic,
+    OrderCancelRequest,
     OrderCatalogItemAnalyte,
     OrderCreate,
     OrderDetailPublic,
     OrderItem,
+    OrderItemAnalyteCustomizeRequest,
     OrderItemDetailPublic,
     OrderItemSpecimen,
     OrderListItemPublic,
@@ -48,13 +53,16 @@ from app.models.lis import (
     PatientInsurance,
     PaymentCollect,
     PaymentMethod,
+    PaymentRefund,
     PaymentStatus,
     PaymentTransaction,
     PaymentTransactionPublic,
+    PaymentTransactionStatus,
     PayoutStatus,
     SortOrder,
     SpecimenStatus,
     SpecimenType,
+    Unit,
 )
 from app.repositories import order as order_repo
 from app.services import commission as commission_service
@@ -187,6 +195,13 @@ def preview_order(
     if request.initial_payment is not None and not can_collect_payment:
         raise BusinessRuleError("Vous ne pouvez pas encaisser de paiement")
 
+    requested_analytes = {
+        item.catalog_id: item.analyte_ids for item in request.item_analytes
+    }
+    if set(requested_analytes) - set(tests):
+        raise BusinessRuleError(
+            "Une personnalisation d'analytes cible un test non sélectionné"
+        )
     items: list[OrderPreviewItemPublic] = []
     for test in tests.values():
         charged = test.price
@@ -206,6 +221,11 @@ def preview_order(
         override = overrides.get(test.id)
         if override is not None:
             charged = override.price_charged
+        analytes = _resolve_analytes(
+            session=session,
+            catalog_id=test.id,
+            analyte_ids=requested_analytes.get(test.id),
+        )
         items.append(
             OrderPreviewItemPublic(
                 catalog_id=test.id,
@@ -217,6 +237,10 @@ def preview_order(
                 insurance_provider_name=provider_name,
                 price_override_reason=override.reason.strip() if override else None,
                 source_catalog_ids=sorted(sources[test.id], key=str),
+                analytes=[
+                    _analyte_detail(analyte=analyte, sort_order=index)
+                    for index, (_, analyte, _) in enumerate(analytes)
+                ],
             )
         )
 
@@ -349,18 +373,20 @@ def create_order(
             ),
         )
         item_by_catalog[item.catalog_id] = order_item
-        analytes = session.exec(
-            select(CatalogItemAnalyte).where(
-                CatalogItemAnalyte.catalog_item_id == item.catalog_id
-            )
-        ).all()
-        for analyte in analytes:
+        for analyte_detail in item.analytes:
+            attachment = session.exec(
+                select(CatalogItemAnalyte).where(
+                    CatalogItemAnalyte.catalog_item_id == item.catalog_id,
+                    CatalogItemAnalyte.analyte_id == analyte_detail.analyte_id,
+                )
+            ).first()
             order_repo.create(
                 session=session,
                 db_obj=OrderCatalogItemAnalyte(
                     order_item_id=order_item.id,
-                    catalog_item_analyte_id=analyte.id,
-                    sort_order=analyte.sort_order,
+                    analyte_id=analyte_detail.analyte_id,
+                    catalog_item_analyte_id=attachment.id if attachment else None,
+                    sort_order=analyte_detail.sort_order,
                 ),
             )
 
@@ -504,6 +530,7 @@ def _snapshot_order(
         "patient_context_id": (
             str(order.patient_context_id) if order.patient_context_id else None
         ),
+        "status": order.status.value,
         "notes": order.notes,
         "catalog_ids": [str(item.catalog_id) for item, _ in items],
         "items": [
@@ -522,9 +549,198 @@ def _snapshot_order(
         ],
         "discount": str(invoice.discount),
         "net_amount": str(invoice.net_amount),
+        "amount_paid": str(invoice.amount_paid),
+        "payment_status": invoice.payment_status.value,
         "invoice_id": str(invoice.id),
         "invoice_version": invoice.version,
     }
+
+
+def _analyte_detail(
+    *,
+    analyte: Analyte,
+    sort_order: int,
+    unit: Unit | None = None,
+    has_result: bool = False,
+    has_verified_result: bool = False,
+) -> OrderAnalyteDetailPublic:
+    return OrderAnalyteDetailPublic(
+        analyte_id=analyte.id,
+        analyte_code=analyte.code,
+        analyte_name=analyte.name,
+        analyte_data_type=analyte.data_type,
+        unit_name=unit.name if unit else None,
+        sort_order=sort_order,
+        has_result=has_result,
+        has_verified_result=has_verified_result,
+    )
+
+
+def _resolve_analytes(
+    *,
+    session: Session,
+    catalog_id: uuid.UUID,
+    analyte_ids: list[uuid.UUID] | None,
+) -> list[tuple[CatalogItemAnalyte | None, Analyte, Unit | None]]:
+    if analyte_ids is None:
+        return list(
+            session.exec(
+                select(CatalogItemAnalyte, Analyte, Unit)
+                .join(Analyte, CatalogItemAnalyte.analyte_id == Analyte.id)
+                .join(Unit, Analyte.unit_id == Unit.id, isouter=True)
+                .where(
+                    CatalogItemAnalyte.catalog_item_id == catalog_id,
+                    Analyte.is_deleted == False,  # noqa: E712
+                )
+                .order_by(col(CatalogItemAnalyte.sort_order).asc())
+            ).all()
+        )
+    if len(analyte_ids) != len(set(analyte_ids)):
+        raise BusinessRuleError("Un analyte ne peut être ajouté qu'une seule fois")
+    if not analyte_ids:
+        return []
+    rows = list(
+        session.exec(
+            select(Analyte, Unit)
+            .join(Unit, Analyte.unit_id == Unit.id, isouter=True)
+            .where(
+                Analyte.id.in_(analyte_ids),
+                Analyte.is_deleted == False,  # noqa: E712
+            )
+        ).all()
+    )
+    by_id = {analyte.id: (analyte, unit) for analyte, unit in rows}
+    if set(analyte_ids) != set(by_id):
+        raise BusinessRuleError("Un analyte sélectionné n'est pas disponible")
+    attachments = {
+        attachment.analyte_id: attachment
+        for attachment in session.exec(
+            select(CatalogItemAnalyte).where(
+                CatalogItemAnalyte.catalog_item_id == catalog_id,
+                CatalogItemAnalyte.analyte_id.in_(analyte_ids),
+            )
+        ).all()
+    }
+    return [
+        (attachments.get(analyte_id), *by_id[analyte_id])
+        for analyte_id in analyte_ids
+    ]
+
+
+def _get_order_analytes(
+    *, session: Session, item_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[OrderAnalyteDetailPublic]]:
+    if not item_ids:
+        return {}
+    result_rows = list(
+        session.exec(
+            select(AnalyteResult).where(
+                AnalyteResult.order_item_id.in_(item_ids),
+                AnalyteResult.is_superseded == False,  # noqa: E712
+            )
+        ).all()
+    )
+    result_keys = {(result.order_item_id, result.analyte_id) for result in result_rows}
+    verified_keys = {
+        (result.order_item_id, result.analyte_id)
+        for result in result_rows
+        if result.status == "verified"
+    }
+    rows = session.exec(
+        select(OrderCatalogItemAnalyte, Analyte, Unit)
+        .join(Analyte, OrderCatalogItemAnalyte.analyte_id == Analyte.id)
+        .join(Unit, Analyte.unit_id == Unit.id, isouter=True)
+        .where(
+            OrderCatalogItemAnalyte.order_item_id.in_(item_ids),
+            OrderCatalogItemAnalyte.is_active == True,  # noqa: E712
+        )
+        .order_by(
+            col(OrderCatalogItemAnalyte.order_item_id).asc(),
+            col(OrderCatalogItemAnalyte.sort_order).asc(),
+        )
+    ).all()
+    grouped: dict[uuid.UUID, list[OrderAnalyteDetailPublic]] = {}
+    for snapshot, analyte, unit in rows:
+        key = (snapshot.order_item_id, analyte.id)
+        grouped.setdefault(snapshot.order_item_id, []).append(
+            _analyte_detail(
+                analyte=analyte,
+                unit=unit,
+                sort_order=snapshot.sort_order,
+                has_result=key in result_keys,
+                has_verified_result=key in verified_keys,
+            )
+        )
+    return grouped
+
+
+def _apply_item_analytes(
+    *,
+    session: Session,
+    item: OrderItem,
+    analyte_ids: list[uuid.UUID],
+    revision: OrderRevision,
+    reason: str,
+) -> tuple[int, int, int]:
+    resolved = _resolve_analytes(
+        session=session,
+        catalog_id=item.catalog_id,
+        analyte_ids=analyte_ids,
+    )
+    existing = {
+        snapshot.analyte_id: snapshot
+        for snapshot in session.exec(
+            select(OrderCatalogItemAnalyte).where(
+                OrderCatalogItemAnalyte.order_item_id == item.id
+            )
+        ).all()
+    }
+    desired = set(analyte_ids)
+    added = 0
+    restored = 0
+    removed = 0
+    for snapshot in existing.values():
+        if snapshot.analyte_id in desired:
+            continue
+        if snapshot.is_active:
+            snapshot.is_active = False
+            snapshot.removed_revision_id = revision.id
+            snapshot.removal_reason = reason
+            session.add(snapshot)
+            removed += 1
+            for result in session.exec(
+                select(AnalyteResult).where(
+                    AnalyteResult.order_item_id == item.id,
+                    AnalyteResult.analyte_id == snapshot.analyte_id,
+                    AnalyteResult.is_superseded == False,  # noqa: E712
+                )
+            ).all():
+                result.is_superseded = True
+                result.superseded_revision_id = revision.id
+                session.add(result)
+    for index, (attachment, analyte, _unit) in enumerate(resolved):
+        snapshot = existing.get(analyte.id)
+        if snapshot is None:
+            order_repo.create(
+                session=session,
+                db_obj=OrderCatalogItemAnalyte(
+                    order_item_id=item.id,
+                    analyte_id=analyte.id,
+                    catalog_item_analyte_id=attachment.id if attachment else None,
+                    sort_order=index,
+                ),
+            )
+            added += 1
+            continue
+        if not snapshot.is_active:
+            restored += 1
+        snapshot.is_active = True
+        snapshot.sort_order = index
+        snapshot.catalog_item_analyte_id = attachment.id if attachment else None
+        snapshot.removed_revision_id = None
+        snapshot.removal_reason = None
+        session.add(snapshot)
+    return added, restored, removed
 
 
 def _create_order_item(
@@ -552,21 +768,196 @@ def _create_order_item(
             ],
         ),
     )
-    analytes = session.exec(
-        select(CatalogItemAnalyte).where(
-            CatalogItemAnalyte.catalog_item_id == preview_item.catalog_id
-        )
-    ).all()
-    for analyte in analytes:
+    for analyte_detail in preview_item.analytes:
+        attachment = session.exec(
+            select(CatalogItemAnalyte).where(
+                CatalogItemAnalyte.catalog_item_id == preview_item.catalog_id,
+                CatalogItemAnalyte.analyte_id == analyte_detail.analyte_id,
+            )
+        ).first()
         order_repo.create(
             session=session,
             db_obj=OrderCatalogItemAnalyte(
                 order_item_id=item.id,
-                catalog_item_analyte_id=analyte.id,
-                sort_order=analyte.sort_order,
+                analyte_id=analyte_detail.analyte_id,
+                catalog_item_analyte_id=attachment.id if attachment else None,
+                sort_order=analyte_detail.sort_order,
             ),
         )
     return item
+
+
+def add_reflex_catalog(
+    *,
+    session: Session,
+    order: Order,
+    catalog_id: uuid.UUID,
+    performed_by_id: uuid.UUID,
+) -> set[uuid.UUID]:
+    """Idempotently add a reflex catalog selection and reissue billing."""
+    existing_rows = order_repo.get_items(session=session, order_id=order.id)
+    existing_ids = {item.catalog_id for item, _ in existing_rows}
+    tests, sources = _expand_catalog(session=session, catalog_ids=[catalog_id])
+    missing = [test for test in tests.values() if test.id not in existing_ids]
+    if not missing:
+        return set()
+
+    invoice = order_repo.get_invoice(session=session, order_id=order.id)
+    if invoice is None:
+        raise NotFoundError("Facture active non trouvée")
+    provider = None
+    if order.patient_insurance_id is not None:
+        insurance = session.get(PatientInsurance, order.patient_insurance_id)
+        if insurance is not None:
+            provider = session.get(
+                InsuranceProvider, insurance.insurance_provider_id
+            )
+    revision = order_repo.create(
+        session=session,
+        db_obj=OrderRevision(
+            order_id=order.id,
+            revision_number=order.revision_number + 1,
+            correction_reason="Ajout automatique par règle réflexe",
+            old_values=_snapshot_order(
+                order=order, items=existing_rows, invoice=invoice
+            ),
+            new_values={},
+            effects={"reflex_catalog_id": str(catalog_id)},
+            performed_by_id=performed_by_id,
+        ),
+    )
+    order.revision_number = revision.revision_number
+    session.add(order)
+    next_sort = max((item.sort_order for item, _ in existing_rows), default=-1) + 1
+    added: dict[uuid.UUID, OrderItem] = {}
+    for offset, test in enumerate(missing):
+        charged = test.price
+        insured = False
+        provider_name = None
+        if provider is not None:
+            pricing = session.exec(
+                select(InsurancePricing).where(
+                    InsurancePricing.insurance_provider_id == provider.id,
+                    InsurancePricing.catalog_id == test.id,
+                )
+            ).first()
+            if pricing is not None:
+                charged = pricing.insurance_price
+                insured = True
+                provider_name = provider.name
+        added[test.id] = _create_order_item(
+            session=session,
+            order_id=order.id,
+            preview_item=OrderPreviewItemPublic(
+                catalog_id=test.id,
+                catalog_code=test.code,
+                catalog_name=test.name,
+                catalog_price=_money(test.price),
+                price_charged=_money(charged),
+                is_covered_by_insurance=insured,
+                insurance_provider_name=provider_name,
+                source_catalog_ids=sorted(sources[test.id], key=str),
+                analytes=[
+                    _analyte_detail(analyte=analyte, unit=unit, sort_order=index)
+                    for index, (_attachment, analyte, unit) in enumerate(
+                        _resolve_analytes(
+                            session=session,
+                            catalog_id=test.id,
+                            analyte_ids=None,
+                        )
+                    )
+                ],
+            ),
+            sort_order=next_sort + offset,
+            revision_id=revision.id,
+        )
+        added[test.id].is_reflex_added = True
+        session.add(added[test.id])
+
+    active_specimens = list(
+        session.exec(
+            select(OrderSpecimen).where(
+                OrderSpecimen.order_id == order.id,
+                OrderSpecimen.is_superseded == False,  # noqa: E712
+            )
+        ).all()
+    )
+    by_type = {specimen.specimen_type_id: specimen for specimen in active_specimens}
+    requirements = session.exec(
+        select(CatalogSpecimenRequirement).where(
+            CatalogSpecimenRequirement.catalog_id.in_(list(added))
+        )
+    ).all()
+    for requirement in requirements:
+        specimen = by_type.get(requirement.specimen_type_id)
+        if specimen is None:
+            specimen = order_repo.create(
+                session=session,
+                db_obj=OrderSpecimen(
+                    order_id=order.id,
+                    specimen_type_id=requirement.specimen_type_id,
+                    status=SpecimenStatus.pending,
+                    required_volume_ml=requirement.volume_ml,
+                    collection_instructions=requirement.instructions,
+                ),
+            )
+            by_type[specimen.specimen_type_id] = specimen
+        order_repo.create(
+            session=session,
+            db_obj=OrderItemSpecimen(
+                order_item_id=added[requirement.catalog_id].id,
+                order_specimen_id=specimen.id,
+            ),
+        )
+
+    all_rows = order_repo.get_items(session=session, order_id=order.id)
+    total = _money(
+        sum((item.price_charged for item, _ in all_rows), Decimal("0"))
+    )
+    discount = min(invoice.discount, total)
+    preview = OrderPreviewPublic(
+        items=[
+            OrderPreviewItemPublic(
+                catalog_id=item.catalog_id,
+                catalog_code=catalog.code,
+                catalog_name=catalog.name,
+                catalog_price=item.catalog_price,
+                price_charged=item.price_charged,
+                is_covered_by_insurance=item.is_covered_by_insurance,
+                insurance_provider_name=item.insurance_provider_name,
+                price_override_reason=item.price_override_reason,
+                source_catalog_ids=[
+                    uuid.UUID(value) for value in item.source_catalog_ids
+                ],
+            )
+            for item, catalog in all_rows
+        ],
+        specimens=[],
+        total_amount=total,
+        discount=discount,
+        net_amount=_money(total - discount),
+        initial_payment_amount=Decimal("0"),
+        balance_due=Decimal("0"),
+    )
+    replacement, _ = _reissue_for_revision(
+        session=session,
+        invoice=invoice,
+        preview=preview,
+        revision=revision,
+        created_by_id=performed_by_id,
+    )
+    _update_commission_for_revision(
+        session=session,
+        order=order,
+        old_doctor_id=order.doctor_id,
+        preview=preview,
+        revision=revision,
+    )
+    revision.new_values = _snapshot_order(
+        order=order, items=all_rows, invoice=replacement
+    )
+    session.add(revision)
+    return set(added)
 
 
 def _reissue_for_revision(
@@ -738,6 +1129,186 @@ def _update_commission_for_revision(
     return adjustment
 
 
+def _refunded_amount(*, session: Session, payment_id: uuid.UUID) -> Decimal:
+    return _money(
+        sum(
+            (
+                refund.amount
+                for refund in session.exec(
+                    select(PaymentRefund).where(
+                        PaymentRefund.payment_id == payment_id
+                    )
+                ).all()
+            ),
+            Decimal("0.00"),
+        )
+    )
+
+
+def _refund_invoice_for_cancellation(
+    *,
+    session: Session,
+    invoice: Invoice,
+    reason: str,
+    refunded_by_id: uuid.UUID,
+) -> tuple[int, Decimal]:
+    from app.services import billing as billing_service
+
+    refund_count = 0
+    refund_total = Decimal("0.00")
+    for payment, _method in order_repo.get_payments(
+        session=session, invoice_id=invoice.id
+    ):
+        available = _money(
+            payment.amount
+            - _refunded_amount(session=session, payment_id=payment.id)
+        )
+        if available <= 0:
+            continue
+        refund = order_repo.create(
+            session=session,
+            db_obj=PaymentRefund(
+                payment_id=payment.id,
+                amount=available,
+                payment_method_id=payment.payment_method_id,
+                reason=reason,
+                refunded_by_id=refunded_by_id,
+            ),
+        )
+        payment.status = PaymentTransactionStatus.refunded
+        session.add(payment)
+        session.add(
+            AuditLog(
+                table_name="payment_refunds",
+                record_id=refund.id,
+                action=AuditAction.insert,
+                new_values={
+                    "amount": str(available),
+                    "reason": reason,
+                    "source": "order_cancellation",
+                },
+                performed_by_id=refunded_by_id,
+            )
+        )
+        refund_count += 1
+        refund_total = _money(refund_total + available)
+    billing_service.recalculate_payment(session=session, invoice=invoice)
+    return refund_count, refund_total
+
+
+def _cancel_commission(
+    *, session: Session, order: Order, revision: OrderRevision
+) -> Decimal:
+    adjustment = Decimal("0.00")
+    entries = session.exec(
+        select(DoctorCommissionEntry).where(DoctorCommissionEntry.order_id == order.id)
+    ).all()
+    for entry in entries:
+        if entry.commission_amount == 0:
+            continue
+        if entry.payout_status == PayoutStatus.paid:
+            amount = _money(-entry.commission_amount)
+            order_repo.create(
+                session=session,
+                db_obj=DoctorCommissionAdjustment(
+                    commission_entry_id=entry.id,
+                    order_revision_id=revision.id,
+                    amount=amount,
+                    reason=revision.correction_reason,
+                ),
+            )
+            adjustment = _money(adjustment + amount)
+            continue
+        entry.insured_commission_amount = Decimal("0.00")
+        entry.non_insured_commission_amount = Decimal("0.00")
+        entry.commission_amount = Decimal("0.00")
+        session.add(entry)
+    return adjustment
+
+
+def cancel_order(
+    *,
+    session: Session,
+    order_id: uuid.UUID,
+    request: OrderCancelRequest,
+    performed_by_id: uuid.UUID,
+) -> OrderDetailPublic:
+    order = order_repo.get_for_update(session=session, order_id=order_id)
+    if order is None:
+        raise NotFoundError("Demande non trouvée")
+    if order.status == OrderStatus.cancelled:
+        raise ConflictError("Cette demande est déjà annulée")
+    if order.revision_number != request.expected_revision:
+        raise ConflictError(
+            "La demande a été modifiée par un autre utilisateur. Rechargez la page."
+        )
+    reason = request.reason.strip()
+    if not reason:
+        raise BusinessRuleError("Le motif d'annulation est requis")
+    invoice = order_repo.get_invoice(session=session, order_id=order.id)
+    if invoice is None:
+        raise NotFoundError("Facture de la demande non trouvée")
+    item_rows = order_repo.get_items(session=session, order_id=order.id)
+    old_snapshot = _snapshot_order(order=order, items=item_rows, invoice=invoice)
+    reports = order_repo.get_active_reports(session=session, order_id=order.id)
+    revision = order_repo.create(
+        session=session,
+        db_obj=OrderRevision(
+            order_id=order.id,
+            revision_number=order.revision_number + 1,
+            correction_reason=reason,
+            old_values=old_snapshot,
+            new_values={},
+            effects={},
+            performed_by_id=performed_by_id,
+        ),
+    )
+    for report in reports:
+        report.is_voided = True
+        session.add(report)
+    refund_count, refund_total = _refund_invoice_for_cancellation(
+        session=session,
+        invoice=invoice,
+        reason=reason,
+        refunded_by_id=performed_by_id,
+    )
+    commission_adjustment = _cancel_commission(
+        session=session, order=order, revision=revision
+    )
+    order.status = OrderStatus.cancelled
+    order.revision_number = revision.revision_number
+    session.add(order)
+    revision.new_values = _snapshot_order(
+        order=order, items=item_rows, invoice=invoice
+    )
+    revision.effects = {
+        "cancelled": True,
+        "refund_count": refund_count,
+        "refund_total": str(refund_total),
+        "voided_report_count": len(reports),
+        "invoice_reissued": False,
+        "commission_adjustment": str(commission_adjustment),
+    }
+    session.add(revision)
+    session.add(
+        AuditLog(
+            table_name="orders",
+            record_id=order.id,
+            action=AuditAction.update,
+            old_values=revision.old_values,
+            new_values={
+                **revision.new_values,
+                "revision_id": str(revision.id),
+                "cancellation_reason": reason,
+                "effects": revision.effects,
+            },
+            performed_by_id=performed_by_id,
+        )
+    )
+    session.commit()
+    return get_order_detail(session=session, order_id=order.id)
+
+
 def update_order(
     *,
     session: Session,
@@ -750,6 +1321,8 @@ def update_order(
     order = order_repo.get_for_update(session=session, order_id=order_id)
     if order is None:
         raise NotFoundError("Demande non trouvée")
+    if order.status == OrderStatus.cancelled:
+        raise ConflictError("Une demande annulée ne peut pas être modifiée")
     if order.revision_number != request.expected_revision:
         raise ConflictError(
             "La demande a été modifiée par un autre utilisateur. Rechargez la page."
@@ -760,6 +1333,30 @@ def update_order(
         )
     reason = request.correction_reason.strip()
     existing_items = order_repo.get_items(session=session, order_id=order.id)
+    existing_item_by_catalog = {item.catalog_id: item for item, _ in existing_items}
+    existing_analyte_ids = {
+        catalog_id: [
+            snapshot.analyte_id
+            for snapshot in session.exec(
+                select(OrderCatalogItemAnalyte)
+                .where(
+                    OrderCatalogItemAnalyte.order_item_id == item.id,
+                    OrderCatalogItemAnalyte.is_active == True,  # noqa: E712
+                )
+                .order_by(col(OrderCatalogItemAnalyte.sort_order).asc())
+            ).all()
+        ]
+        for catalog_id, item in existing_item_by_catalog.items()
+    }
+    requested_analyte_ids = {
+        selection.catalog_id: selection.analyte_ids
+        for selection in request.item_analytes
+    }
+    analytes_changed = any(
+        existing_analyte_ids.get(catalog_id) != analyte_ids
+        for catalog_id, analyte_ids in requested_analyte_ids.items()
+        if catalog_id in existing_item_by_catalog
+    )
     allowed_unavailable_ids = {
         item.catalog_id for item, _ in existing_items
     } | {
@@ -816,6 +1413,7 @@ def update_order(
     old_by_catalog = {item.catalog_id: item for item, _ in old_items}
     current_items: dict[uuid.UUID, OrderItem] = {}
     superseded_item_ids: list[uuid.UUID] = []
+    analyte_effects = [0, 0, 0]
     for index, preview_item in enumerate(preview.items):
         existing = old_by_catalog.pop(preview_item.catalog_id, None)
         if existing is not None:
@@ -833,6 +1431,23 @@ def update_order(
                 str(value) for value in preview_item.source_catalog_ids
             ]
             session.add(existing)
+            if any(
+                selection.catalog_id == preview_item.catalog_id
+                for selection in request.item_analytes
+            ):
+                effects = _apply_item_analytes(
+                    session=session,
+                    item=existing,
+                    analyte_ids=[
+                        analyte.analyte_id for analyte in preview_item.analytes
+                    ],
+                    revision=revision,
+                    reason=reason,
+                )
+                analyte_effects = [
+                    current + value
+                    for current, value in zip(analyte_effects, effects, strict=True)
+                ]
             current_items[preview_item.catalog_id] = existing
         else:
             current_items[preview_item.catalog_id] = _create_order_item(
@@ -937,11 +1552,16 @@ def update_order(
         request.patient_id != uuid.UUID(old_snapshot["patient_id"])
         or set(old_snapshot["catalog_ids"])
         != {str(item.catalog_id) for item in preview.items}
+        or analytes_changed
     )
     if clinical_changed:
         for report in reports:
             report.is_voided = True
             session.add(report)
+    if analytes_changed:
+        from app.services import result as result_service
+
+        result_service._refresh_order_status(session=session, order=order)
 
     financial_changed = (
         invoice.total_amount != preview.total_amount
@@ -984,6 +1604,9 @@ def update_order(
         "reused_collected_specimen_count": reused_collected,
         "created_pending_specimen_count": created_pending,
         "voided_report_count": len(reports) if clinical_changed else 0,
+        "added_analyte_count": analyte_effects[0],
+        "restored_analyte_count": analyte_effects[1],
+        "removed_analyte_count": analyte_effects[2],
         "invoice_reissued": financial_changed,
         "customer_credit": str(credit),
         "commission_adjustment": str(commission_adjustment),
@@ -1115,14 +1738,20 @@ def get_order_detail(*, session: Session, order_id: uuid.UUID) -> OrderDetailPub
     if invoice is None:
         raise NotFoundError("Facture de la demande non trouvée")
     specimen_ids = order_repo.get_item_specimen_ids(session=session, order_id=order_id)
+    item_rows = order_repo.get_items(session=session, order_id=order_id)
+    analytes_by_item = _get_order_analytes(
+        session=session,
+        item_ids=[item.id for item, _ in item_rows],
+    )
     items = [
         OrderItemDetailPublic(
             **item.model_dump(),
             catalog_code=catalog.code,
             catalog_name=catalog.name,
             specimen_ids=specimen_ids.get(item.id, []),
+            analytes=analytes_by_item.get(item.id, []),
         )
-        for item, catalog in order_repo.get_items(session=session, order_id=order_id)
+        for item, catalog in item_rows
     ]
     specimens = [
         OrderSpecimenDetailPublic(
@@ -1161,6 +1790,130 @@ def get_order_detail(*, session: Session, order_id: uuid.UUID) -> OrderDetailPub
     )
 
 
+def customize_order_item_analytes(
+    *,
+    session: Session,
+    order_id: uuid.UUID,
+    item_id: uuid.UUID,
+    request: OrderItemAnalyteCustomizeRequest,
+    performed_by_id: uuid.UUID,
+) -> OrderDetailPublic:
+    order = order_repo.get_for_update(session=session, order_id=order_id)
+    if order is None:
+        raise NotFoundError("Demande non trouvée")
+    if order.status == OrderStatus.cancelled:
+        raise ConflictError("Une demande annulée ne peut pas être modifiée")
+    if order.revision_number != request.expected_revision:
+        raise ConflictError(
+            "La demande a été modifiée par un autre utilisateur. Rechargez la page."
+        )
+    item = session.get(OrderItem, item_id)
+    if item is None or item.order_id != order.id or not item.is_active:
+        raise NotFoundError("Examen de la demande non trouvé")
+    current = list(
+        session.exec(
+            select(OrderCatalogItemAnalyte)
+            .where(
+                OrderCatalogItemAnalyte.order_item_id == item.id,
+                OrderCatalogItemAnalyte.is_active == True,  # noqa: E712
+            )
+            .order_by(col(OrderCatalogItemAnalyte.sort_order).asc())
+        ).all()
+    )
+    current_ids = [snapshot.analyte_id for snapshot in current]
+    if current_ids == request.analyte_ids:
+        return get_order_detail(session=session, order_id=order.id)
+    removed_ids = set(current_ids) - set(request.analyte_ids)
+    removed_has_results = bool(
+        removed_ids
+        and session.exec(
+            select(AnalyteResult.id).where(
+                AnalyteResult.order_item_id == item.id,
+                AnalyteResult.analyte_id.in_(removed_ids),
+                AnalyteResult.is_superseded == False,  # noqa: E712
+            )
+        ).first()
+    )
+    reason = (request.reason or "").strip()
+    if (order.status == OrderStatus.completed or removed_has_results) and not reason:
+        raise BusinessRuleError(
+            "Le motif est requis pour modifier des analytes avec des résultats"
+        )
+    reason = reason or "Personnalisation des analytes de la demande"
+    invoice = order_repo.get_invoice(session=session, order_id=order.id)
+    if invoice is None:
+        raise NotFoundError("Facture de la demande non trouvée")
+    item_rows = order_repo.get_items(session=session, order_id=order.id)
+    old_snapshot = _snapshot_order(order=order, items=item_rows, invoice=invoice)
+    old_snapshot["item_analytes"] = {
+        str(item.id): [str(analyte_id) for analyte_id in current_ids]
+    }
+    revision = order_repo.create(
+        session=session,
+        db_obj=OrderRevision(
+            order_id=order.id,
+            revision_number=order.revision_number + 1,
+            correction_reason=reason,
+            old_values=old_snapshot,
+            new_values={},
+            effects={},
+            performed_by_id=performed_by_id,
+        ),
+    )
+    added, restored, removed = _apply_item_analytes(
+        session=session,
+        item=item,
+        analyte_ids=request.analyte_ids,
+        revision=revision,
+        reason=reason,
+    )
+    reports = order_repo.get_active_reports(session=session, order_id=order.id)
+    for report in reports:
+        report.is_voided = True
+        session.add(report)
+    order.revision_number = revision.revision_number
+    session.add(order)
+    from app.services import result as result_service
+
+    result_service._refresh_order_status(session=session, order=order)
+    new_snapshot = _snapshot_order(order=order, items=item_rows, invoice=invoice)
+    new_snapshot["item_analytes"] = {
+        str(item.id): [str(analyte_id) for analyte_id in request.analyte_ids]
+    }
+    revision.new_values = new_snapshot
+    revision.effects = {
+        "order_item_id": str(item.id),
+        "added_analyte_count": added,
+        "restored_analyte_count": restored,
+        "removed_analyte_count": removed,
+        "voided_report_count": len(reports),
+        "invoice_reissued": False,
+        "commission_adjustment": "0.00",
+    }
+    session.add(revision)
+    session.add(
+        AuditLog(
+            table_name="order_catalog_item_analytes",
+            record_id=item.id,
+            action=AuditAction.update,
+            old_values={
+                "analyte_ids": [str(analyte_id) for analyte_id in current_ids]
+            },
+            new_values={
+                "analyte_ids": [
+                    str(analyte_id) for analyte_id in request.analyte_ids
+                ],
+                "reason": reason,
+                "revision_id": str(revision.id),
+                "effects": revision.effects,
+            },
+            performed_by_id=performed_by_id,
+        )
+    )
+    session.commit()
+    return get_order_detail(session=session, order_id=order.id)
+
+
 def collect_payment(
     *,
     session: Session,
@@ -1171,6 +1924,11 @@ def collect_payment(
     invoice = session.get(Invoice, invoice_id)
     if invoice is None or invoice.is_voided:
         raise NotFoundError("Facture non trouvée")
+    order = session.get(Order, invoice.order_id)
+    if order is not None and order.status == OrderStatus.cancelled:
+        raise ConflictError(
+            "Un paiement ne peut pas être enregistré sur une demande annulée"
+        )
     method = session.get(PaymentMethod, payment_in.payment_method_id)
     if method is None or method.is_deleted:
         raise BusinessRuleError("Méthode de paiement non disponible")

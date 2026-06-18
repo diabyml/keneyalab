@@ -1,4 +1,8 @@
 import type { InvoiceDetailPublic } from "@/client"
+import {
+  LabDocumentFooter,
+  LabDocumentHeader,
+} from "@/components/Common/LabDocumentIdentity"
 import { Code128Barcode } from "@/components/Orders/Code128Barcode"
 import { formatDateTime, formatMoney } from "@/components/Orders/utils"
 import { Separator } from "@/components/ui/separator"
@@ -10,11 +14,7 @@ export function InvoiceThermalReceipt({
 }) {
   return (
     <article className="thermal-receipt print-only">
-      <header className="text-center">
-        <h1 className="text-base font-bold">KENEYA LAB</h1>
-        <p>Laboratoire d'analyses médicales</p>
-        <p>Facture / reçu</p>
-      </header>
+      <LabDocumentHeader title="Facture / reçu" compact />
       <Separator className="my-2" />
       <div>Facture : {invoice.invoice_number}</div>
       <div>Version : {invoice.version}</div>
@@ -67,7 +67,7 @@ export function InvoiceThermalReceipt({
       <div className="my-3">
         <Code128Barcode value={invoice.invoice_number} />
       </div>
-      <p className="text-center">Merci pour votre confiance.</p>
+      <LabDocumentFooter compact />
     </article>
   )
 }

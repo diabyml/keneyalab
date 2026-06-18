@@ -1,5 +1,6 @@
 from sqlmodel import Session, create_engine, select
 
+from app.core import audit as _audit  # noqa: F401
 from app.core.config import settings
 from app.core.rbac_init import seed_rbac
 from app.models import User, UserCreate

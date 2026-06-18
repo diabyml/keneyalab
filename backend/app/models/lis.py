@@ -22,6 +22,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSONB
+from pydantic import AnyHttpUrl, EmailStr, TypeAdapter, field_validator
 from sqlmodel import Field, SQLModel
 
 from .common import get_datetime_utc
@@ -177,6 +178,19 @@ class AuditAction(str, Enum):
     insert = "insert"
     update = "update"
     delete = "delete"
+    login_success = "login_success"
+    login_failed = "login_failed"
+    password_recovery = "password_recovery"
+    password_reset = "password_reset"
+
+
+class AuditCategory(str, Enum):
+    clinical = "clinical"
+    workflow = "workflow"
+    finance = "finance"
+    configuration = "configuration"
+    security = "security"
+    system = "system"
 
 
 class SortOrder(str, Enum):
@@ -526,6 +540,7 @@ class AuditLogFilters(CreatedAtFilter, SortFilter, PaginationFilter):
     table_name: str | None = Field(default=None, max_length=100)
     record_id: uuid.UUID | None = None
     action: AuditAction | None = None
+    category: AuditCategory | None = None
     performed_by_id: uuid.UUID | None = None
     performed_from: datetime | None = None
     performed_to: datetime | None = None
@@ -1542,6 +1557,11 @@ class OrderLineOverride(SQLModel):
     reason: str = Field(min_length=1, max_length=500)
 
 
+class OrderItemAnalyteSelection(SQLModel):
+    catalog_id: uuid.UUID
+    analyte_ids: list[uuid.UUID]
+
+
 class OrderPaymentInput(SQLModel):
     amount: Decimal = Field(gt=0)
     payment_method_id: uuid.UUID
@@ -1554,6 +1574,7 @@ class OrderPreviewRequest(SQLModel):
     patient_context_id: uuid.UUID | None = None
     notes: str | None = None
     catalog_ids: list[uuid.UUID] = Field(min_length=1)
+    item_analytes: list[OrderItemAnalyteSelection] = Field(default_factory=list)
     line_overrides: list[OrderLineOverride] = Field(default_factory=list)
     discount: Decimal = Field(default=Decimal("0.00"), ge=0)
     discount_reason: str | None = Field(default=None, max_length=500)
@@ -1566,6 +1587,11 @@ class OrderCreate(OrderPreviewRequest):
 
 class OrderUpdate(OrderPreviewRequest):
     correction_reason: str = Field(min_length=1, max_length=1000)
+    expected_revision: int = Field(ge=1)
+
+
+class OrderCancelRequest(SQLModel):
+    reason: str = Field(min_length=1, max_length=1000)
     expected_revision: int = Field(ge=1)
 
 
@@ -1779,14 +1805,22 @@ class OrderCatalogItemAnalyte(SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint(
             "order_item_id",
-            "catalog_item_analyte_id",
+            "analyte_id",
             name="uq_order_catalog_item_analyte",
         ),
     )
 
     id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
     order_item_id: uuid.UUID = Field(foreign_key="order_items.id", ondelete="CASCADE")
-    catalog_item_analyte_id: uuid.UUID = Field(foreign_key="catalog_item_analytes.id")
+    analyte_id: uuid.UUID = Field(foreign_key="analytes.id")
+    catalog_item_analyte_id: uuid.UUID | None = Field(
+        default=None, foreign_key="catalog_item_analytes.id"
+    )
+    is_active: bool = Field(default=True)
+    removed_revision_id: uuid.UUID | None = Field(
+        default=None, foreign_key="order_revisions.id"
+    )
+    removal_reason: str | None = Field(default=None, sa_column=Column(Text))
     sort_order: int = Field(default=0)
     created_at: datetime = Field(
         default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
@@ -1798,8 +1832,27 @@ class OrderCatalogItemAnalyte(SQLModel, table=True):
 
 class OrderCatalogItemAnalytePublic(TimestampPublic):
     order_item_id: uuid.UUID
-    catalog_item_analyte_id: uuid.UUID
+    analyte_id: uuid.UUID
+    catalog_item_analyte_id: uuid.UUID | None = None
+    is_active: bool
     sort_order: int
+
+
+class OrderAnalyteDetailPublic(SQLModel):
+    analyte_id: uuid.UUID
+    analyte_code: str
+    analyte_name: str
+    analyte_data_type: AnalyteDataType
+    unit_name: str | None = None
+    sort_order: int
+    has_result: bool = False
+    has_verified_result: bool = False
+
+
+class OrderItemAnalyteCustomizeRequest(SQLModel):
+    analyte_ids: list[uuid.UUID]
+    reason: str | None = Field(default=None, max_length=1000)
+    expected_revision: int = Field(ge=1)
 
 
 class AnalyteResultBase(SQLModel):
@@ -1928,6 +1981,7 @@ class CriticalNotification(CriticalNotificationBase, table=True):
     )
     acknowledged: bool = Field(default=False)
     acknowledged_at: datetime | None = Field(default=None, sa_type=TIMESTAMPTZ)
+    acknowledged_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
     created_at: datetime = Field(
         default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
     )
@@ -1940,10 +1994,218 @@ class CriticalNotificationPublic(CriticalNotificationBase, TimestampPublic):
     notified_at: datetime | None = None
     acknowledged: bool
     acknowledged_at: datetime | None = None
+    acknowledged_by_id: uuid.UUID | None = None
 
 
 class CriticalNotificationsPublic(SQLModel):
     data: list[CriticalNotificationPublic]
+    count: int
+
+
+class ResultEntryValue(SQLModel):
+    analyte_id: uuid.UUID
+    specimen_id: uuid.UUID
+    result_value: str
+    instrument_id: uuid.UUID | None = None
+
+
+class ResultBulkEntryRequest(SQLModel):
+    order_item_id: uuid.UUID
+    values: list[ResultEntryValue] = Field(min_length=1)
+
+
+class ResultCommentRequest(SQLModel):
+    comment: str = Field(min_length=1, max_length=4000)
+
+
+class ResultCorrectionRequest(SQLModel):
+    result_value: str
+    reason: str = Field(min_length=1, max_length=1000)
+    instrument_id: uuid.UUID | None = None
+
+
+class ResultCorrectionHistoryPublic(SQLModel):
+    id: uuid.UUID
+    old_value: str | None = None
+    new_value: str | None = None
+    reason: str
+    performed_by_name: str | None = None
+    performed_at: datetime | None = None
+
+
+class ResultValidationOutcomePublic(SQLModel):
+    classification: str
+    message: str
+    is_abnormal: bool = False
+    is_critical: bool = False
+    delta_flag: bool = False
+
+
+class ResultConsistencyOutcomePublic(SQLModel):
+    rule_id: uuid.UUID
+    name: str
+    severity: RuleSeverity
+    message: str
+
+
+class ResultReflexOutcomePublic(SQLModel):
+    rule_id: uuid.UUID
+    catalog_id: uuid.UUID
+    catalog_code: str
+    catalog_name: str
+    added: bool
+
+
+class ResultCommentDetailPublic(AnalyteResultCommentPublic):
+    user_name: str
+
+
+class CriticalNotificationDetailPublic(CriticalNotificationPublic):
+    accession_number: str
+    patient_name: str
+    analyte_code: str
+    analyte_name: str
+    result_value: str | None = None
+    notified_by_name: str
+    notified_to_name: str
+    acknowledged_by_name: str | None = None
+
+
+class CriticalNotificationListPublic(SQLModel):
+    data: list[CriticalNotificationDetailPublic]
+    count: int
+
+
+class CriticalNotificationCountPublic(SQLModel):
+    count: int
+
+
+class CriticalRecipientPublic(SQLModel):
+    id: uuid.UUID
+    name: str
+    email: str
+
+
+class CriticalRecipientsPublic(SQLModel):
+    data: list[CriticalRecipientPublic]
+    count: int
+
+
+class ResultAnalyteWorkspacePublic(SQLModel):
+    result_id: uuid.UUID | None = None
+    analyte_id: uuid.UUID
+    analyte_code: str
+    analyte_name: str
+    data_type: AnalyteDataType
+    unit_name: str | None = None
+    options_data: Any | None = None
+    reference_text: str | None = None
+    is_calculated: bool = False
+    specimen_id: uuid.UUID
+    specimen_type_name: str
+    result_value: str | None = None
+    image_url: str | None = None
+    status: ResultStatus = ResultStatus.pending
+    validation_rule_id: uuid.UUID | None = None
+    validation: ResultValidationOutcomePublic | None = None
+    is_abnormal: bool = False
+    is_critical: bool = False
+    delta_flag: bool = False
+    resulted_by_name: str | None = None
+    resulted_at: datetime | None = None
+    verified_by_name: str | None = None
+    verified_at: datetime | None = None
+    verification_eligible: bool = False
+    verification_blocker: str | None = None
+    escalation_required: bool = False
+    critical_notifications: list[CriticalNotificationDetailPublic] = Field(
+        default_factory=list
+    )
+    comments: list[ResultCommentDetailPublic] = Field(default_factory=list)
+    corrections: list[ResultCorrectionHistoryPublic] = Field(default_factory=list)
+
+
+class ResultTestWorkspacePublic(SQLModel):
+    order_item_id: uuid.UUID
+    catalog_id: uuid.UUID
+    catalog_code: str
+    catalog_name: str
+    category_id: uuid.UUID | None = None
+    category_name: str | None = None
+    is_reflex_added: bool = False
+    analytes: list[ResultAnalyteWorkspacePublic] = Field(default_factory=list)
+    resulted_count: int = 0
+    verified_count: int = 0
+
+
+class ResultWorkspacePublic(SQLModel):
+    order_id: uuid.UUID
+    revision_number: int = 1
+    accession_number: str
+    patient_id: uuid.UUID
+    patient_identifier: str
+    patient_name: str
+    patient_date_of_birth: date
+    patient_gender: GenderType
+    patient_context_id: uuid.UUID | None = None
+    patient_context_name: str | None = None
+    doctor_name: str | None = None
+    order_status: OrderStatus
+    tests: list[ResultTestWorkspacePublic] = Field(default_factory=list)
+    total_count: int = 0
+    resulted_count: int = 0
+    verified_count: int = 0
+    consistency_outcomes: list[ResultConsistencyOutcomePublic] = Field(
+        default_factory=list
+    )
+    reflex_outcomes: list[ResultReflexOutcomePublic] = Field(default_factory=list)
+
+
+class ResultSubmissionPublic(SQLModel):
+    workspace: ResultWorkspacePublic
+    saved_result_ids: list[uuid.UUID] = Field(default_factory=list)
+    critical_result_ids: list[uuid.UUID] = Field(default_factory=list)
+    consistency_outcomes: list[ResultConsistencyOutcomePublic] = Field(
+        default_factory=list
+    )
+    reflex_outcomes: list[ResultReflexOutcomePublic] = Field(default_factory=list)
+
+
+class ResultVerificationSkipPublic(SQLModel):
+    result_id: uuid.UUID | None = None
+    order_item_id: uuid.UUID
+    analyte_id: uuid.UUID
+    specimen_id: uuid.UUID
+    analyte_name: str
+    message: str
+
+
+class ResultBulkVerificationPublic(SQLModel):
+    workspace: ResultWorkspacePublic
+    verified_count: int = 0
+    skipped_count: int = 0
+    verified_result_ids: list[uuid.UUID] = Field(default_factory=list)
+    skipped: list[ResultVerificationSkipPublic] = Field(default_factory=list)
+
+
+class ResultQueueItemPublic(SQLModel):
+    order_id: uuid.UUID
+    accession_number: str
+    patient_id: uuid.UUID
+    patient_identifier: str
+    patient_name: str
+    order_status: OrderStatus
+    category_summary: str
+    total_count: int
+    resulted_count: int
+    verified_count: int
+    abnormal_count: int
+    critical_count: int
+    created_at: datetime | None = None
+
+
+class ResultQueuePublic(SQLModel):
+    data: list[ResultQueueItemPublic]
     count: int
 
 
@@ -2172,6 +2434,102 @@ class FinanceSettings(FinanceSettingsBase, table=True):
 
 class FinanceSettingsPublic(FinanceSettingsBase, TimestampPublic):
     id: int
+    updated_by_id: uuid.UUID | None = None
+
+
+class LabSettingsBase(SQLModel):
+    display_name: str = Field(default="KENEYA LAB", min_length=1, max_length=255)
+    legal_name: str | None = Field(default=None, max_length=255)
+    slogan: str | None = Field(default=None, max_length=255)
+    address: str | None = Field(default=None, sa_column=Column(Text))
+    city: str | None = Field(default=None, max_length=120)
+    postal_code: str | None = Field(default=None, max_length=30)
+    country: str | None = Field(default=None, max_length=120)
+    primary_phone: str | None = Field(default=None, max_length=50)
+    secondary_phone: str | None = Field(default=None, max_length=50)
+    email: str | None = Field(default=None, max_length=255)
+    website: str | None = Field(default=None, max_length=255)
+    registration_number: str | None = Field(default=None, max_length=100)
+    laboratory_license: str | None = Field(default=None, max_length=100)
+    tax_id: str | None = Field(default=None, max_length=100)
+    bank_name: str | None = Field(default=None, max_length=255)
+    bank_account_holder: str | None = Field(default=None, max_length=255)
+    bank_account_number: str | None = Field(default=None, max_length=120)
+    payment_instructions: str | None = Field(default=None, sa_column=Column(Text))
+    director_name: str | None = Field(default=None, max_length=255)
+    director_title: str | None = Field(default=None, max_length=255)
+    document_footer: str | None = Field(default=None, sa_column=Column(Text))
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return str(TypeAdapter(EmailStr).validate_python(value))
+
+    @field_validator("website")
+    @classmethod
+    def validate_website(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return str(TypeAdapter(AnyHttpUrl).validate_python(value))
+
+
+class LabSettingsUpdate(SQLModel):
+    display_name: str | None = Field(default=None, min_length=1, max_length=255)
+    legal_name: str | None = Field(default=None, max_length=255)
+    slogan: str | None = Field(default=None, max_length=255)
+    address: str | None = None
+    city: str | None = Field(default=None, max_length=120)
+    postal_code: str | None = Field(default=None, max_length=30)
+    country: str | None = Field(default=None, max_length=120)
+    primary_phone: str | None = Field(default=None, max_length=50)
+    secondary_phone: str | None = Field(default=None, max_length=50)
+    email: str | None = Field(default=None, max_length=255)
+    website: str | None = Field(default=None, max_length=255)
+    registration_number: str | None = Field(default=None, max_length=100)
+    laboratory_license: str | None = Field(default=None, max_length=100)
+    tax_id: str | None = Field(default=None, max_length=100)
+    bank_name: str | None = Field(default=None, max_length=255)
+    bank_account_holder: str | None = Field(default=None, max_length=255)
+    bank_account_number: str | None = Field(default=None, max_length=120)
+    payment_instructions: str | None = None
+    director_name: str | None = Field(default=None, max_length=255)
+    director_title: str | None = Field(default=None, max_length=255)
+    document_footer: str | None = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return str(TypeAdapter(EmailStr).validate_python(value))
+
+    @field_validator("website")
+    @classmethod
+    def validate_website(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return str(TypeAdapter(AnyHttpUrl).validate_python(value))
+
+
+class LabSettings(LabSettingsBase, table=True):
+    __tablename__ = "lab_settings"
+
+    id: int = Field(default=1, primary_key=True)
+    logo_object_key: str | None = Field(default=None, max_length=500)
+    updated_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+
+
+class LabSettingsPublic(LabSettingsBase, TimestampPublic):
+    id: int
+    logo_url: str | None = None
     updated_by_id: uuid.UUID | None = None
 
 
@@ -2448,6 +2806,7 @@ class OrderPreviewItemPublic(SQLModel):
     insurance_provider_name: str | None = None
     price_override_reason: str | None = None
     source_catalog_ids: list[uuid.UUID] = Field(default_factory=list)
+    analytes: list[OrderAnalyteDetailPublic] = Field(default_factory=list)
 
 
 class OrderPreviewSpecimenPublic(SQLModel):
@@ -2492,6 +2851,7 @@ class OrderItemDetailPublic(OrderItemPublic):
     catalog_code: str
     catalog_name: str
     specimen_ids: list[uuid.UUID] = Field(default_factory=list)
+    analytes: list[OrderAnalyteDetailPublic] = Field(default_factory=list)
 
 
 class OrderSpecimenDetailPublic(OrderSpecimenPublic):
@@ -2543,6 +2903,72 @@ class SpecimenWorkspacePublic(SQLModel):
     payment_status: PaymentStatus
     balance_due: Decimal
     specimens: list[OrderSpecimenDetailPublic] = Field(default_factory=list)
+
+
+class DashboardMetricPublic(SQLModel):
+    key: str
+    label: str
+    value: int | Decimal
+    unit: str | None = None
+
+
+class DashboardStatusPointPublic(SQLModel):
+    key: str
+    label: str
+    count: int
+
+
+class DashboardTrendPointPublic(SQLModel):
+    label: str
+    orders: int = 0
+    specimens: int = 0
+    results: int = 0
+    revenue: Decimal = Decimal("0.00")
+
+
+class DashboardActionPublic(SQLModel):
+    key: str
+    label: str
+    description: str
+    href: str
+    priority: int = 0
+
+
+class DashboardOrdersPublic(SQLModel):
+    metrics: list[DashboardMetricPublic] = Field(default_factory=list)
+    status_breakdown: list[DashboardStatusPointPublic] = Field(default_factory=list)
+    recent: list[OrderListItemPublic] = Field(default_factory=list)
+
+
+class DashboardSpecimensPublic(SQLModel):
+    metrics: list[DashboardMetricPublic] = Field(default_factory=list)
+    oldest_waiting: SpecimenQueueItemPublic | None = None
+
+
+class DashboardResultsPublic(SQLModel):
+    metrics: list[DashboardMetricPublic] = Field(default_factory=list)
+
+
+class DashboardCriticalPublic(SQLModel):
+    metrics: list[DashboardMetricPublic] = Field(default_factory=list)
+    latest: list[CriticalNotificationDetailPublic] = Field(default_factory=list)
+
+
+class DashboardFinancePublic(SQLModel):
+    metrics: list[DashboardMetricPublic] = Field(default_factory=list)
+
+
+class DashboardPublic(SQLModel):
+    generated_at: datetime
+    created_from: datetime
+    created_to: datetime
+    orders: DashboardOrdersPublic | None = None
+    specimens: DashboardSpecimensPublic | None = None
+    results: DashboardResultsPublic | None = None
+    critical: DashboardCriticalPublic | None = None
+    finance: DashboardFinancePublic | None = None
+    trends: list[DashboardTrendPointPublic] = Field(default_factory=list)
+    quick_actions: list[DashboardActionPublic] = Field(default_factory=list)
 
 
 class OrderDetailPublic(OrderPublic):
@@ -2913,13 +3339,35 @@ class AuditLog(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
     table_name: str = Field(max_length=100)
-    record_id: uuid.UUID
+    record_id: uuid.UUID | None = None
     action: AuditAction = Field(
         sa_column=Column(pg_enum(AuditAction, "audit_action"), nullable=False)
     )
+    category: AuditCategory = Field(
+        default=AuditCategory.system,
+        sa_column=Column(pg_enum(AuditCategory, "audit_category"), nullable=False),
+    )
+    record_label: str | None = Field(default=None, max_length=255)
     old_values: Any | None = Field(default=None, sa_column=Column(JSONB))
     new_values: Any | None = Field(default=None, sa_column=Column(JSONB))
-    performed_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    metadata_json: Any | None = Field(
+        default=None,
+        sa_column=Column("metadata", JSONB),
+    )
+    performed_by_id: uuid.UUID | None = Field(
+        default=None,
+        foreign_key="user.id",
+        ondelete="SET NULL",
+    )
+    actor_name: str | None = Field(default=None, max_length=255)
+    actor_email: str | None = Field(default=None, max_length=255)
+    request_id: str | None = Field(default=None, max_length=100)
+    correlation_id: str | None = Field(default=None, max_length=100)
+    source: str = Field(default="system", max_length=30)
+    ip_address: str | None = Field(default=None, max_length=64)
+    user_agent: str | None = Field(default=None, max_length=500)
+    http_method: str | None = Field(default=None, max_length=10)
+    http_path: str | None = Field(default=None, max_length=500)
     performed_at: datetime = Field(
         default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
     )
@@ -2931,11 +3379,27 @@ class AuditLog(SQLModel, table=True):
 class AuditLogPublic(SQLModel):
     id: uuid.UUID
     table_name: str
-    record_id: uuid.UUID
+    record_id: uuid.UUID | None = None
     action: AuditAction
+    category: AuditCategory
+    record_label: str | None = None
     old_values: Any | None = None
     new_values: Any | None = None
+    audit_metadata: Any | None = Field(
+        default=None,
+        validation_alias="metadata",
+        serialization_alias="metadata",
+    )
     performed_by_id: uuid.UUID | None = None
+    actor_name: str | None = None
+    actor_email: str | None = None
+    request_id: str | None = None
+    correlation_id: str | None = None
+    source: str
+    ip_address: str | None = None
+    user_agent: str | None = None
+    http_method: str | None = None
+    http_path: str | None = None
     performed_at: datetime | None = None
     created_at: datetime | None = None
 
@@ -2943,6 +3407,24 @@ class AuditLogPublic(SQLModel):
 class AuditLogsPublic(SQLModel):
     data: list[AuditLogPublic]
     count: int
+
+
+class AuditSummaryPublic(SQLModel):
+    total: int
+    inserts: int
+    updates: int
+    deletes: int
+    security_events: int
+
+
+class AuditActorPublic(SQLModel):
+    id: uuid.UUID
+    name: str | None = None
+    email: str | None = None
+
+
+class AuditActorsPublic(SQLModel):
+    data: list[AuditActorPublic]
 
 
 __all__ = [

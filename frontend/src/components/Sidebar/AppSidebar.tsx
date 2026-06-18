@@ -1,14 +1,17 @@
+import { useQuery } from "@tanstack/react-query"
 import {
   ClipboardList,
   FlaskConical,
   HandCoins,
   Home,
+  Microscope,
   ReceiptText,
   Settings2,
   Stethoscope,
   UserRound,
 } from "lucide-react"
 
+import { CriticalNotificationsService } from "@/client"
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import {
@@ -30,8 +33,16 @@ export function AppSidebar() {
   const canViewOrders = usePermission("orders", "view")
   const canCreateOrders = usePermission("orders", "create")
   const canViewSpecimens = usePermission("specimens", "view")
+  const canViewResults = usePermission("results", "view")
+  const canViewCritical = usePermission("critical_notifications", "view")
   const canViewInvoices = usePermission("invoices", "view")
   const canViewCommissions = usePermission("commissions", "view")
+  const criticalCountQuery = useQuery({
+    queryKey: ["critical-notifications", "unacknowledged-count"],
+    queryFn: () => CriticalNotificationsService.readUnacknowledgedCount(),
+    enabled: canViewCritical,
+    refetchInterval: 30_000,
+  })
 
   const items: Item[] = [{ icon: Home, title: "Tableau de bord", path: "/" }]
 
@@ -44,6 +55,15 @@ export function AppSidebar() {
       icon: FlaskConical,
       title: "Prélèvements",
       path: "/specimens",
+    })
+  }
+
+  if (canViewResults) {
+    items.push({
+      icon: Microscope,
+      title: "Résultats",
+      path: "/results",
+      badge: criticalCountQuery.data?.count,
     })
   }
 
@@ -79,13 +99,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="px-4 py-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:items-center">
+      <SidebarHeader className="px-3 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
         <Logo variant="responsive" />
       </SidebarHeader>
       <SidebarContent>
         <Main items={items} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="gap-1 border-t p-2">
         <SidebarAppearance />
         <User user={currentUser} />
       </SidebarFooter>

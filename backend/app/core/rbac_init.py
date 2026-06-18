@@ -220,6 +220,16 @@ SEED_PERMISSIONS: list[dict] = [
         "action": "view",
         "description": "Read-only access to audit logs",
     },
+    {
+        "resource": "audit",
+        "action": "export",
+        "description": "Export filtered audit logs",
+    },
+    {
+        "resource": "lab_settings",
+        "action": "manage",
+        "description": "Manage laboratory identity and document details",
+    },
     # Items (existing app resource)
     {"resource": "items", "action": "create", "description": "Create items"},
     {"resource": "items", "action": "view", "description": "View items"},
@@ -313,6 +323,8 @@ ROLE_PERMISSION_MAP: dict[str, list[tuple[str, str]]] = {
         ("commissions", "manage_config"),
         ("reference_data", "manage"),
         ("audit", "view"),
+        ("audit", "export"),
+        ("lab_settings", "manage"),
         ("items", "create"),
         ("items", "view"),
         ("items", "edit"),

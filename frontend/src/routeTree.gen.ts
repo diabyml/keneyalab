@@ -16,6 +16,7 @@ import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutUserAccountRouteImport } from './routes/_layout/user-account'
 import { Route as LayoutSpecimensRouteImport } from './routes/_layout/specimens'
+import { Route as LayoutResultsRouteImport } from './routes/_layout/results'
 import { Route as LayoutPatientsRouteImport } from './routes/_layout/patients'
 import { Route as LayoutOrdersRouteImport } from './routes/_layout/orders'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
@@ -25,6 +26,7 @@ import { Route as LayoutDoctorCommissionPaymentsRouteImport } from './routes/_la
 import { Route as LayoutConfigurationsRouteImport } from './routes/_layout/configurations'
 import { Route as LayoutCommissionsRouteImport } from './routes/_layout/commissions'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutResultsIndexRouteImport } from './routes/_layout/results/index'
 import { Route as LayoutPatientsIndexRouteImport } from './routes/_layout/patients/index'
 import { Route as LayoutOrdersIndexRouteImport } from './routes/_layout/orders/index'
 import { Route as LayoutInvoicesIndexRouteImport } from './routes/_layout/invoices/index'
@@ -32,6 +34,7 @@ import { Route as LayoutDoctorsIndexRouteImport } from './routes/_layout/doctors
 import { Route as LayoutDoctorCommissionPaymentsIndexRouteImport } from './routes/_layout/doctor-commission-payments/index'
 import { Route as LayoutConfigurationsIndexRouteImport } from './routes/_layout/configurations/index'
 import { Route as LayoutCommissionsIndexRouteImport } from './routes/_layout/commissions/index'
+import { Route as LayoutResultsOrderIdRouteImport } from './routes/_layout/results/$orderId'
 import { Route as LayoutPatientsPatientIdRouteImport } from './routes/_layout/patients/$patientId'
 import { Route as LayoutOrdersNewRouteImport } from './routes/_layout/orders/new'
 import { Route as LayoutOrdersOrderIdRouteImport } from './routes/_layout/orders/$orderId'
@@ -50,10 +53,12 @@ import { Route as LayoutConfigurationsReglesAutomatiseesRouteImport } from './ro
 import { Route as LayoutConfigurationsPermissionsRouteImport } from './routes/_layout/configurations/permissions'
 import { Route as LayoutConfigurationsMotifsRejetRouteImport } from './routes/_layout/configurations/motifs-rejet'
 import { Route as LayoutConfigurationsMethodesPaiementRouteImport } from './routes/_layout/configurations/methodes-paiement'
+import { Route as LayoutConfigurationsLaboratoireRouteImport } from './routes/_layout/configurations/laboratoire'
 import { Route as LayoutConfigurationsFinanceRouteImport } from './routes/_layout/configurations/finance'
 import { Route as LayoutConfigurationsContextsPatientRouteImport } from './routes/_layout/configurations/contexts-patient'
 import { Route as LayoutConfigurationsCategoriesRouteImport } from './routes/_layout/configurations/categories'
 import { Route as LayoutConfigurationsCatalogueRouteImport } from './routes/_layout/configurations/catalogue'
+import { Route as LayoutConfigurationsAuditRouteImport } from './routes/_layout/configurations/audit'
 import { Route as LayoutConfigurationsAssureursRouteImport } from './routes/_layout/configurations/assureurs'
 import { Route as LayoutConfigurationsAnalytesRouteImport } from './routes/_layout/configurations/analytes'
 import { Route as LayoutCommissionsEntriesRouteImport } from './routes/_layout/commissions/entries'
@@ -95,6 +100,11 @@ const LayoutUserAccountRoute = LayoutUserAccountRouteImport.update({
 const LayoutSpecimensRoute = LayoutSpecimensRouteImport.update({
   id: '/specimens',
   path: '/specimens',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutResultsRoute = LayoutResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutPatientsRoute = LayoutPatientsRouteImport.update({
@@ -143,6 +153,11 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutResultsIndexRoute = LayoutResultsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutResultsRoute,
+} as any)
 const LayoutPatientsIndexRoute = LayoutPatientsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -179,6 +194,11 @@ const LayoutCommissionsIndexRoute = LayoutCommissionsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LayoutCommissionsRoute,
+} as any)
+const LayoutResultsOrderIdRoute = LayoutResultsOrderIdRouteImport.update({
+  id: '/$orderId',
+  path: '/$orderId',
+  getParentRoute: () => LayoutResultsRoute,
 } as any)
 const LayoutPatientsPatientIdRoute = LayoutPatientsPatientIdRouteImport.update({
   id: '/$patientId',
@@ -283,6 +303,12 @@ const LayoutConfigurationsMethodesPaiementRoute =
     path: '/methodes-paiement',
     getParentRoute: () => LayoutConfigurationsRoute,
   } as any)
+const LayoutConfigurationsLaboratoireRoute =
+  LayoutConfigurationsLaboratoireRouteImport.update({
+    id: '/laboratoire',
+    path: '/laboratoire',
+    getParentRoute: () => LayoutConfigurationsRoute,
+  } as any)
 const LayoutConfigurationsFinanceRoute =
   LayoutConfigurationsFinanceRouteImport.update({
     id: '/finance',
@@ -305,6 +331,12 @@ const LayoutConfigurationsCatalogueRoute =
   LayoutConfigurationsCatalogueRouteImport.update({
     id: '/catalogue',
     path: '/catalogue',
+    getParentRoute: () => LayoutConfigurationsRoute,
+  } as any)
+const LayoutConfigurationsAuditRoute =
+  LayoutConfigurationsAuditRouteImport.update({
+    id: '/audit',
+    path: '/audit',
     getParentRoute: () => LayoutConfigurationsRoute,
   } as any)
 const LayoutConfigurationsAssureursRoute =
@@ -369,15 +401,18 @@ export interface FileRoutesByFullPath {
   '/items': typeof LayoutItemsRoute
   '/orders': typeof LayoutOrdersRouteWithChildren
   '/patients': typeof LayoutPatientsRouteWithChildren
+  '/results': typeof LayoutResultsRouteWithChildren
   '/specimens': typeof LayoutSpecimensRoute
   '/user-account': typeof LayoutUserAccountRoute
   '/commissions/entries': typeof LayoutCommissionsEntriesRoute
   '/configurations/analytes': typeof LayoutConfigurationsAnalytesRoute
   '/configurations/assureurs': typeof LayoutConfigurationsAssureursRoute
+  '/configurations/audit': typeof LayoutConfigurationsAuditRoute
   '/configurations/catalogue': typeof LayoutConfigurationsCatalogueRoute
   '/configurations/categories': typeof LayoutConfigurationsCategoriesRoute
   '/configurations/contexts-patient': typeof LayoutConfigurationsContextsPatientRoute
   '/configurations/finance': typeof LayoutConfigurationsFinanceRoute
+  '/configurations/laboratoire': typeof LayoutConfigurationsLaboratoireRoute
   '/configurations/methodes-paiement': typeof LayoutConfigurationsMethodesPaiementRoute
   '/configurations/motifs-rejet': typeof LayoutConfigurationsMotifsRejetRoute
   '/configurations/permissions': typeof LayoutConfigurationsPermissionsRoute
@@ -396,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderId': typeof LayoutOrdersOrderIdRouteWithChildren
   '/orders/new': typeof LayoutOrdersNewRoute
   '/patients/$patientId': typeof LayoutPatientsPatientIdRoute
+  '/results/$orderId': typeof LayoutResultsOrderIdRoute
   '/commissions/': typeof LayoutCommissionsIndexRoute
   '/configurations/': typeof LayoutConfigurationsIndexRoute
   '/doctor-commission-payments/': typeof LayoutDoctorCommissionPaymentsIndexRoute
@@ -403,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/invoices/': typeof LayoutInvoicesIndexRoute
   '/orders/': typeof LayoutOrdersIndexRoute
   '/patients/': typeof LayoutPatientsIndexRoute
+  '/results/': typeof LayoutResultsIndexRoute
   '/commissions/payments/$paymentId': typeof LayoutCommissionsPaymentsPaymentIdRoute
   '/commissions/payments/new': typeof LayoutCommissionsPaymentsNewRoute
   '/orders/$orderId/edit': typeof LayoutOrdersOrderIdEditRoute
@@ -421,10 +458,12 @@ export interface FileRoutesByTo {
   '/commissions/entries': typeof LayoutCommissionsEntriesRoute
   '/configurations/analytes': typeof LayoutConfigurationsAnalytesRoute
   '/configurations/assureurs': typeof LayoutConfigurationsAssureursRoute
+  '/configurations/audit': typeof LayoutConfigurationsAuditRoute
   '/configurations/catalogue': typeof LayoutConfigurationsCatalogueRoute
   '/configurations/categories': typeof LayoutConfigurationsCategoriesRoute
   '/configurations/contexts-patient': typeof LayoutConfigurationsContextsPatientRoute
   '/configurations/finance': typeof LayoutConfigurationsFinanceRoute
+  '/configurations/laboratoire': typeof LayoutConfigurationsLaboratoireRoute
   '/configurations/methodes-paiement': typeof LayoutConfigurationsMethodesPaiementRoute
   '/configurations/motifs-rejet': typeof LayoutConfigurationsMotifsRejetRoute
   '/configurations/permissions': typeof LayoutConfigurationsPermissionsRoute
@@ -442,6 +481,7 @@ export interface FileRoutesByTo {
   '/invoices/$invoiceId': typeof LayoutInvoicesInvoiceIdRoute
   '/orders/new': typeof LayoutOrdersNewRoute
   '/patients/$patientId': typeof LayoutPatientsPatientIdRoute
+  '/results/$orderId': typeof LayoutResultsOrderIdRoute
   '/commissions': typeof LayoutCommissionsIndexRoute
   '/configurations': typeof LayoutConfigurationsIndexRoute
   '/doctor-commission-payments': typeof LayoutDoctorCommissionPaymentsIndexRoute
@@ -449,6 +489,7 @@ export interface FileRoutesByTo {
   '/invoices': typeof LayoutInvoicesIndexRoute
   '/orders': typeof LayoutOrdersIndexRoute
   '/patients': typeof LayoutPatientsIndexRoute
+  '/results': typeof LayoutResultsIndexRoute
   '/commissions/payments/$paymentId': typeof LayoutCommissionsPaymentsPaymentIdRoute
   '/commissions/payments/new': typeof LayoutCommissionsPaymentsNewRoute
   '/orders/$orderId/edit': typeof LayoutOrdersOrderIdEditRoute
@@ -470,16 +511,19 @@ export interface FileRoutesById {
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/orders': typeof LayoutOrdersRouteWithChildren
   '/_layout/patients': typeof LayoutPatientsRouteWithChildren
+  '/_layout/results': typeof LayoutResultsRouteWithChildren
   '/_layout/specimens': typeof LayoutSpecimensRoute
   '/_layout/user-account': typeof LayoutUserAccountRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/commissions/entries': typeof LayoutCommissionsEntriesRoute
   '/_layout/configurations/analytes': typeof LayoutConfigurationsAnalytesRoute
   '/_layout/configurations/assureurs': typeof LayoutConfigurationsAssureursRoute
+  '/_layout/configurations/audit': typeof LayoutConfigurationsAuditRoute
   '/_layout/configurations/catalogue': typeof LayoutConfigurationsCatalogueRoute
   '/_layout/configurations/categories': typeof LayoutConfigurationsCategoriesRoute
   '/_layout/configurations/contexts-patient': typeof LayoutConfigurationsContextsPatientRoute
   '/_layout/configurations/finance': typeof LayoutConfigurationsFinanceRoute
+  '/_layout/configurations/laboratoire': typeof LayoutConfigurationsLaboratoireRoute
   '/_layout/configurations/methodes-paiement': typeof LayoutConfigurationsMethodesPaiementRoute
   '/_layout/configurations/motifs-rejet': typeof LayoutConfigurationsMotifsRejetRoute
   '/_layout/configurations/permissions': typeof LayoutConfigurationsPermissionsRoute
@@ -498,6 +542,7 @@ export interface FileRoutesById {
   '/_layout/orders/$orderId': typeof LayoutOrdersOrderIdRouteWithChildren
   '/_layout/orders/new': typeof LayoutOrdersNewRoute
   '/_layout/patients/$patientId': typeof LayoutPatientsPatientIdRoute
+  '/_layout/results/$orderId': typeof LayoutResultsOrderIdRoute
   '/_layout/commissions/': typeof LayoutCommissionsIndexRoute
   '/_layout/configurations/': typeof LayoutConfigurationsIndexRoute
   '/_layout/doctor-commission-payments/': typeof LayoutDoctorCommissionPaymentsIndexRoute
@@ -505,6 +550,7 @@ export interface FileRoutesById {
   '/_layout/invoices/': typeof LayoutInvoicesIndexRoute
   '/_layout/orders/': typeof LayoutOrdersIndexRoute
   '/_layout/patients/': typeof LayoutPatientsIndexRoute
+  '/_layout/results/': typeof LayoutResultsIndexRoute
   '/_layout/commissions/payments/$paymentId': typeof LayoutCommissionsPaymentsPaymentIdRoute
   '/_layout/commissions/payments/new': typeof LayoutCommissionsPaymentsNewRoute
   '/_layout/orders/$orderId/edit': typeof LayoutOrdersOrderIdEditRoute
@@ -527,15 +573,18 @@ export interface FileRouteTypes {
     | '/items'
     | '/orders'
     | '/patients'
+    | '/results'
     | '/specimens'
     | '/user-account'
     | '/commissions/entries'
     | '/configurations/analytes'
     | '/configurations/assureurs'
+    | '/configurations/audit'
     | '/configurations/catalogue'
     | '/configurations/categories'
     | '/configurations/contexts-patient'
     | '/configurations/finance'
+    | '/configurations/laboratoire'
     | '/configurations/methodes-paiement'
     | '/configurations/motifs-rejet'
     | '/configurations/permissions'
@@ -554,6 +603,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/orders/new'
     | '/patients/$patientId'
+    | '/results/$orderId'
     | '/commissions/'
     | '/configurations/'
     | '/doctor-commission-payments/'
@@ -561,6 +611,7 @@ export interface FileRouteTypes {
     | '/invoices/'
     | '/orders/'
     | '/patients/'
+    | '/results/'
     | '/commissions/payments/$paymentId'
     | '/commissions/payments/new'
     | '/orders/$orderId/edit'
@@ -579,10 +630,12 @@ export interface FileRouteTypes {
     | '/commissions/entries'
     | '/configurations/analytes'
     | '/configurations/assureurs'
+    | '/configurations/audit'
     | '/configurations/catalogue'
     | '/configurations/categories'
     | '/configurations/contexts-patient'
     | '/configurations/finance'
+    | '/configurations/laboratoire'
     | '/configurations/methodes-paiement'
     | '/configurations/motifs-rejet'
     | '/configurations/permissions'
@@ -600,6 +653,7 @@ export interface FileRouteTypes {
     | '/invoices/$invoiceId'
     | '/orders/new'
     | '/patients/$patientId'
+    | '/results/$orderId'
     | '/commissions'
     | '/configurations'
     | '/doctor-commission-payments'
@@ -607,6 +661,7 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/orders'
     | '/patients'
+    | '/results'
     | '/commissions/payments/$paymentId'
     | '/commissions/payments/new'
     | '/orders/$orderId/edit'
@@ -627,16 +682,19 @@ export interface FileRouteTypes {
     | '/_layout/items'
     | '/_layout/orders'
     | '/_layout/patients'
+    | '/_layout/results'
     | '/_layout/specimens'
     | '/_layout/user-account'
     | '/_layout/'
     | '/_layout/commissions/entries'
     | '/_layout/configurations/analytes'
     | '/_layout/configurations/assureurs'
+    | '/_layout/configurations/audit'
     | '/_layout/configurations/catalogue'
     | '/_layout/configurations/categories'
     | '/_layout/configurations/contexts-patient'
     | '/_layout/configurations/finance'
+    | '/_layout/configurations/laboratoire'
     | '/_layout/configurations/methodes-paiement'
     | '/_layout/configurations/motifs-rejet'
     | '/_layout/configurations/permissions'
@@ -655,6 +713,7 @@ export interface FileRouteTypes {
     | '/_layout/orders/$orderId'
     | '/_layout/orders/new'
     | '/_layout/patients/$patientId'
+    | '/_layout/results/$orderId'
     | '/_layout/commissions/'
     | '/_layout/configurations/'
     | '/_layout/doctor-commission-payments/'
@@ -662,6 +721,7 @@ export interface FileRouteTypes {
     | '/_layout/invoices/'
     | '/_layout/orders/'
     | '/_layout/patients/'
+    | '/_layout/results/'
     | '/_layout/commissions/payments/$paymentId'
     | '/_layout/commissions/payments/new'
     | '/_layout/orders/$orderId/edit'
@@ -727,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSpecimensRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/results': {
+      id: '/_layout/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof LayoutResultsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/patients': {
       id: '/_layout/patients'
       path: '/patients'
@@ -790,6 +857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/results/': {
+      id: '/_layout/results/'
+      path: '/'
+      fullPath: '/results/'
+      preLoaderRoute: typeof LayoutResultsIndexRouteImport
+      parentRoute: typeof LayoutResultsRoute
+    }
     '/_layout/patients/': {
       id: '/_layout/patients/'
       path: '/'
@@ -838,6 +912,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/commissions/'
       preLoaderRoute: typeof LayoutCommissionsIndexRouteImport
       parentRoute: typeof LayoutCommissionsRoute
+    }
+    '/_layout/results/$orderId': {
+      id: '/_layout/results/$orderId'
+      path: '/$orderId'
+      fullPath: '/results/$orderId'
+      preLoaderRoute: typeof LayoutResultsOrderIdRouteImport
+      parentRoute: typeof LayoutResultsRoute
     }
     '/_layout/patients/$patientId': {
       id: '/_layout/patients/$patientId'
@@ -965,6 +1046,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutConfigurationsMethodesPaiementRouteImport
       parentRoute: typeof LayoutConfigurationsRoute
     }
+    '/_layout/configurations/laboratoire': {
+      id: '/_layout/configurations/laboratoire'
+      path: '/laboratoire'
+      fullPath: '/configurations/laboratoire'
+      preLoaderRoute: typeof LayoutConfigurationsLaboratoireRouteImport
+      parentRoute: typeof LayoutConfigurationsRoute
+    }
     '/_layout/configurations/finance': {
       id: '/_layout/configurations/finance'
       path: '/finance'
@@ -991,6 +1079,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogue'
       fullPath: '/configurations/catalogue'
       preLoaderRoute: typeof LayoutConfigurationsCatalogueRouteImport
+      parentRoute: typeof LayoutConfigurationsRoute
+    }
+    '/_layout/configurations/audit': {
+      id: '/_layout/configurations/audit'
+      path: '/audit'
+      fullPath: '/configurations/audit'
+      preLoaderRoute: typeof LayoutConfigurationsAuditRouteImport
       parentRoute: typeof LayoutConfigurationsRoute
     }
     '/_layout/configurations/assureurs': {
@@ -1075,10 +1170,12 @@ const LayoutCommissionsRouteWithChildren =
 interface LayoutConfigurationsRouteChildren {
   LayoutConfigurationsAnalytesRoute: typeof LayoutConfigurationsAnalytesRoute
   LayoutConfigurationsAssureursRoute: typeof LayoutConfigurationsAssureursRoute
+  LayoutConfigurationsAuditRoute: typeof LayoutConfigurationsAuditRoute
   LayoutConfigurationsCatalogueRoute: typeof LayoutConfigurationsCatalogueRoute
   LayoutConfigurationsCategoriesRoute: typeof LayoutConfigurationsCategoriesRoute
   LayoutConfigurationsContextsPatientRoute: typeof LayoutConfigurationsContextsPatientRoute
   LayoutConfigurationsFinanceRoute: typeof LayoutConfigurationsFinanceRoute
+  LayoutConfigurationsLaboratoireRoute: typeof LayoutConfigurationsLaboratoireRoute
   LayoutConfigurationsMethodesPaiementRoute: typeof LayoutConfigurationsMethodesPaiementRoute
   LayoutConfigurationsMotifsRejetRoute: typeof LayoutConfigurationsMotifsRejetRoute
   LayoutConfigurationsPermissionsRoute: typeof LayoutConfigurationsPermissionsRoute
@@ -1096,11 +1193,13 @@ interface LayoutConfigurationsRouteChildren {
 const LayoutConfigurationsRouteChildren: LayoutConfigurationsRouteChildren = {
   LayoutConfigurationsAnalytesRoute: LayoutConfigurationsAnalytesRoute,
   LayoutConfigurationsAssureursRoute: LayoutConfigurationsAssureursRoute,
+  LayoutConfigurationsAuditRoute: LayoutConfigurationsAuditRoute,
   LayoutConfigurationsCatalogueRoute: LayoutConfigurationsCatalogueRoute,
   LayoutConfigurationsCategoriesRoute: LayoutConfigurationsCategoriesRoute,
   LayoutConfigurationsContextsPatientRoute:
     LayoutConfigurationsContextsPatientRoute,
   LayoutConfigurationsFinanceRoute: LayoutConfigurationsFinanceRoute,
+  LayoutConfigurationsLaboratoireRoute: LayoutConfigurationsLaboratoireRoute,
   LayoutConfigurationsMethodesPaiementRoute:
     LayoutConfigurationsMethodesPaiementRoute,
   LayoutConfigurationsMotifsRejetRoute: LayoutConfigurationsMotifsRejetRoute,
@@ -1215,6 +1314,20 @@ const LayoutPatientsRouteWithChildren = LayoutPatientsRoute._addFileChildren(
   LayoutPatientsRouteChildren,
 )
 
+interface LayoutResultsRouteChildren {
+  LayoutResultsOrderIdRoute: typeof LayoutResultsOrderIdRoute
+  LayoutResultsIndexRoute: typeof LayoutResultsIndexRoute
+}
+
+const LayoutResultsRouteChildren: LayoutResultsRouteChildren = {
+  LayoutResultsOrderIdRoute: LayoutResultsOrderIdRoute,
+  LayoutResultsIndexRoute: LayoutResultsIndexRoute,
+}
+
+const LayoutResultsRouteWithChildren = LayoutResultsRoute._addFileChildren(
+  LayoutResultsRouteChildren,
+)
+
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutCommissionsRoute: typeof LayoutCommissionsRouteWithChildren
@@ -1225,6 +1338,7 @@ interface LayoutRouteChildren {
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutOrdersRoute: typeof LayoutOrdersRouteWithChildren
   LayoutPatientsRoute: typeof LayoutPatientsRouteWithChildren
+  LayoutResultsRoute: typeof LayoutResultsRouteWithChildren
   LayoutSpecimensRoute: typeof LayoutSpecimensRoute
   LayoutUserAccountRoute: typeof LayoutUserAccountRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
@@ -1241,6 +1355,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutOrdersRoute: LayoutOrdersRouteWithChildren,
   LayoutPatientsRoute: LayoutPatientsRouteWithChildren,
+  LayoutResultsRoute: LayoutResultsRouteWithChildren,
   LayoutSpecimensRoute: LayoutSpecimensRoute,
   LayoutUserAccountRoute: LayoutUserAccountRoute,
   LayoutIndexRoute: LayoutIndexRoute,

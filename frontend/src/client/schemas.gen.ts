@@ -291,6 +291,329 @@ export const AnalytesPublicSchema = {
     title: 'AnalytesPublic'
 } as const;
 
+export const AuditActionSchema = {
+    type: 'string',
+    enum: ['insert', 'update', 'delete', 'login_success', 'login_failed', 'password_recovery', 'password_reset'],
+    title: 'AuditAction'
+} as const;
+
+export const AuditActorPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        email: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Email'
+        }
+    },
+    type: 'object',
+    required: ['id'],
+    title: 'AuditActorPublic'
+} as const;
+
+export const AuditActorsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/AuditActorPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        }
+    },
+    type: 'object',
+    required: ['data'],
+    title: 'AuditActorsPublic'
+} as const;
+
+export const AuditCategorySchema = {
+    type: 'string',
+    enum: ['clinical', 'workflow', 'finance', 'configuration', 'security', 'system'],
+    title: 'AuditCategory'
+} as const;
+
+export const AuditLogPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        table_name: {
+            type: 'string',
+            title: 'Table Name'
+        },
+        record_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Record Id'
+        },
+        action: {
+            '$ref': '#/components/schemas/AuditAction'
+        },
+        category: {
+            '$ref': '#/components/schemas/AuditCategory'
+        },
+        record_label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Record Label'
+        },
+        old_values: {
+            anyOf: [
+                {},
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Old Values'
+        },
+        new_values: {
+            anyOf: [
+                {},
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'New Values'
+        },
+        metadata: {
+            anyOf: [
+                {},
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Metadata'
+        },
+        performed_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Performed By Id'
+        },
+        actor_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Actor Name'
+        },
+        actor_email: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Actor Email'
+        },
+        request_id: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Request Id'
+        },
+        correlation_id: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Correlation Id'
+        },
+        source: {
+            type: 'string',
+            title: 'Source'
+        },
+        ip_address: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Ip Address'
+        },
+        user_agent: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'User Agent'
+        },
+        http_method: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Http Method'
+        },
+        http_path: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Http Path'
+        },
+        performed_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Performed At'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'table_name', 'action', 'category', 'source'],
+    title: 'AuditLogPublic'
+} as const;
+
+export const AuditLogsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/AuditLogPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'AuditLogsPublic'
+} as const;
+
+export const AuditSummaryPublicSchema = {
+    properties: {
+        total: {
+            type: 'integer',
+            title: 'Total'
+        },
+        inserts: {
+            type: 'integer',
+            title: 'Inserts'
+        },
+        updates: {
+            type: 'integer',
+            title: 'Updates'
+        },
+        deletes: {
+            type: 'integer',
+            title: 'Deletes'
+        },
+        security_events: {
+            type: 'integer',
+            title: 'Security Events'
+        }
+    },
+    type: 'object',
+    required: ['total', 'inserts', 'updates', 'deletes', 'security_events'],
+    title: 'AuditSummaryPublic'
+} as const;
+
+export const Body_lab_settings_upload_lab_logoSchema = {
+    properties: {
+        file: {
+            type: 'string',
+            format: 'binary',
+            title: 'File'
+        }
+    },
+    type: 'object',
+    required: ['file'],
+    title: 'Body_lab-settings-upload_lab_logo'
+} as const;
+
 export const Body_login_login_access_tokenSchema = {
     properties: {
         grant_type: {
@@ -346,6 +669,51 @@ export const Body_login_login_access_tokenSchema = {
     type: 'object',
     required: ['username', 'password'],
     title: 'Body_login-login_access_token'
+} as const;
+
+export const Body_results_correct_verified_image_resultSchema = {
+    properties: {
+        reason: {
+            type: 'string',
+            title: 'Reason'
+        },
+        file: {
+            type: 'string',
+            format: 'binary',
+            title: 'File'
+        }
+    },
+    type: 'object',
+    required: ['reason', 'file'],
+    title: 'Body_results-correct_verified_image_result'
+} as const;
+
+export const Body_results_upload_result_imageSchema = {
+    properties: {
+        order_item_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Order Item Id'
+        },
+        analyte_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Analyte Id'
+        },
+        specimen_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Specimen Id'
+        },
+        file: {
+            type: 'string',
+            format: 'binary',
+            title: 'File'
+        }
+    },
+    type: 'object',
+    required: ['order_item_id', 'analyte_id', 'specimen_id', 'file'],
+    title: 'Body_results-upload_result_image'
 } as const;
 
 export const CatalogCreateSchema = {
@@ -1434,6 +1802,589 @@ export const ConsistencyRulesPublicSchema = {
     type: 'object',
     required: ['data', 'count'],
     title: 'ConsistencyRulesPublic'
+} as const;
+
+export const CriticalMethodSchema = {
+    type: 'string',
+    enum: ['call', 'sms', 'in_app', 'email'],
+    title: 'CriticalMethod'
+} as const;
+
+export const CriticalNotificationAcknowledgeSchema = {
+    properties: {
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    title: 'CriticalNotificationAcknowledge'
+} as const;
+
+export const CriticalNotificationCountPublicSchema = {
+    properties: {
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['count'],
+    title: 'CriticalNotificationCountPublic'
+} as const;
+
+export const CriticalNotificationCreateSchema = {
+    properties: {
+        notified_to_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Notified To Id'
+        },
+        method: {
+            '$ref': '#/components/schemas/CriticalMethod'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    required: ['notified_to_id', 'method'],
+    title: 'CriticalNotificationCreate'
+} as const;
+
+export const CriticalNotificationDetailPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        analyte_result_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Analyte Result Id'
+        },
+        notified_by_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Notified By Id'
+        },
+        notified_to_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Notified To Id'
+        },
+        method: {
+            '$ref': '#/components/schemas/CriticalMethod'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        notified_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notified At'
+        },
+        acknowledged: {
+            type: 'boolean',
+            title: 'Acknowledged'
+        },
+        acknowledged_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Acknowledged At'
+        },
+        acknowledged_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Acknowledged By Id'
+        },
+        accession_number: {
+            type: 'string',
+            title: 'Accession Number'
+        },
+        patient_name: {
+            type: 'string',
+            title: 'Patient Name'
+        },
+        analyte_code: {
+            type: 'string',
+            title: 'Analyte Code'
+        },
+        analyte_name: {
+            type: 'string',
+            title: 'Analyte Name'
+        },
+        result_value: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Result Value'
+        },
+        notified_by_name: {
+            type: 'string',
+            title: 'Notified By Name'
+        },
+        notified_to_name: {
+            type: 'string',
+            title: 'Notified To Name'
+        },
+        acknowledged_by_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Acknowledged By Name'
+        }
+    },
+    type: 'object',
+    required: ['id', 'analyte_result_id', 'notified_by_id', 'notified_to_id', 'method', 'acknowledged', 'accession_number', 'patient_name', 'analyte_code', 'analyte_name', 'notified_by_name', 'notified_to_name'],
+    title: 'CriticalNotificationDetailPublic'
+} as const;
+
+export const CriticalNotificationListPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/CriticalNotificationDetailPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'CriticalNotificationListPublic'
+} as const;
+
+export const CriticalRecipientPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        email: {
+            type: 'string',
+            title: 'Email'
+        }
+    },
+    type: 'object',
+    required: ['id', 'name', 'email'],
+    title: 'CriticalRecipientPublic'
+} as const;
+
+export const CriticalRecipientsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/CriticalRecipientPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'CriticalRecipientsPublic'
+} as const;
+
+export const DashboardActionPublicSchema = {
+    properties: {
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        label: {
+            type: 'string',
+            title: 'Label'
+        },
+        description: {
+            type: 'string',
+            title: 'Description'
+        },
+        href: {
+            type: 'string',
+            title: 'Href'
+        },
+        priority: {
+            type: 'integer',
+            title: 'Priority',
+            default: 0
+        }
+    },
+    type: 'object',
+    required: ['key', 'label', 'description', 'href'],
+    title: 'DashboardActionPublic'
+} as const;
+
+export const DashboardCriticalPublicSchema = {
+    properties: {
+        metrics: {
+            items: {
+                '$ref': '#/components/schemas/DashboardMetricPublic'
+            },
+            type: 'array',
+            title: 'Metrics'
+        },
+        latest: {
+            items: {
+                '$ref': '#/components/schemas/CriticalNotificationDetailPublic'
+            },
+            type: 'array',
+            title: 'Latest'
+        }
+    },
+    type: 'object',
+    title: 'DashboardCriticalPublic'
+} as const;
+
+export const DashboardFinancePublicSchema = {
+    properties: {
+        metrics: {
+            items: {
+                '$ref': '#/components/schemas/DashboardMetricPublic'
+            },
+            type: 'array',
+            title: 'Metrics'
+        }
+    },
+    type: 'object',
+    title: 'DashboardFinancePublic'
+} as const;
+
+export const DashboardMetricPublicSchema = {
+    properties: {
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        label: {
+            type: 'string',
+            title: 'Label'
+        },
+        value: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                }
+            ],
+            title: 'Value'
+        },
+        unit: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit'
+        }
+    },
+    type: 'object',
+    required: ['key', 'label', 'value'],
+    title: 'DashboardMetricPublic'
+} as const;
+
+export const DashboardOrdersPublicSchema = {
+    properties: {
+        metrics: {
+            items: {
+                '$ref': '#/components/schemas/DashboardMetricPublic'
+            },
+            type: 'array',
+            title: 'Metrics'
+        },
+        status_breakdown: {
+            items: {
+                '$ref': '#/components/schemas/DashboardStatusPointPublic'
+            },
+            type: 'array',
+            title: 'Status Breakdown'
+        },
+        recent: {
+            items: {
+                '$ref': '#/components/schemas/OrderListItemPublic'
+            },
+            type: 'array',
+            title: 'Recent'
+        }
+    },
+    type: 'object',
+    title: 'DashboardOrdersPublic'
+} as const;
+
+export const DashboardPublicSchema = {
+    properties: {
+        generated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Generated At'
+        },
+        created_from: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created From'
+        },
+        created_to: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created To'
+        },
+        orders: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/DashboardOrdersPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        specimens: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/DashboardSpecimensPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        results: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/DashboardResultsPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        critical: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/DashboardCriticalPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        finance: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/DashboardFinancePublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        trends: {
+            items: {
+                '$ref': '#/components/schemas/DashboardTrendPointPublic'
+            },
+            type: 'array',
+            title: 'Trends'
+        },
+        quick_actions: {
+            items: {
+                '$ref': '#/components/schemas/DashboardActionPublic'
+            },
+            type: 'array',
+            title: 'Quick Actions'
+        }
+    },
+    type: 'object',
+    required: ['generated_at', 'created_from', 'created_to'],
+    title: 'DashboardPublic'
+} as const;
+
+export const DashboardResultsPublicSchema = {
+    properties: {
+        metrics: {
+            items: {
+                '$ref': '#/components/schemas/DashboardMetricPublic'
+            },
+            type: 'array',
+            title: 'Metrics'
+        }
+    },
+    type: 'object',
+    title: 'DashboardResultsPublic'
+} as const;
+
+export const DashboardSpecimensPublicSchema = {
+    properties: {
+        metrics: {
+            items: {
+                '$ref': '#/components/schemas/DashboardMetricPublic'
+            },
+            type: 'array',
+            title: 'Metrics'
+        },
+        oldest_waiting: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/SpecimenQueueItemPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        }
+    },
+    type: 'object',
+    title: 'DashboardSpecimensPublic'
+} as const;
+
+export const DashboardStatusPointPublicSchema = {
+    properties: {
+        key: {
+            type: 'string',
+            title: 'Key'
+        },
+        label: {
+            type: 'string',
+            title: 'Label'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['key', 'label', 'count'],
+    title: 'DashboardStatusPointPublic'
+} as const;
+
+export const DashboardTrendPointPublicSchema = {
+    properties: {
+        label: {
+            type: 'string',
+            title: 'Label'
+        },
+        orders: {
+            type: 'integer',
+            title: 'Orders',
+            default: 0
+        },
+        specimens: {
+            type: 'integer',
+            title: 'Specimens',
+            default: 0
+        },
+        results: {
+            type: 'integer',
+            title: 'Results',
+            default: 0
+        },
+        revenue: {
+            type: 'string',
+            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+            title: 'Revenue',
+            default: '0.00'
+        }
+    },
+    type: 'object',
+    required: ['label'],
+    title: 'DashboardTrendPointPublic'
 } as const;
 
 export const DiscountAllocationPolicySchema = {
@@ -4075,6 +5026,566 @@ export const ItemsPublicSchema = {
     title: 'ItemsPublic'
 } as const;
 
+export const LabSettingsPublicSchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        display_name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Display Name',
+            default: 'KENEYA LAB'
+        },
+        legal_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Legal Name'
+        },
+        slogan: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Slogan'
+        },
+        address: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Address'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 120
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
+        },
+        postal_code: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 30
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Postal Code'
+        },
+        country: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 120
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Country'
+        },
+        primary_phone: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Primary Phone'
+        },
+        secondary_phone: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Secondary Phone'
+        },
+        email: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Email'
+        },
+        website: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Website'
+        },
+        registration_number: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Registration Number'
+        },
+        laboratory_license: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Laboratory License'
+        },
+        tax_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Tax Id'
+        },
+        bank_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Bank Name'
+        },
+        bank_account_holder: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Bank Account Holder'
+        },
+        bank_account_number: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 120
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Bank Account Number'
+        },
+        payment_instructions: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Payment Instructions'
+        },
+        director_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Director Name'
+        },
+        director_title: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Director Title'
+        },
+        document_footer: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Document Footer'
+        },
+        logo_url: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Logo Url'
+        },
+        updated_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated By Id'
+        }
+    },
+    type: 'object',
+    required: ['id'],
+    title: 'LabSettingsPublic'
+} as const;
+
+export const LabSettingsUpdateSchema = {
+    properties: {
+        display_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Display Name'
+        },
+        legal_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Legal Name'
+        },
+        slogan: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Slogan'
+        },
+        address: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Address'
+        },
+        city: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 120
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'City'
+        },
+        postal_code: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 30
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Postal Code'
+        },
+        country: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 120
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Country'
+        },
+        primary_phone: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Primary Phone'
+        },
+        secondary_phone: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Secondary Phone'
+        },
+        email: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Email'
+        },
+        website: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Website'
+        },
+        registration_number: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Registration Number'
+        },
+        laboratory_license: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Laboratory License'
+        },
+        tax_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Tax Id'
+        },
+        bank_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Bank Name'
+        },
+        bank_account_holder: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Bank Account Holder'
+        },
+        bank_account_number: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 120
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Bank Account Number'
+        },
+        payment_instructions: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Payment Instructions'
+        },
+        director_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Director Name'
+        },
+        director_title: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Director Title'
+        },
+        document_footer: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Document Footer'
+        }
+    },
+    type: 'object',
+    title: 'LabSettingsUpdate'
+} as const;
+
 export const MessageSchema = {
     properties: {
         message: {
@@ -4103,6 +5614,74 @@ export const NewPasswordSchema = {
     type: 'object',
     required: ['token', 'new_password'],
     title: 'NewPassword'
+} as const;
+
+export const OrderAnalyteDetailPublicSchema = {
+    properties: {
+        analyte_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Analyte Id'
+        },
+        analyte_code: {
+            type: 'string',
+            title: 'Analyte Code'
+        },
+        analyte_name: {
+            type: 'string',
+            title: 'Analyte Name'
+        },
+        analyte_data_type: {
+            '$ref': '#/components/schemas/AnalyteDataType'
+        },
+        unit_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit Name'
+        },
+        sort_order: {
+            type: 'integer',
+            title: 'Sort Order'
+        },
+        has_result: {
+            type: 'boolean',
+            title: 'Has Result',
+            default: false
+        },
+        has_verified_result: {
+            type: 'boolean',
+            title: 'Has Verified Result',
+            default: false
+        }
+    },
+    type: 'object',
+    required: ['analyte_id', 'analyte_code', 'analyte_name', 'analyte_data_type', 'sort_order'],
+    title: 'OrderAnalyteDetailPublic'
+} as const;
+
+export const OrderCancelRequestSchema = {
+    properties: {
+        reason: {
+            type: 'string',
+            maxLength: 1000,
+            minLength: 1,
+            title: 'Reason'
+        },
+        expected_revision: {
+            type: 'integer',
+            minimum: 1,
+            title: 'Expected Revision'
+        }
+    },
+    type: 'object',
+    required: ['reason', 'expected_revision'],
+    title: 'OrderCancelRequest'
 } as const;
 
 export const OrderCreateSchema = {
@@ -4167,6 +5746,13 @@ export const OrderCreateSchema = {
             type: 'array',
             minItems: 1,
             title: 'Catalog Ids'
+        },
+        item_analytes: {
+            items: {
+                '$ref': '#/components/schemas/OrderItemAnalyteSelection'
+            },
+            type: 'array',
+            title: 'Item Analytes'
         },
         line_overrides: {
             items: {
@@ -4419,6 +6005,60 @@ export const OrderDetailPublicSchema = {
     title: 'OrderDetailPublic'
 } as const;
 
+export const OrderItemAnalyteCustomizeRequestSchema = {
+    properties: {
+        analyte_ids: {
+            items: {
+                type: 'string',
+                format: 'uuid'
+            },
+            type: 'array',
+            title: 'Analyte Ids'
+        },
+        reason: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 1000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reason'
+        },
+        expected_revision: {
+            type: 'integer',
+            minimum: 1,
+            title: 'Expected Revision'
+        }
+    },
+    type: 'object',
+    required: ['analyte_ids', 'expected_revision'],
+    title: 'OrderItemAnalyteCustomizeRequest'
+} as const;
+
+export const OrderItemAnalyteSelectionSchema = {
+    properties: {
+        catalog_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Catalog Id'
+        },
+        analyte_ids: {
+            items: {
+                type: 'string',
+                format: 'uuid'
+            },
+            type: 'array',
+            title: 'Analyte Ids'
+        }
+    },
+    type: 'object',
+    required: ['catalog_id', 'analyte_ids'],
+    title: 'OrderItemAnalyteSelection'
+} as const;
+
 export const OrderItemDetailPublicSchema = {
     properties: {
         id: {
@@ -4547,6 +6187,13 @@ export const OrderItemDetailPublicSchema = {
             },
             type: 'array',
             title: 'Specimen Ids'
+        },
+        analytes: {
+            items: {
+                '$ref': '#/components/schemas/OrderAnalyteDetailPublic'
+            },
+            type: 'array',
+            title: 'Analytes'
         }
     },
     type: 'object',
@@ -4765,6 +6412,13 @@ export const OrderPreviewItemPublicSchema = {
             },
             type: 'array',
             title: 'Source Catalog Ids'
+        },
+        analytes: {
+            items: {
+                '$ref': '#/components/schemas/OrderAnalyteDetailPublic'
+            },
+            type: 'array',
+            title: 'Analytes'
         }
     },
     type: 'object',
@@ -4881,6 +6535,13 @@ export const OrderPreviewRequestSchema = {
             type: 'array',
             minItems: 1,
             title: 'Catalog Ids'
+        },
+        item_analytes: {
+            items: {
+                '$ref': '#/components/schemas/OrderItemAnalyteSelection'
+            },
+            type: 'array',
+            title: 'Item Analytes'
         },
         line_overrides: {
             items: {
@@ -5373,6 +7034,13 @@ export const OrderUpdateSchema = {
             type: 'array',
             minItems: 1,
             title: 'Catalog Ids'
+        },
+        item_analytes: {
+            items: {
+                '$ref': '#/components/schemas/OrderItemAnalyteSelection'
+            },
+            type: 'array',
+            title: 'Item Analytes'
         },
         line_overrides: {
             items: {
@@ -6660,6 +8328,940 @@ export const RejectionReasonsPublicSchema = {
     type: 'object',
     required: ['data', 'count'],
     title: 'RejectionReasonsPublic'
+} as const;
+
+export const ResultAnalyteWorkspacePublicSchema = {
+    properties: {
+        result_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Result Id'
+        },
+        analyte_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Analyte Id'
+        },
+        analyte_code: {
+            type: 'string',
+            title: 'Analyte Code'
+        },
+        analyte_name: {
+            type: 'string',
+            title: 'Analyte Name'
+        },
+        data_type: {
+            '$ref': '#/components/schemas/AnalyteDataType'
+        },
+        unit_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit Name'
+        },
+        options_data: {
+            anyOf: [
+                {},
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Options Data'
+        },
+        reference_text: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reference Text'
+        },
+        is_calculated: {
+            type: 'boolean',
+            title: 'Is Calculated',
+            default: false
+        },
+        specimen_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Specimen Id'
+        },
+        specimen_type_name: {
+            type: 'string',
+            title: 'Specimen Type Name'
+        },
+        result_value: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Result Value'
+        },
+        image_url: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Image Url'
+        },
+        status: {
+            '$ref': '#/components/schemas/ResultStatus',
+            default: 'pending'
+        },
+        validation_rule_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Validation Rule Id'
+        },
+        validation: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/ResultValidationOutcomePublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        is_abnormal: {
+            type: 'boolean',
+            title: 'Is Abnormal',
+            default: false
+        },
+        is_critical: {
+            type: 'boolean',
+            title: 'Is Critical',
+            default: false
+        },
+        delta_flag: {
+            type: 'boolean',
+            title: 'Delta Flag',
+            default: false
+        },
+        resulted_by_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Resulted By Name'
+        },
+        resulted_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Resulted At'
+        },
+        verified_by_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Verified By Name'
+        },
+        verified_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Verified At'
+        },
+        verification_eligible: {
+            type: 'boolean',
+            title: 'Verification Eligible',
+            default: false
+        },
+        verification_blocker: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Verification Blocker'
+        },
+        escalation_required: {
+            type: 'boolean',
+            title: 'Escalation Required',
+            default: false
+        },
+        critical_notifications: {
+            items: {
+                '$ref': '#/components/schemas/CriticalNotificationDetailPublic'
+            },
+            type: 'array',
+            title: 'Critical Notifications'
+        },
+        comments: {
+            items: {
+                '$ref': '#/components/schemas/ResultCommentDetailPublic'
+            },
+            type: 'array',
+            title: 'Comments'
+        },
+        corrections: {
+            items: {
+                '$ref': '#/components/schemas/ResultCorrectionHistoryPublic'
+            },
+            type: 'array',
+            title: 'Corrections'
+        }
+    },
+    type: 'object',
+    required: ['analyte_id', 'analyte_code', 'analyte_name', 'data_type', 'specimen_id', 'specimen_type_name'],
+    title: 'ResultAnalyteWorkspacePublic'
+} as const;
+
+export const ResultBulkEntryRequestSchema = {
+    properties: {
+        order_item_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Order Item Id'
+        },
+        values: {
+            items: {
+                '$ref': '#/components/schemas/ResultEntryValue'
+            },
+            type: 'array',
+            minItems: 1,
+            title: 'Values'
+        }
+    },
+    type: 'object',
+    required: ['order_item_id', 'values'],
+    title: 'ResultBulkEntryRequest'
+} as const;
+
+export const ResultBulkVerificationPublicSchema = {
+    properties: {
+        workspace: {
+            '$ref': '#/components/schemas/ResultWorkspacePublic'
+        },
+        verified_count: {
+            type: 'integer',
+            title: 'Verified Count',
+            default: 0
+        },
+        skipped_count: {
+            type: 'integer',
+            title: 'Skipped Count',
+            default: 0
+        },
+        verified_result_ids: {
+            items: {
+                type: 'string',
+                format: 'uuid'
+            },
+            type: 'array',
+            title: 'Verified Result Ids'
+        },
+        skipped: {
+            items: {
+                '$ref': '#/components/schemas/ResultVerificationSkipPublic'
+            },
+            type: 'array',
+            title: 'Skipped'
+        }
+    },
+    type: 'object',
+    required: ['workspace'],
+    title: 'ResultBulkVerificationPublic'
+} as const;
+
+export const ResultCommentDetailPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        analyte_result_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Analyte Result Id'
+        },
+        user_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'User Id'
+        },
+        comment: {
+            type: 'string',
+            title: 'Comment'
+        },
+        user_name: {
+            type: 'string',
+            title: 'User Name'
+        }
+    },
+    type: 'object',
+    required: ['id', 'analyte_result_id', 'user_id', 'comment', 'user_name'],
+    title: 'ResultCommentDetailPublic'
+} as const;
+
+export const ResultCommentRequestSchema = {
+    properties: {
+        comment: {
+            type: 'string',
+            maxLength: 4000,
+            minLength: 1,
+            title: 'Comment'
+        }
+    },
+    type: 'object',
+    required: ['comment'],
+    title: 'ResultCommentRequest'
+} as const;
+
+export const ResultConsistencyOutcomePublicSchema = {
+    properties: {
+        rule_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Rule Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        severity: {
+            '$ref': '#/components/schemas/RuleSeverity'
+        },
+        message: {
+            type: 'string',
+            title: 'Message'
+        }
+    },
+    type: 'object',
+    required: ['rule_id', 'name', 'severity', 'message'],
+    title: 'ResultConsistencyOutcomePublic'
+} as const;
+
+export const ResultCorrectionHistoryPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        old_value: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Old Value'
+        },
+        new_value: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'New Value'
+        },
+        reason: {
+            type: 'string',
+            title: 'Reason'
+        },
+        performed_by_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Performed By Name'
+        },
+        performed_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Performed At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'reason'],
+    title: 'ResultCorrectionHistoryPublic'
+} as const;
+
+export const ResultCorrectionRequestSchema = {
+    properties: {
+        result_value: {
+            type: 'string',
+            title: 'Result Value'
+        },
+        reason: {
+            type: 'string',
+            maxLength: 1000,
+            minLength: 1,
+            title: 'Reason'
+        },
+        instrument_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Instrument Id'
+        }
+    },
+    type: 'object',
+    required: ['result_value', 'reason'],
+    title: 'ResultCorrectionRequest'
+} as const;
+
+export const ResultEntryValueSchema = {
+    properties: {
+        analyte_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Analyte Id'
+        },
+        specimen_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Specimen Id'
+        },
+        result_value: {
+            type: 'string',
+            title: 'Result Value'
+        },
+        instrument_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Instrument Id'
+        }
+    },
+    type: 'object',
+    required: ['analyte_id', 'specimen_id', 'result_value'],
+    title: 'ResultEntryValue'
+} as const;
+
+export const ResultQueueItemPublicSchema = {
+    properties: {
+        order_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Order Id'
+        },
+        accession_number: {
+            type: 'string',
+            title: 'Accession Number'
+        },
+        patient_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Patient Id'
+        },
+        patient_identifier: {
+            type: 'string',
+            title: 'Patient Identifier'
+        },
+        patient_name: {
+            type: 'string',
+            title: 'Patient Name'
+        },
+        order_status: {
+            '$ref': '#/components/schemas/OrderStatus'
+        },
+        category_summary: {
+            type: 'string',
+            title: 'Category Summary'
+        },
+        total_count: {
+            type: 'integer',
+            title: 'Total Count'
+        },
+        resulted_count: {
+            type: 'integer',
+            title: 'Resulted Count'
+        },
+        verified_count: {
+            type: 'integer',
+            title: 'Verified Count'
+        },
+        abnormal_count: {
+            type: 'integer',
+            title: 'Abnormal Count'
+        },
+        critical_count: {
+            type: 'integer',
+            title: 'Critical Count'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        }
+    },
+    type: 'object',
+    required: ['order_id', 'accession_number', 'patient_id', 'patient_identifier', 'patient_name', 'order_status', 'category_summary', 'total_count', 'resulted_count', 'verified_count', 'abnormal_count', 'critical_count'],
+    title: 'ResultQueueItemPublic'
+} as const;
+
+export const ResultQueuePublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ResultQueueItemPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ResultQueuePublic'
+} as const;
+
+export const ResultReflexOutcomePublicSchema = {
+    properties: {
+        rule_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Rule Id'
+        },
+        catalog_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Catalog Id'
+        },
+        catalog_code: {
+            type: 'string',
+            title: 'Catalog Code'
+        },
+        catalog_name: {
+            type: 'string',
+            title: 'Catalog Name'
+        },
+        added: {
+            type: 'boolean',
+            title: 'Added'
+        }
+    },
+    type: 'object',
+    required: ['rule_id', 'catalog_id', 'catalog_code', 'catalog_name', 'added'],
+    title: 'ResultReflexOutcomePublic'
+} as const;
+
+export const ResultStatusSchema = {
+    type: 'string',
+    enum: ['pending', 'resulted', 'verified', 'rejected'],
+    title: 'ResultStatus'
+} as const;
+
+export const ResultSubmissionPublicSchema = {
+    properties: {
+        workspace: {
+            '$ref': '#/components/schemas/ResultWorkspacePublic'
+        },
+        saved_result_ids: {
+            items: {
+                type: 'string',
+                format: 'uuid'
+            },
+            type: 'array',
+            title: 'Saved Result Ids'
+        },
+        critical_result_ids: {
+            items: {
+                type: 'string',
+                format: 'uuid'
+            },
+            type: 'array',
+            title: 'Critical Result Ids'
+        },
+        consistency_outcomes: {
+            items: {
+                '$ref': '#/components/schemas/ResultConsistencyOutcomePublic'
+            },
+            type: 'array',
+            title: 'Consistency Outcomes'
+        },
+        reflex_outcomes: {
+            items: {
+                '$ref': '#/components/schemas/ResultReflexOutcomePublic'
+            },
+            type: 'array',
+            title: 'Reflex Outcomes'
+        }
+    },
+    type: 'object',
+    required: ['workspace'],
+    title: 'ResultSubmissionPublic'
+} as const;
+
+export const ResultTestWorkspacePublicSchema = {
+    properties: {
+        order_item_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Order Item Id'
+        },
+        catalog_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Catalog Id'
+        },
+        catalog_code: {
+            type: 'string',
+            title: 'Catalog Code'
+        },
+        catalog_name: {
+            type: 'string',
+            title: 'Catalog Name'
+        },
+        category_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Id'
+        },
+        category_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Category Name'
+        },
+        is_reflex_added: {
+            type: 'boolean',
+            title: 'Is Reflex Added',
+            default: false
+        },
+        analytes: {
+            items: {
+                '$ref': '#/components/schemas/ResultAnalyteWorkspacePublic'
+            },
+            type: 'array',
+            title: 'Analytes'
+        },
+        resulted_count: {
+            type: 'integer',
+            title: 'Resulted Count',
+            default: 0
+        },
+        verified_count: {
+            type: 'integer',
+            title: 'Verified Count',
+            default: 0
+        }
+    },
+    type: 'object',
+    required: ['order_item_id', 'catalog_id', 'catalog_code', 'catalog_name'],
+    title: 'ResultTestWorkspacePublic'
+} as const;
+
+export const ResultValidationOutcomePublicSchema = {
+    properties: {
+        classification: {
+            type: 'string',
+            title: 'Classification'
+        },
+        message: {
+            type: 'string',
+            title: 'Message'
+        },
+        is_abnormal: {
+            type: 'boolean',
+            title: 'Is Abnormal',
+            default: false
+        },
+        is_critical: {
+            type: 'boolean',
+            title: 'Is Critical',
+            default: false
+        },
+        delta_flag: {
+            type: 'boolean',
+            title: 'Delta Flag',
+            default: false
+        }
+    },
+    type: 'object',
+    required: ['classification', 'message'],
+    title: 'ResultValidationOutcomePublic'
+} as const;
+
+export const ResultVerificationSkipPublicSchema = {
+    properties: {
+        result_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Result Id'
+        },
+        order_item_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Order Item Id'
+        },
+        analyte_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Analyte Id'
+        },
+        specimen_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Specimen Id'
+        },
+        analyte_name: {
+            type: 'string',
+            title: 'Analyte Name'
+        },
+        message: {
+            type: 'string',
+            title: 'Message'
+        }
+    },
+    type: 'object',
+    required: ['order_item_id', 'analyte_id', 'specimen_id', 'analyte_name', 'message'],
+    title: 'ResultVerificationSkipPublic'
+} as const;
+
+export const ResultWorkspacePublicSchema = {
+    properties: {
+        order_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Order Id'
+        },
+        revision_number: {
+            type: 'integer',
+            title: 'Revision Number',
+            default: 1
+        },
+        accession_number: {
+            type: 'string',
+            title: 'Accession Number'
+        },
+        patient_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Patient Id'
+        },
+        patient_identifier: {
+            type: 'string',
+            title: 'Patient Identifier'
+        },
+        patient_name: {
+            type: 'string',
+            title: 'Patient Name'
+        },
+        patient_date_of_birth: {
+            type: 'string',
+            format: 'date',
+            title: 'Patient Date Of Birth'
+        },
+        patient_gender: {
+            '$ref': '#/components/schemas/GenderType'
+        },
+        patient_context_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Patient Context Id'
+        },
+        patient_context_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Patient Context Name'
+        },
+        doctor_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Doctor Name'
+        },
+        order_status: {
+            '$ref': '#/components/schemas/OrderStatus'
+        },
+        tests: {
+            items: {
+                '$ref': '#/components/schemas/ResultTestWorkspacePublic'
+            },
+            type: 'array',
+            title: 'Tests'
+        },
+        total_count: {
+            type: 'integer',
+            title: 'Total Count',
+            default: 0
+        },
+        resulted_count: {
+            type: 'integer',
+            title: 'Resulted Count',
+            default: 0
+        },
+        verified_count: {
+            type: 'integer',
+            title: 'Verified Count',
+            default: 0
+        },
+        consistency_outcomes: {
+            items: {
+                '$ref': '#/components/schemas/ResultConsistencyOutcomePublic'
+            },
+            type: 'array',
+            title: 'Consistency Outcomes'
+        },
+        reflex_outcomes: {
+            items: {
+                '$ref': '#/components/schemas/ResultReflexOutcomePublic'
+            },
+            type: 'array',
+            title: 'Reflex Outcomes'
+        }
+    },
+    type: 'object',
+    required: ['order_id', 'accession_number', 'patient_id', 'patient_identifier', 'patient_name', 'patient_date_of_birth', 'patient_gender', 'order_status'],
+    title: 'ResultWorkspacePublic'
 } as const;
 
 export const RoleCreateSchema = {

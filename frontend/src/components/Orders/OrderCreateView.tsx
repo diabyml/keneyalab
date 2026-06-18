@@ -45,6 +45,7 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { usePermission } from "@/hooks/usePermission"
 import { handleError } from "@/utils"
 import { CatalogPicker } from "./CatalogPicker"
+import { TestAnalyteEditor } from "./TestAnalyteEditor"
 import { formatMoney } from "./utils"
 
 function normalizeNonNegativeAmount(value: string): string | null {
@@ -90,6 +91,9 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
   const [overrides, setOverrides] = useState<Record<string, OrderLineOverride>>(
     {},
   )
+  const [analyteOverrides, setAnalyteOverrides] = useState<
+    Record<string, string[]>
+  >({})
   const [discount, setDiscount] = useState("")
   const [discountReason, setDiscountReason] = useState("")
   const [paymentAmount, setPaymentAmount] = useState("")
@@ -176,6 +180,14 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
               reason: item.price_override_reason!,
             },
           ]),
+      ),
+    )
+    setAnalyteOverrides(
+      Object.fromEntries(
+        (order.items ?? []).map((item) => [
+          item.catalog_id,
+          (item.analytes ?? []).map((analyte) => analyte.analyte_id),
+        ]),
       ),
     )
     const sourceIds = [
@@ -282,6 +294,9 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
       patient_context_id: contextId,
       notes: notes.trim() || null,
       catalog_ids: [...selected.keys()],
+      item_analytes: Object.entries(analyteOverrides).map(
+        ([catalog_id, analyte_ids]) => ({ catalog_id, analyte_ids }),
+      ),
       line_overrides: completeOverrides,
       discount: normalizedDiscount,
       discount_reason: discountReason.trim() || null,
@@ -299,6 +314,7 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
     paymentAmount,
     paymentMethodId,
     selected,
+    analyteOverrides,
     normalizedDiscount,
   ])
 
@@ -555,7 +571,28 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
                 Recherchez les tests ou ajoutez plusieurs résultats avec Entrée.
               </p>
             </div>
-            <CatalogPicker selected={selected} onChange={setSelected} />
+            <CatalogPicker
+              selected={selected}
+              onChange={(next) => {
+                setSelected(next)
+                const selectedIds = new Set(next.keys())
+                setAnalyteOverrides((current) =>
+                  Object.fromEntries(
+                    Object.entries(current).filter(([catalogId]) => {
+                      const previewItem = preview?.items.find(
+                        (item) => item.catalog_id === catalogId,
+                      )
+                      return (
+                        !previewItem ||
+                        (previewItem.source_catalog_ids ?? []).some(
+                          (sourceId) => selectedIds.has(sourceId),
+                        )
+                      )
+                    }),
+                  ),
+                )
+              }}
+            />
           </section>
         </div>
 
@@ -638,6 +675,16 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
                             {formatMoney(item.price_charged)}
                           </span>
                         </div>
+                        <TestAnalyteEditor
+                          analytes={item.analytes ?? []}
+                          busy={previewQuery.isFetching}
+                          onChange={(analyteIds) =>
+                            setAnalyteOverrides((current) => ({
+                              ...current,
+                              [item.catalog_id]: analyteIds,
+                            }))
+                          }
+                        />
                         {canOverride && (
                           <div className="space-y-1">
                             <div className="grid grid-cols-[90px_minmax(0,1fr)_auto] gap-1">

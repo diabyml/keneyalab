@@ -32,6 +32,8 @@ interface SearchSelectProps {
   minSearchLength?: number
   debounceMs?: number
   className?: string
+  autoFocus?: boolean
+  onEscape?: () => void
 }
 
 const DEFAULT_DEBOUNCE_MS = 250
@@ -50,6 +52,8 @@ export function SearchSelect({
   minSearchLength = 0,
   debounceMs = DEFAULT_DEBOUNCE_MS,
   className,
+  autoFocus = false,
+  onEscape,
 }: SearchSelectProps) {
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState("")
@@ -143,6 +147,10 @@ export function SearchSelect({
           disabled={disabled}
           placeholder={open ? searchPlaceholder : placeholder}
           showClear={clearable && !!value}
+          autoFocus={autoFocus}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") onEscape?.()
+          }}
         />
         <ComboboxContent
           container={portalContainer}

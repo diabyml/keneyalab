@@ -8,6 +8,7 @@ import {
   type LucideIcon,
   Microscope,
   Ruler,
+  ScrollText,
   Search,
   Settings2,
   ShieldCheck,
@@ -42,6 +43,24 @@ interface ConfigLink {
 }
 
 const CONFIG_LINKS: ConfigLink[] = [
+  {
+    id: "audit-config",
+    name: "Journal d'audit",
+    description: "Consulter les changements et événements de sécurité",
+    icon: ScrollText,
+    requiredPermission: { resource: "audit", action: "view" },
+    category: "Général",
+    navigateTo: "/configurations/audit",
+  },
+  {
+    id: "laboratoire-config",
+    name: "Laboratoire",
+    description: "Configurer l’identité, le logo et les coordonnées",
+    icon: Building2,
+    requiredPermission: { resource: "lab_settings", action: "manage" },
+    category: "Général",
+    navigateTo: "/configurations/laboratoire",
+  },
   {
     id: "roles-config",
     name: "Rôles",
@@ -205,6 +224,8 @@ function ConfigLinks() {
   const canManageRules = usePermission("rules", "manage")
   const canManageReferenceData = usePermission("reference_data", "manage")
   const canManageFinance = usePermission("finance", "manage")
+  const canManageLabSettings = usePermission("lab_settings", "manage")
+  const canViewAudit = usePermission("audit", "view")
   const [search, setSearch] = useState("")
 
   function accessAllowed(link: ConfigLink): boolean {
@@ -216,6 +237,9 @@ function ConfigLinks() {
     if (link.requiredPermission.resource === "reference_data")
       return canManageReferenceData
     if (link.requiredPermission.resource === "finance") return canManageFinance
+    if (link.requiredPermission.resource === "lab_settings")
+      return canManageLabSettings
+    if (link.requiredPermission.resource === "audit") return canViewAudit
     return false
   }
 

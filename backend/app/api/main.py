@@ -2,9 +2,12 @@ from fastapi import APIRouter
 
 from app.api.routes import (
     analytes,
+    audit_logs,
     automated_rules,
     catalog,
     categories,
+    critical_notifications,
+    dashboard,
     doctor_commission_entries,
     doctor_commission_payments,
     doctors,
@@ -14,6 +17,7 @@ from app.api.routes import (
     insurance_providers,
     invoices,
     items,
+    lab_settings,
     login,
     orders,
     patient_contexts,
@@ -22,6 +26,7 @@ from app.api.routes import (
     private,
     rbac,
     rejection_reasons,
+    results,
     specimen_types,
     specimens,
     titles,
@@ -54,10 +59,15 @@ api_router.include_router(doctors.commission_router)
 api_router.include_router(doctor_commission_entries.router)
 api_router.include_router(doctor_commission_payments.router)
 api_router.include_router(finance_settings.router)
+api_router.include_router(lab_settings.router)
 api_router.include_router(analytes.router)
+api_router.include_router(audit_logs.router)
 api_router.include_router(catalog.router)
 api_router.include_router(orders.router)
 api_router.include_router(invoices.router)
+api_router.include_router(results.router)
+api_router.include_router(critical_notifications.router)
+api_router.include_router(dashboard.router)
 api_router.include_router(validation_rules.router)
 api_router.include_router(automated_rules.router)
 api_router.include_router(formulas.router)

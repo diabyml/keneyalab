@@ -93,9 +93,7 @@ def _line_statement(*, payable_only: bool = True):
         .join(Patient, Order.patient_id == Patient.id)
         .join(Invoice, Invoice.order_id == DoctorCommissionEntry.order_id)
         .where(
-            Order.status != OrderStatus.cancelled,
             col(Invoice.is_voided).is_(False),
-            Invoice.payment_status == PaymentStatus.paid,
         )
     )
     if payable_only:
