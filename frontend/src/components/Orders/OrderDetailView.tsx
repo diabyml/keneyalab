@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   CheckCheck,
   CreditCard,
+  FileText,
   Microscope,
   Pencil,
   Printer,
@@ -70,6 +71,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const canCancelOrder = usePermission("orders", "cancel")
   const canRefundPayment = usePermission("payments", "refund")
   const canViewAudit = usePermission("audit", "view")
+  const canViewReports = usePermission("reports", "view")
   const [printTarget, setPrintTarget] = useState<"receipt" | "labels" | null>(
     null,
   )
@@ -204,6 +206,14 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {canViewReports && !isCancelled && (
+              <Button variant="outline" asChild>
+                <Link to="/orders/$orderId/report" params={{ orderId }}>
+                  <FileText className="size-4" />
+                  Compte rendu
+                </Link>
+              </Button>
+            )}
             {canEditOrder && !isCancelled && (
               <Button variant="outline" asChild>
                 <Link to="/orders/$orderId/edit" params={{ orderId }}>

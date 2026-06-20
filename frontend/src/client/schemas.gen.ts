@@ -1425,6 +1425,18 @@ export const CategoryCreateSchema = {
             type: 'integer',
             title: 'Sort Order',
             default: 1
+        },
+        report_renderer_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Report Renderer Id'
         }
     },
     type: 'object',
@@ -1476,6 +1488,18 @@ export const CategoryPublicSchema = {
             type: 'integer',
             title: 'Sort Order',
             default: 1
+        },
+        report_renderer_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Report Renderer Id'
         }
     },
     type: 'object',
@@ -1516,6 +1540,25 @@ export const CategoryReorderRequestSchema = {
     title: 'CategoryReorderRequest'
 } as const;
 
+export const CategoryReportRendererUpdateSchema = {
+    properties: {
+        report_renderer_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Report Renderer Id'
+        }
+    },
+    type: 'object',
+    title: 'CategoryReportRendererUpdate'
+} as const;
+
 export const CategoryUpdateSchema = {
     properties: {
         name: {
@@ -1540,6 +1583,18 @@ export const CategoryUpdateSchema = {
                 }
             ],
             title: 'Sort Order'
+        },
+        report_renderer_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Report Renderer Id'
         }
     },
     type: 'object',
@@ -2385,6 +2440,12 @@ export const DashboardTrendPointPublicSchema = {
     type: 'object',
     required: ['label'],
     title: 'DashboardTrendPointPublic'
+} as const;
+
+export const DeliveryStatusSchema = {
+    type: 'string',
+    enum: ['pending', 'sent', 'failed'],
+    title: 'DeliveryStatus'
 } as const;
 
 export const DiscountAllocationPolicySchema = {
@@ -8328,6 +8389,915 @@ export const RejectionReasonsPublicSchema = {
     type: 'object',
     required: ['data', 'count'],
     title: 'RejectionReasonsPublic'
+} as const;
+
+export const ReportChannelSchema = {
+    type: 'string',
+    enum: ['print', 'email', 'whatsapp', 'portal'],
+    title: 'ReportChannel'
+} as const;
+
+export const ReportComponentCreateSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            maxLength: 255,
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        component_type: {
+            '$ref': '#/components/schemas/ReportComponentType'
+        },
+        html_source: {
+            type: 'string',
+            title: 'Html Source',
+            default: ''
+        },
+        css_source: {
+            type: 'string',
+            title: 'Css Source',
+            default: ''
+        }
+    },
+    type: 'object',
+    required: ['name', 'component_type'],
+    title: 'ReportComponentCreate'
+} as const;
+
+export const ReportComponentPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        component_type: {
+            '$ref': '#/components/schemas/ReportComponentType'
+        },
+        is_archived: {
+            type: 'boolean',
+            title: 'Is Archived'
+        },
+        created_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created By Id'
+        },
+        draft_version: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/ReportComponentVersionPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        published_version: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/ReportComponentVersionPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        is_default: {
+            type: 'boolean',
+            title: 'Is Default',
+            default: false
+        }
+    },
+    type: 'object',
+    required: ['id', 'name', 'component_type', 'is_archived'],
+    title: 'ReportComponentPublic'
+} as const;
+
+export const ReportComponentTypeSchema = {
+    type: 'string',
+    enum: ['header', 'patient_doctor_details', 'footer'],
+    title: 'ReportComponentType'
+} as const;
+
+export const ReportComponentUpdateSchema = {
+    properties: {
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        html_source: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Html Source'
+        },
+        css_source: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Css Source'
+        }
+    },
+    type: 'object',
+    title: 'ReportComponentUpdate'
+} as const;
+
+export const ReportComponentVersionPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        component_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Component Id'
+        },
+        version: {
+            type: 'integer',
+            title: 'Version'
+        },
+        status: {
+            '$ref': '#/components/schemas/ReportTemplateVersionStatus'
+        },
+        html_source: {
+            type: 'string',
+            title: 'Html Source'
+        },
+        css_source: {
+            type: 'string',
+            title: 'Css Source'
+        },
+        created_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created By Id'
+        },
+        published_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Published By Id'
+        },
+        published_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Published At'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'component_id', 'version', 'status', 'html_source', 'css_source', 'created_at', 'updated_at'],
+    title: 'ReportComponentVersionPublic'
+} as const;
+
+export const ReportComponentsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ReportComponentPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ReportComponentsPublic'
+} as const;
+
+export const ReportDefaultUpdateSchema = {
+    properties: {
+        template_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Template Id'
+        }
+    },
+    type: 'object',
+    required: ['template_id'],
+    title: 'ReportDefaultUpdate'
+} as const;
+
+export const ReportDeliveryRequestSchema = {
+    properties: {
+        channel: {
+            '$ref': '#/components/schemas/ReportChannel'
+        },
+        recipient: {
+            type: 'string',
+            maxLength: 320,
+            minLength: 3,
+            title: 'Recipient'
+        },
+        recipient_note: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Recipient Note'
+        }
+    },
+    type: 'object',
+    required: ['channel', 'recipient'],
+    title: 'ReportDeliveryRequest'
+} as const;
+
+export const ReportPreviewPublicSchema = {
+    properties: {
+        order_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Order Id'
+        },
+        can_release: {
+            type: 'boolean',
+            title: 'Can Release'
+        },
+        blockers: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Blockers'
+        },
+        snapshot: {
+            title: 'Snapshot'
+        },
+        template_snapshot: {
+            title: 'Template Snapshot'
+        }
+    },
+    type: 'object',
+    required: ['can_release'],
+    title: 'ReportPreviewPublic'
+} as const;
+
+export const ReportPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        order_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Order Id'
+        },
+        version: {
+            type: 'integer',
+            title: 'Version',
+            default: 1
+        },
+        report_template_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Report Template Id'
+        },
+        channel: {
+            '$ref': '#/components/schemas/ReportChannel'
+        },
+        recipient_note: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Recipient Note'
+        },
+        report_storage_url: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Report Storage Url'
+        },
+        released_by_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Released By Id'
+        },
+        released_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Released At'
+        },
+        delivery_status: {
+            '$ref': '#/components/schemas/DeliveryStatus'
+        },
+        is_voided: {
+            type: 'boolean',
+            title: 'Is Voided'
+        },
+        snapshot: {
+            title: 'Snapshot'
+        },
+        template_snapshot: {
+            title: 'Template Snapshot'
+        },
+        delivery_metadata: {
+            title: 'Delivery Metadata'
+        }
+    },
+    type: 'object',
+    required: ['id', 'order_id', 'channel', 'released_by_id', 'delivery_status', 'is_voided'],
+    title: 'ReportPublic'
+} as const;
+
+export const ReportReleaseRequestSchema = {
+    properties: {
+        channel: {
+            '$ref': '#/components/schemas/ReportChannel',
+            default: 'print'
+        },
+        recipient: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 320,
+                    minLength: 3
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Recipient'
+        },
+        recipient_note: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Recipient Note'
+        }
+    },
+    type: 'object',
+    title: 'ReportReleaseRequest'
+} as const;
+
+export const ReportRendererCreateSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            maxLength: 255,
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        jsx_source: {
+            type: 'string',
+            title: 'Jsx Source'
+        },
+        css_source: {
+            type: 'string',
+            title: 'Css Source',
+            default: ''
+        }
+    },
+    type: 'object',
+    required: ['name', 'jsx_source'],
+    title: 'ReportRendererCreate'
+} as const;
+
+export const ReportRendererPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        is_builtin: {
+            type: 'boolean',
+            title: 'Is Builtin'
+        },
+        is_archived: {
+            type: 'boolean',
+            title: 'Is Archived'
+        },
+        created_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created By Id'
+        },
+        draft_version: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/ReportRendererVersionPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        published_version: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/ReportRendererVersionPublic'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        is_default: {
+            type: 'boolean',
+            title: 'Is Default',
+            default: false
+        }
+    },
+    type: 'object',
+    required: ['id', 'name', 'is_builtin', 'is_archived'],
+    title: 'ReportRendererPublic'
+} as const;
+
+export const ReportRendererUpdateSchema = {
+    properties: {
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        jsx_source: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Jsx Source'
+        },
+        css_source: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Css Source'
+        }
+    },
+    type: 'object',
+    title: 'ReportRendererUpdate'
+} as const;
+
+export const ReportRendererVersionPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        renderer_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Renderer Id'
+        },
+        version: {
+            type: 'integer',
+            title: 'Version'
+        },
+        status: {
+            '$ref': '#/components/schemas/ReportTemplateVersionStatus'
+        },
+        jsx_source: {
+            type: 'string',
+            title: 'Jsx Source'
+        },
+        css_source: {
+            type: 'string',
+            title: 'Css Source'
+        },
+        created_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created By Id'
+        },
+        published_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Published By Id'
+        },
+        published_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Published At'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'renderer_id', 'version', 'status', 'jsx_source', 'css_source', 'created_at', 'updated_at'],
+    title: 'ReportRendererVersionPublic'
+} as const;
+
+export const ReportRenderersPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ReportRendererPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ReportRenderersPublic'
+} as const;
+
+export const ReportSettingsPublicSchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        default_header_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Default Header Id'
+        },
+        default_details_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Default Details Id'
+        },
+        default_footer_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Default Footer Id'
+        },
+        default_renderer_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Default Renderer Id'
+        },
+        updated_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated By Id'
+        },
+        updated_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'updated_at'],
+    title: 'ReportSettingsPublic'
+} as const;
+
+export const ReportTemplateVersionStatusSchema = {
+    type: 'string',
+    enum: ['draft', 'published', 'archived'],
+    title: 'ReportTemplateVersionStatus'
+} as const;
+
+export const ReportsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ReportPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ReportsPublic'
 } as const;
 
 export const ResultAnalyteWorkspacePublicSchema = {

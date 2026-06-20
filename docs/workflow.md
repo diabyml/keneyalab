@@ -5,6 +5,8 @@ docker compose exec backend python scripts/clear_data.py
 
 ## To access adminer: http://adminer.localhost/
 
+## Mailcatcher  http://localhost:1080
+
 
 ## run permissions seed
 docker compose exec backend python -c "from app.core.db import init_db; from app.core.db import engine; from sqlmodel import Session; session = Session(engine); init_db(session)"

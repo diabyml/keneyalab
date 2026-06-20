@@ -143,6 +143,11 @@ SEED_PERMISSIONS: list[dict] = [
         "description": "Void a superseded report version",
     },
     {"resource": "reports", "action": "view", "description": "View released reports"},
+    {
+        "resource": "reports",
+        "action": "manage_templates",
+        "description": "Manage report components and category renderers",
+    },
     # Invoices
     {"resource": "invoices", "action": "create", "description": "Create an invoice"},
     {"resource": "invoices", "action": "view", "description": "View invoice details"},
@@ -304,6 +309,7 @@ ROLE_PERMISSION_MAP: dict[str, list[tuple[str, str]]] = {
         ("order_items", "delete"),
         ("results", "view"),
         ("reports", "view"),
+        ("reports", "manage_templates"),
         ("specimens", "view"),
         ("patients", "create"),
         ("patients", "view"),

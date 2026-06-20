@@ -50,6 +50,7 @@ import { Route as LayoutConfigurationsTarifsAssuranceRouteImport } from './route
 import { Route as LayoutConfigurationsRolesRouteImport } from './routes/_layout/configurations/roles'
 import { Route as LayoutConfigurationsReglesValidationRouteImport } from './routes/_layout/configurations/regles-validation'
 import { Route as LayoutConfigurationsReglesAutomatiseesRouteImport } from './routes/_layout/configurations/regles-automatisees'
+import { Route as LayoutConfigurationsRapportsRouteImport } from './routes/_layout/configurations/rapports'
 import { Route as LayoutConfigurationsPermissionsRouteImport } from './routes/_layout/configurations/permissions'
 import { Route as LayoutConfigurationsMotifsRejetRouteImport } from './routes/_layout/configurations/motifs-rejet'
 import { Route as LayoutConfigurationsMethodesPaiementRouteImport } from './routes/_layout/configurations/methodes-paiement'
@@ -64,6 +65,7 @@ import { Route as LayoutConfigurationsAnalytesRouteImport } from './routes/_layo
 import { Route as LayoutCommissionsEntriesRouteImport } from './routes/_layout/commissions/entries'
 import { Route as LayoutOrdersOrderIdIndexRouteImport } from './routes/_layout/orders/$orderId/index'
 import { Route as LayoutCommissionsPaymentsIndexRouteImport } from './routes/_layout/commissions/payments/index'
+import { Route as LayoutOrdersOrderIdReportRouteImport } from './routes/_layout/orders/$orderId/report'
 import { Route as LayoutOrdersOrderIdEditRouteImport } from './routes/_layout/orders/$orderId/edit'
 import { Route as LayoutCommissionsPaymentsNewRouteImport } from './routes/_layout/commissions/payments/new'
 import { Route as LayoutCommissionsPaymentsPaymentIdRouteImport } from './routes/_layout/commissions/payments/$paymentId'
@@ -285,6 +287,12 @@ const LayoutConfigurationsReglesAutomatiseesRoute =
     path: '/regles-automatisees',
     getParentRoute: () => LayoutConfigurationsRoute,
   } as any)
+const LayoutConfigurationsRapportsRoute =
+  LayoutConfigurationsRapportsRouteImport.update({
+    id: '/rapports',
+    path: '/rapports',
+    getParentRoute: () => LayoutConfigurationsRoute,
+  } as any)
 const LayoutConfigurationsPermissionsRoute =
   LayoutConfigurationsPermissionsRouteImport.update({
     id: '/permissions',
@@ -369,6 +377,12 @@ const LayoutCommissionsPaymentsIndexRoute =
     path: '/payments/',
     getParentRoute: () => LayoutCommissionsRoute,
   } as any)
+const LayoutOrdersOrderIdReportRoute =
+  LayoutOrdersOrderIdReportRouteImport.update({
+    id: '/report',
+    path: '/report',
+    getParentRoute: () => LayoutOrdersOrderIdRoute,
+  } as any)
 const LayoutOrdersOrderIdEditRoute = LayoutOrdersOrderIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
@@ -416,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/configurations/methodes-paiement': typeof LayoutConfigurationsMethodesPaiementRoute
   '/configurations/motifs-rejet': typeof LayoutConfigurationsMotifsRejetRoute
   '/configurations/permissions': typeof LayoutConfigurationsPermissionsRoute
+  '/configurations/rapports': typeof LayoutConfigurationsRapportsRoute
   '/configurations/regles-automatisees': typeof LayoutConfigurationsReglesAutomatiseesRoute
   '/configurations/regles-validation': typeof LayoutConfigurationsReglesValidationRoute
   '/configurations/roles': typeof LayoutConfigurationsRolesRoute
@@ -443,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/commissions/payments/$paymentId': typeof LayoutCommissionsPaymentsPaymentIdRoute
   '/commissions/payments/new': typeof LayoutCommissionsPaymentsNewRoute
   '/orders/$orderId/edit': typeof LayoutOrdersOrderIdEditRoute
+  '/orders/$orderId/report': typeof LayoutOrdersOrderIdReportRoute
   '/commissions/payments/': typeof LayoutCommissionsPaymentsIndexRoute
   '/orders/$orderId/': typeof LayoutOrdersOrderIdIndexRoute
 }
@@ -467,6 +483,7 @@ export interface FileRoutesByTo {
   '/configurations/methodes-paiement': typeof LayoutConfigurationsMethodesPaiementRoute
   '/configurations/motifs-rejet': typeof LayoutConfigurationsMotifsRejetRoute
   '/configurations/permissions': typeof LayoutConfigurationsPermissionsRoute
+  '/configurations/rapports': typeof LayoutConfigurationsRapportsRoute
   '/configurations/regles-automatisees': typeof LayoutConfigurationsReglesAutomatiseesRoute
   '/configurations/regles-validation': typeof LayoutConfigurationsReglesValidationRoute
   '/configurations/roles': typeof LayoutConfigurationsRolesRoute
@@ -493,6 +510,7 @@ export interface FileRoutesByTo {
   '/commissions/payments/$paymentId': typeof LayoutCommissionsPaymentsPaymentIdRoute
   '/commissions/payments/new': typeof LayoutCommissionsPaymentsNewRoute
   '/orders/$orderId/edit': typeof LayoutOrdersOrderIdEditRoute
+  '/orders/$orderId/report': typeof LayoutOrdersOrderIdReportRoute
   '/commissions/payments': typeof LayoutCommissionsPaymentsIndexRoute
   '/orders/$orderId': typeof LayoutOrdersOrderIdIndexRoute
 }
@@ -527,6 +545,7 @@ export interface FileRoutesById {
   '/_layout/configurations/methodes-paiement': typeof LayoutConfigurationsMethodesPaiementRoute
   '/_layout/configurations/motifs-rejet': typeof LayoutConfigurationsMotifsRejetRoute
   '/_layout/configurations/permissions': typeof LayoutConfigurationsPermissionsRoute
+  '/_layout/configurations/rapports': typeof LayoutConfigurationsRapportsRoute
   '/_layout/configurations/regles-automatisees': typeof LayoutConfigurationsReglesAutomatiseesRoute
   '/_layout/configurations/regles-validation': typeof LayoutConfigurationsReglesValidationRoute
   '/_layout/configurations/roles': typeof LayoutConfigurationsRolesRoute
@@ -554,6 +573,7 @@ export interface FileRoutesById {
   '/_layout/commissions/payments/$paymentId': typeof LayoutCommissionsPaymentsPaymentIdRoute
   '/_layout/commissions/payments/new': typeof LayoutCommissionsPaymentsNewRoute
   '/_layout/orders/$orderId/edit': typeof LayoutOrdersOrderIdEditRoute
+  '/_layout/orders/$orderId/report': typeof LayoutOrdersOrderIdReportRoute
   '/_layout/commissions/payments/': typeof LayoutCommissionsPaymentsIndexRoute
   '/_layout/orders/$orderId/': typeof LayoutOrdersOrderIdIndexRoute
 }
@@ -588,6 +608,7 @@ export interface FileRouteTypes {
     | '/configurations/methodes-paiement'
     | '/configurations/motifs-rejet'
     | '/configurations/permissions'
+    | '/configurations/rapports'
     | '/configurations/regles-automatisees'
     | '/configurations/regles-validation'
     | '/configurations/roles'
@@ -615,6 +636,7 @@ export interface FileRouteTypes {
     | '/commissions/payments/$paymentId'
     | '/commissions/payments/new'
     | '/orders/$orderId/edit'
+    | '/orders/$orderId/report'
     | '/commissions/payments/'
     | '/orders/$orderId/'
   fileRoutesByTo: FileRoutesByTo
@@ -639,6 +661,7 @@ export interface FileRouteTypes {
     | '/configurations/methodes-paiement'
     | '/configurations/motifs-rejet'
     | '/configurations/permissions'
+    | '/configurations/rapports'
     | '/configurations/regles-automatisees'
     | '/configurations/regles-validation'
     | '/configurations/roles'
@@ -665,6 +688,7 @@ export interface FileRouteTypes {
     | '/commissions/payments/$paymentId'
     | '/commissions/payments/new'
     | '/orders/$orderId/edit'
+    | '/orders/$orderId/report'
     | '/commissions/payments'
     | '/orders/$orderId'
   id:
@@ -698,6 +722,7 @@ export interface FileRouteTypes {
     | '/_layout/configurations/methodes-paiement'
     | '/_layout/configurations/motifs-rejet'
     | '/_layout/configurations/permissions'
+    | '/_layout/configurations/rapports'
     | '/_layout/configurations/regles-automatisees'
     | '/_layout/configurations/regles-validation'
     | '/_layout/configurations/roles'
@@ -725,6 +750,7 @@ export interface FileRouteTypes {
     | '/_layout/commissions/payments/$paymentId'
     | '/_layout/commissions/payments/new'
     | '/_layout/orders/$orderId/edit'
+    | '/_layout/orders/$orderId/report'
     | '/_layout/commissions/payments/'
     | '/_layout/orders/$orderId/'
   fileRoutesById: FileRoutesById
@@ -1025,6 +1051,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutConfigurationsReglesAutomatiseesRouteImport
       parentRoute: typeof LayoutConfigurationsRoute
     }
+    '/_layout/configurations/rapports': {
+      id: '/_layout/configurations/rapports'
+      path: '/rapports'
+      fullPath: '/configurations/rapports'
+      preLoaderRoute: typeof LayoutConfigurationsRapportsRouteImport
+      parentRoute: typeof LayoutConfigurationsRoute
+    }
     '/_layout/configurations/permissions': {
       id: '/_layout/configurations/permissions'
       path: '/permissions'
@@ -1123,6 +1156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutCommissionsPaymentsIndexRouteImport
       parentRoute: typeof LayoutCommissionsRoute
     }
+    '/_layout/orders/$orderId/report': {
+      id: '/_layout/orders/$orderId/report'
+      path: '/report'
+      fullPath: '/orders/$orderId/report'
+      preLoaderRoute: typeof LayoutOrdersOrderIdReportRouteImport
+      parentRoute: typeof LayoutOrdersOrderIdRoute
+    }
     '/_layout/orders/$orderId/edit': {
       id: '/_layout/orders/$orderId/edit'
       path: '/edit'
@@ -1179,6 +1219,7 @@ interface LayoutConfigurationsRouteChildren {
   LayoutConfigurationsMethodesPaiementRoute: typeof LayoutConfigurationsMethodesPaiementRoute
   LayoutConfigurationsMotifsRejetRoute: typeof LayoutConfigurationsMotifsRejetRoute
   LayoutConfigurationsPermissionsRoute: typeof LayoutConfigurationsPermissionsRoute
+  LayoutConfigurationsRapportsRoute: typeof LayoutConfigurationsRapportsRoute
   LayoutConfigurationsReglesAutomatiseesRoute: typeof LayoutConfigurationsReglesAutomatiseesRoute
   LayoutConfigurationsReglesValidationRoute: typeof LayoutConfigurationsReglesValidationRoute
   LayoutConfigurationsRolesRoute: typeof LayoutConfigurationsRolesRoute
@@ -1204,6 +1245,7 @@ const LayoutConfigurationsRouteChildren: LayoutConfigurationsRouteChildren = {
     LayoutConfigurationsMethodesPaiementRoute,
   LayoutConfigurationsMotifsRejetRoute: LayoutConfigurationsMotifsRejetRoute,
   LayoutConfigurationsPermissionsRoute: LayoutConfigurationsPermissionsRoute,
+  LayoutConfigurationsRapportsRoute: LayoutConfigurationsRapportsRoute,
   LayoutConfigurationsReglesAutomatiseesRoute:
     LayoutConfigurationsReglesAutomatiseesRoute,
   LayoutConfigurationsReglesValidationRoute:
@@ -1273,11 +1315,13 @@ const LayoutInvoicesRouteWithChildren = LayoutInvoicesRoute._addFileChildren(
 
 interface LayoutOrdersOrderIdRouteChildren {
   LayoutOrdersOrderIdEditRoute: typeof LayoutOrdersOrderIdEditRoute
+  LayoutOrdersOrderIdReportRoute: typeof LayoutOrdersOrderIdReportRoute
   LayoutOrdersOrderIdIndexRoute: typeof LayoutOrdersOrderIdIndexRoute
 }
 
 const LayoutOrdersOrderIdRouteChildren: LayoutOrdersOrderIdRouteChildren = {
   LayoutOrdersOrderIdEditRoute: LayoutOrdersOrderIdEditRoute,
+  LayoutOrdersOrderIdReportRoute: LayoutOrdersOrderIdReportRoute,
   LayoutOrdersOrderIdIndexRoute: LayoutOrdersOrderIdIndexRoute,
 }
 

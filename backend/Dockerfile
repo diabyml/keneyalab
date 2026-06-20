@@ -13,6 +13,7 @@ ENV UV_COMPILE_BYTECODE=1
 # uv Cache
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#caching
 ENV UV_LINK_MODE=copy
+ENV UV_HTTP_TIMEOUT=180
 
 WORKDIR /app/
 

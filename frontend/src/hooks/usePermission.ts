@@ -1,5 +1,10 @@
 import { useQuery, type useQueryClient } from "@tanstack/react-query"
-import { ApiError, type PermissionPublic, UsersService } from "@/client"
+import {
+  ApiError,
+  type PermissionPublic,
+  type UserPublic,
+  UsersService,
+} from "@/client"
 
 const PERMISSIONS_KEY = ["currentUserPermissions"] as const
 
@@ -35,7 +40,11 @@ export async function ensurePermission(
     return false
   }
   try {
-    const permissions = await fetchCurrentUserPermissions()
+    const [user, permissions] = await Promise.all([
+      UsersService.readUserMe(),
+      fetchCurrentUserPermissions(),
+    ])
+    if (user.is_superuser) return true
     return hasPermission(permissions, resource, action)
   } catch (error) {
     if (error instanceof ApiError && [401, 403].includes(error.status)) {
@@ -64,6 +73,10 @@ export function usePermissions(): PermissionPublic[] {
     queryFn: fetchCurrentUserPermissions,
     enabled: localStorage.getItem("access_token") !== null,
     initialData: getStoredPermissions,
+    initialDataUpdatedAt: 0,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   })
   return permissions ?? []
 }
@@ -71,5 +84,11 @@ export function usePermissions(): PermissionPublic[] {
 /** React hook — checks a specific resource + action against cached permissions. */
 export function usePermission(resource: string, action: string): boolean {
   const permissions = usePermissions()
+  const { data: user } = useQuery<UserPublic>({
+    queryKey: ["currentUser"],
+    queryFn: UsersService.readUserMe,
+    enabled: localStorage.getItem("access_token") !== null,
+  })
+  if (user?.is_superuser) return true
   return hasPermission(permissions, resource, action)
 }

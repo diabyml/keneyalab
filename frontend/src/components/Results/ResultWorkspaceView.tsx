@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  FileText,
   ImageUp,
   Info,
   Loader2,
@@ -74,6 +75,7 @@ export function ResultWorkspaceView({ orderId }: { orderId: string }) {
   const canEdit = usePermission("results", "edit")
   const canVerify = usePermission("results", "verify")
   const canCustomize = usePermission("orders", "edit")
+  const canViewReports = usePermission("reports", "view")
   const [values, setValues] = useState<Record<string, string>>({})
   const [dirty, setDirty] = useState<Set<string>>(new Set())
   const [criticalResultId, setCriticalResultId] = useState<string | null>(null)
@@ -424,6 +426,14 @@ export function ResultWorkspaceView({ orderId }: { orderId: string }) {
                     ? `Vérifier ${eligibleCount}`
                     : "Tout vérifier"}
                 </LoadingButton>
+              )}
+              {canViewReports && (
+                <Button size="sm" variant="outline" asChild>
+                  <Link to="/orders/$orderId/report" params={{ orderId }}>
+                    <FileText className="size-4" />
+                    Rapport
+                  </Link>
+                </Button>
               )}
             </div>
           </div>

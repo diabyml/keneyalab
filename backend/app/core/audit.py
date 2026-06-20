@@ -188,6 +188,18 @@ def serialize_value(value: Any, *, field_name: str | None = None) -> Any:
     return str(value)
 
 
+def audit_record_id(value: Any) -> uuid.UUID | None:
+    """Normalize model primary keys to the UUID audit-log identifier."""
+    if value is None or isinstance(value, uuid.UUID):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        try:
+            return uuid.UUID(int=value)
+        except ValueError:
+            return None
+    return None
+
+
 def category_for_table(table_name: str) -> AuditCategory:
     if table_name in _SECURITY_TABLES:
         return AuditCategory.security
@@ -370,7 +382,7 @@ def capture_changes(session: SASession, _flush_context: Any, _instances: Any) ->
         table_name = state.mapper.local_table.name
         if table_name in _EXCLUDED_TABLES:
             continue
-        record_id = getattr(instance, "id", None)
+        record_id = audit_record_id(getattr(instance, "id", None))
         key = (table_name, record_id, action)
         if key in manual_keys:
             continue

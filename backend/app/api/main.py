@@ -26,6 +26,7 @@ from app.api.routes import (
     private,
     rbac,
     rejection_reasons,
+    reports,
     results,
     specimen_types,
     specimens,
@@ -66,6 +67,7 @@ api_router.include_router(catalog.router)
 api_router.include_router(orders.router)
 api_router.include_router(invoices.router)
 api_router.include_router(results.router)
+api_router.include_router(reports.router)
 api_router.include_router(critical_notifications.router)
 api_router.include_router(dashboard.router)
 api_router.include_router(validation_rules.router)

@@ -141,6 +141,18 @@ class ReportChannel(str, Enum):
     portal = "portal"
 
 
+class ReportComponentType(str, Enum):
+    header = "header"
+    patient_doctor_details = "patient_doctor_details"
+    footer = "footer"
+
+
+class ReportTemplateVersionStatus(str, Enum):
+    draft = "draft"
+    published = "published"
+    archived = "archived"
+
+
 class DeliveryStatus(str, Enum):
     pending = "pending"
     sent = "sent"
@@ -762,6 +774,9 @@ class SpecimenTypesPublic(SQLModel):
 class CategoryBase(SQLModel):
     name: str = Field(max_length=100)
     sort_order: int = Field(default=1)
+    report_renderer_id: uuid.UUID | None = Field(
+        default=None, foreign_key="report_renderers.id"
+    )
 
 
 class CategoryCreate(CategoryBase):
@@ -771,6 +786,7 @@ class CategoryCreate(CategoryBase):
 class CategoryUpdate(SQLModel):
     name: str | None = Field(default=None, max_length=100)
     sort_order: int | None = None
+    report_renderer_id: uuid.UUID | None = None
 
 
 class Category(CategoryBase, table=True):
@@ -2254,6 +2270,227 @@ class ReportTemplatesPublic(SQLModel):
     count: int
 
 
+class ReportComponentBase(SQLModel):
+    name: str = Field(max_length=255)
+    description: str | None = Field(default=None, sa_column=Column(Text))
+    component_type: ReportComponentType = Field(
+        sa_column=Column(
+            pg_enum(ReportComponentType, "report_component_type"), nullable=False
+        )
+    )
+
+
+class ReportComponentCreate(ReportComponentBase):
+    html_source: str = ""
+    css_source: str = ""
+
+
+class ReportComponentUpdate(SQLModel):
+    name: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    html_source: str | None = None
+    css_source: str | None = None
+
+
+class ReportComponent(ReportComponentBase, table=True):
+    __tablename__ = "report_components"
+
+    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
+    is_archived: bool = Field(default=False)
+    created_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+
+
+class ReportComponentVersion(SQLModel, table=True):
+    __tablename__ = "report_component_versions"
+    __table_args__ = (
+        UniqueConstraint("component_id", "version", name="uq_report_component_version"),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
+    component_id: uuid.UUID = Field(foreign_key="report_components.id")
+    version: int = Field(default=1)
+    status: ReportTemplateVersionStatus = Field(
+        default=ReportTemplateVersionStatus.draft,
+        sa_column=Column(
+            pg_enum(ReportTemplateVersionStatus, "report_template_version_status"),
+            nullable=False,
+        ),
+    )
+    html_source: str = Field(default="", sa_column=Column(Text, nullable=False))
+    css_source: str = Field(default="", sa_column=Column(Text, nullable=False))
+    created_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    published_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    published_at: datetime | None = Field(default=None, sa_type=TIMESTAMPTZ)
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+
+
+class ReportComponentVersionPublic(SQLModel):
+    id: uuid.UUID
+    component_id: uuid.UUID
+    version: int
+    status: ReportTemplateVersionStatus
+    html_source: str
+    css_source: str
+    created_by_id: uuid.UUID | None = None
+    published_by_id: uuid.UUID | None = None
+    published_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ReportComponentPublic(ReportComponentBase, TimestampPublic):
+    is_archived: bool
+    created_by_id: uuid.UUID | None = None
+    draft_version: ReportComponentVersionPublic | None = None
+    published_version: ReportComponentVersionPublic | None = None
+    is_default: bool = False
+
+
+class ReportComponentsPublic(SQLModel):
+    data: list[ReportComponentPublic]
+    count: int
+
+
+class ReportRendererBase(SQLModel):
+    name: str = Field(max_length=255)
+    description: str | None = Field(default=None, sa_column=Column(Text))
+
+
+class ReportRendererCreate(ReportRendererBase):
+    jsx_source: str
+    css_source: str = ""
+
+
+class ReportRendererUpdate(SQLModel):
+    name: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    jsx_source: str | None = None
+    css_source: str | None = None
+
+
+class ReportRenderer(ReportRendererBase, table=True):
+    __tablename__ = "report_renderers"
+
+    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
+    is_builtin: bool = Field(default=False)
+    is_archived: bool = Field(default=False)
+    created_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+
+
+class ReportRendererVersion(SQLModel, table=True):
+    __tablename__ = "report_renderer_versions"
+    __table_args__ = (
+        UniqueConstraint("renderer_id", "version", name="uq_report_renderer_version"),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
+    renderer_id: uuid.UUID = Field(foreign_key="report_renderers.id")
+    version: int = Field(default=1)
+    status: ReportTemplateVersionStatus = Field(
+        default=ReportTemplateVersionStatus.draft,
+        sa_column=Column(
+            pg_enum(ReportTemplateVersionStatus, "report_template_version_status"),
+            nullable=False,
+        ),
+    )
+    jsx_source: str = Field(default="", sa_column=Column(Text, nullable=False))
+    css_source: str = Field(default="", sa_column=Column(Text, nullable=False))
+    created_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    published_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    published_at: datetime | None = Field(default=None, sa_type=TIMESTAMPTZ)
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+
+
+class ReportRendererVersionPublic(SQLModel):
+    id: uuid.UUID
+    renderer_id: uuid.UUID
+    version: int
+    status: ReportTemplateVersionStatus
+    jsx_source: str
+    css_source: str
+    created_by_id: uuid.UUID | None = None
+    published_by_id: uuid.UUID | None = None
+    published_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ReportRendererPublic(ReportRendererBase, TimestampPublic):
+    is_builtin: bool
+    is_archived: bool
+    created_by_id: uuid.UUID | None = None
+    draft_version: ReportRendererVersionPublic | None = None
+    published_version: ReportRendererVersionPublic | None = None
+    is_default: bool = False
+
+
+class ReportRenderersPublic(SQLModel):
+    data: list[ReportRendererPublic]
+    count: int
+
+
+class ReportSettings(SQLModel, table=True):
+    __tablename__ = "report_settings"
+
+    id: int = Field(default=1, primary_key=True)
+    default_header_id: uuid.UUID | None = Field(
+        default=None, foreign_key="report_components.id"
+    )
+    default_details_id: uuid.UUID | None = Field(
+        default=None, foreign_key="report_components.id"
+    )
+    default_footer_id: uuid.UUID | None = Field(
+        default=None, foreign_key="report_components.id"
+    )
+    default_renderer_id: uuid.UUID | None = Field(
+        default=None, foreign_key="report_renderers.id"
+    )
+    updated_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+
+
+class ReportSettingsPublic(SQLModel):
+    id: int
+    default_header_id: uuid.UUID | None = None
+    default_details_id: uuid.UUID | None = None
+    default_footer_id: uuid.UUID | None = None
+    default_renderer_id: uuid.UUID | None = None
+    updated_by_id: uuid.UUID | None = None
+    updated_at: datetime
+
+
+class ReportDefaultUpdate(SQLModel):
+    template_id: uuid.UUID
+
+
+class CategoryReportRendererUpdate(SQLModel):
+    report_renderer_id: uuid.UUID | None = None
+
+
 class ReportBase(SQLModel):
     order_id: uuid.UUID = Field(foreign_key="orders.id")
     version: int = Field(default=1)
@@ -2269,12 +2506,15 @@ class ReportBase(SQLModel):
 
 class ReportCreate(SQLModel):
     report_template_id: uuid.UUID | None = None
-    channel: ReportChannel
+    channel: ReportChannel = ReportChannel.print
     recipient_note: str | None = None
 
 
 class Report(ReportBase, table=True):
     __tablename__ = "reports"
+    __table_args__ = (
+        UniqueConstraint("order_id", "version", name="uq_report_order_version"),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
     released_by_id: uuid.UUID = Field(foreign_key="user.id")
@@ -2286,6 +2526,13 @@ class Report(ReportBase, table=True):
         sa_column=Column(pg_enum(DeliveryStatus, "delivery_status"), nullable=False),
     )
     is_voided: bool = Field(default=False)
+    snapshot: Any = Field(default_factory=dict, sa_column=Column(JSONB, nullable=False))
+    template_snapshot: Any = Field(
+        default_factory=dict, sa_column=Column(JSONB, nullable=False)
+    )
+    delivery_metadata: Any = Field(
+        default_factory=dict, sa_column=Column(JSONB, nullable=False)
+    )
     created_at: datetime = Field(
         default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
     )
@@ -2299,11 +2546,34 @@ class ReportPublic(ReportBase, TimestampPublic):
     released_at: datetime | None = None
     delivery_status: DeliveryStatus
     is_voided: bool
+    snapshot: Any = Field(default_factory=dict)
+    template_snapshot: Any = Field(default_factory=dict)
+    delivery_metadata: Any = Field(default_factory=dict)
 
 
 class ReportsPublic(SQLModel):
     data: list[ReportPublic]
     count: int
+
+
+class ReportPreviewPublic(SQLModel):
+    order_id: uuid.UUID | None = None
+    can_release: bool
+    blockers: list[str] = Field(default_factory=list)
+    snapshot: Any = Field(default_factory=dict)
+    template_snapshot: Any = Field(default_factory=dict)
+
+
+class ReportDeliveryRequest(SQLModel):
+    channel: ReportChannel
+    recipient: str = Field(min_length=3, max_length=320)
+    recipient_note: str | None = None
+
+
+class ReportReleaseRequest(SQLModel):
+    channel: ReportChannel = ReportChannel.print
+    recipient: str | None = Field(default=None, min_length=3, max_length=320)
+    recipient_note: str | None = None
 
 
 class NotificationBase(SQLModel):

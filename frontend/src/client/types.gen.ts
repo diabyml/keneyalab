@@ -248,6 +248,7 @@ export type CategoriesPublic = {
 export type CategoryCreate = {
     name: string;
     sort_order?: number;
+    report_renderer_id?: (string | null);
 };
 
 export type CategoryPublic = {
@@ -257,6 +258,7 @@ export type CategoryPublic = {
     updated_at?: (string | null);
     name: string;
     sort_order?: number;
+    report_renderer_id?: (string | null);
 };
 
 export type CategoryReorderItem = {
@@ -268,9 +270,14 @@ export type CategoryReorderRequest = {
     items: Array<CategoryReorderItem>;
 };
 
+export type CategoryReportRendererUpdate = {
+    report_renderer_id?: (string | null);
+};
+
 export type CategoryUpdate = {
     name?: (string | null);
     sort_order?: (number | null);
+    report_renderer_id?: (string | null);
 };
 
 export type ConsistencyRuleCreate = {
@@ -437,6 +444,8 @@ export type DashboardTrendPointPublic = {
     results?: number;
     revenue?: string;
 };
+
+export type DeliveryStatus = 'pending' | 'sent' | 'failed';
 
 export type DiscountAllocationPolicy = 'proportional' | 'non_insured_first' | 'insured_first';
 
@@ -1453,6 +1462,165 @@ export type RejectionReasonsPublic = {
 export type RejectionReasonUpdate = {
     name?: (string | null);
 };
+
+export type ReportChannel = 'print' | 'email' | 'whatsapp' | 'portal';
+
+export type ReportComponentCreate = {
+    name: string;
+    description?: (string | null);
+    component_type: ReportComponentType;
+    html_source?: string;
+    css_source?: string;
+};
+
+export type ReportComponentPublic = {
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    name: string;
+    description?: (string | null);
+    component_type: ReportComponentType;
+    is_archived: boolean;
+    created_by_id?: (string | null);
+    draft_version?: (ReportComponentVersionPublic | null);
+    published_version?: (ReportComponentVersionPublic | null);
+    is_default?: boolean;
+};
+
+export type ReportComponentsPublic = {
+    data: Array<ReportComponentPublic>;
+    count: number;
+};
+
+export type ReportComponentType = 'header' | 'patient_doctor_details' | 'footer';
+
+export type ReportComponentUpdate = {
+    name?: (string | null);
+    description?: (string | null);
+    html_source?: (string | null);
+    css_source?: (string | null);
+};
+
+export type ReportComponentVersionPublic = {
+    id: string;
+    component_id: string;
+    version: number;
+    status: ReportTemplateVersionStatus;
+    html_source: string;
+    css_source: string;
+    created_by_id?: (string | null);
+    published_by_id?: (string | null);
+    published_at?: (string | null);
+    created_at: string;
+    updated_at: string;
+};
+
+export type ReportDefaultUpdate = {
+    template_id: string;
+};
+
+export type ReportDeliveryRequest = {
+    channel: ReportChannel;
+    recipient: string;
+    recipient_note?: (string | null);
+};
+
+export type ReportPreviewPublic = {
+    order_id?: (string | null);
+    can_release: boolean;
+    blockers?: Array<(string)>;
+    snapshot?: unknown;
+    template_snapshot?: unknown;
+};
+
+export type ReportPublic = {
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    order_id: string;
+    version?: number;
+    report_template_id?: (string | null);
+    channel: ReportChannel;
+    recipient_note?: (string | null);
+    report_storage_url?: (string | null);
+    released_by_id: string;
+    released_at?: (string | null);
+    delivery_status: DeliveryStatus;
+    is_voided: boolean;
+    snapshot?: unknown;
+    template_snapshot?: unknown;
+    delivery_metadata?: unknown;
+};
+
+export type ReportReleaseRequest = {
+    channel?: ReportChannel;
+    recipient?: (string | null);
+    recipient_note?: (string | null);
+};
+
+export type ReportRendererCreate = {
+    name: string;
+    description?: (string | null);
+    jsx_source: string;
+    css_source?: string;
+};
+
+export type ReportRendererPublic = {
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    name: string;
+    description?: (string | null);
+    is_builtin: boolean;
+    is_archived: boolean;
+    created_by_id?: (string | null);
+    draft_version?: (ReportRendererVersionPublic | null);
+    published_version?: (ReportRendererVersionPublic | null);
+    is_default?: boolean;
+};
+
+export type ReportRenderersPublic = {
+    data: Array<ReportRendererPublic>;
+    count: number;
+};
+
+export type ReportRendererUpdate = {
+    name?: (string | null);
+    description?: (string | null);
+    jsx_source?: (string | null);
+    css_source?: (string | null);
+};
+
+export type ReportRendererVersionPublic = {
+    id: string;
+    renderer_id: string;
+    version: number;
+    status: ReportTemplateVersionStatus;
+    jsx_source: string;
+    css_source: string;
+    created_by_id?: (string | null);
+    published_by_id?: (string | null);
+    published_at?: (string | null);
+    created_at: string;
+    updated_at: string;
+};
+
+export type ReportSettingsPublic = {
+    id: number;
+    default_header_id?: (string | null);
+    default_details_id?: (string | null);
+    default_footer_id?: (string | null);
+    default_renderer_id?: (string | null);
+    updated_by_id?: (string | null);
+    updated_at: string;
+};
+
+export type ReportsPublic = {
+    data: Array<ReportPublic>;
+    count: number;
+};
+
+export type ReportTemplateVersionStatus = 'draft' | 'published' | 'archived';
 
 export type ResultAnalyteWorkspacePublic = {
     result_id?: (string | null);
@@ -3157,6 +3325,138 @@ export type RejectionReasonsRestoreRejectionReasonData = {
 };
 
 export type RejectionReasonsRestoreRejectionReasonResponse = (RejectionReasonPublic);
+
+export type ReportsReadReportComponentsData = {
+    componentType?: (ReportComponentType | null);
+};
+
+export type ReportsReadReportComponentsResponse = (ReportComponentsPublic);
+
+export type ReportsCreateReportComponentData = {
+    requestBody: ReportComponentCreate;
+};
+
+export type ReportsCreateReportComponentResponse = (ReportComponentPublic);
+
+export type ReportsReadReportComponentData = {
+    componentId: string;
+};
+
+export type ReportsReadReportComponentResponse = (ReportComponentPublic);
+
+export type ReportsUpdateReportComponentData = {
+    componentId: string;
+    requestBody: ReportComponentUpdate;
+};
+
+export type ReportsUpdateReportComponentResponse = (ReportComponentPublic);
+
+export type ReportsPublishReportComponentData = {
+    componentId: string;
+};
+
+export type ReportsPublishReportComponentResponse = (ReportComponentPublic);
+
+export type ReportsArchiveReportComponentData = {
+    componentId: string;
+};
+
+export type ReportsArchiveReportComponentResponse = (ReportComponentPublic);
+
+export type ReportsReadReportRenderersResponse = (ReportRenderersPublic);
+
+export type ReportsCreateReportRendererData = {
+    requestBody: ReportRendererCreate;
+};
+
+export type ReportsCreateReportRendererResponse = (ReportRendererPublic);
+
+export type ReportsReadReportRendererData = {
+    rendererId: string;
+};
+
+export type ReportsReadReportRendererResponse = (ReportRendererPublic);
+
+export type ReportsUpdateReportRendererData = {
+    rendererId: string;
+    requestBody: ReportRendererUpdate;
+};
+
+export type ReportsUpdateReportRendererResponse = (ReportRendererPublic);
+
+export type ReportsPublishReportRendererData = {
+    rendererId: string;
+};
+
+export type ReportsPublishReportRendererResponse = (ReportRendererPublic);
+
+export type ReportsArchiveReportRendererData = {
+    rendererId: string;
+};
+
+export type ReportsArchiveReportRendererResponse = (ReportRendererPublic);
+
+export type ReportsReadReportSettingsResponse = (ReportSettingsPublic);
+
+export type ReportsSetDefaultReportComponentData = {
+    componentType: ReportComponentType;
+    requestBody: ReportDefaultUpdate;
+};
+
+export type ReportsSetDefaultReportComponentResponse = (ReportSettingsPublic);
+
+export type ReportsSetDefaultReportRendererData = {
+    requestBody: ReportDefaultUpdate;
+};
+
+export type ReportsSetDefaultReportRendererResponse = (ReportSettingsPublic);
+
+export type ReportsAssignCategoryReportRendererData = {
+    categoryId: string;
+    requestBody: CategoryReportRendererUpdate;
+};
+
+export type ReportsAssignCategoryReportRendererResponse = (CategoryPublic);
+
+export type ReportsReadSampleReportPreviewResponse = (ReportPreviewPublic);
+
+export type ReportsReadOrderReportPreviewData = {
+    orderId: string;
+};
+
+export type ReportsReadOrderReportPreviewResponse = (ReportPreviewPublic);
+
+export type ReportsReleaseOrderReportData = {
+    orderId: string;
+    requestBody: ReportReleaseRequest;
+};
+
+export type ReportsReleaseOrderReportResponse = (ReportPublic);
+
+export type ReportsReadOrderReportsData = {
+    orderId: string;
+};
+
+export type ReportsReadOrderReportsResponse = (ReportsPublic);
+
+export type ReportsReadReportData = {
+    reportId: string;
+};
+
+export type ReportsReadReportResponse = (ReportPublic);
+
+export type ReportsVoidReportData = {
+    reportId: string;
+};
+
+export type ReportsVoidReportResponse = (ReportPublic);
+
+export type ReportsDeliverReportData = {
+    reportId: string;
+    requestBody: ReportDeliveryRequest;
+};
+
+export type ReportsDeliverReportResponse = (ReportPublic);
 
 export type ResultsReadResultQueueData = {
     categoryId?: (string | null);

@@ -3,6 +3,7 @@ import {
   BadgeDollarSign,
   Building2,
   CreditCard,
+  FileText,
   FolderTree,
   KeyRound,
   type LucideIcon,
@@ -60,6 +61,16 @@ const CONFIG_LINKS: ConfigLink[] = [
     requiredPermission: { resource: "lab_settings", action: "manage" },
     category: "Général",
     navigateTo: "/configurations/laboratoire",
+  },
+  {
+    id: "rapports-config",
+    name: "Rapports",
+    description:
+      "Concevoir les en-têtes, détails, rendus cliniques et pieds de page",
+    icon: FileText,
+    requiredPermission: { resource: "reports", action: "manage_templates" },
+    category: "Général",
+    navigateTo: "/configurations/rapports",
   },
   {
     id: "roles-config",
@@ -226,6 +237,7 @@ function ConfigLinks() {
   const canManageFinance = usePermission("finance", "manage")
   const canManageLabSettings = usePermission("lab_settings", "manage")
   const canViewAudit = usePermission("audit", "view")
+  const canManageReports = usePermission("reports", "manage_templates")
   const [search, setSearch] = useState("")
 
   function accessAllowed(link: ConfigLink): boolean {
@@ -240,6 +252,7 @@ function ConfigLinks() {
     if (link.requiredPermission.resource === "lab_settings")
       return canManageLabSettings
     if (link.requiredPermission.resource === "audit") return canViewAudit
+    if (link.requiredPermission.resource === "reports") return canManageReports
     return false
   }
 
