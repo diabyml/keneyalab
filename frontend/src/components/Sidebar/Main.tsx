@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react"
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -34,6 +35,9 @@ export function Main({ items }: MainProps) {
 
   return (
     <SidebarGroup>
+      <SidebarGroupLabel className="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">
+        Laboratoire
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
@@ -50,7 +54,7 @@ export function Main({ items }: MainProps) {
                 >
                   <RouterLink to={item.path} onClick={handleMenuClick}>
                     <item.icon />
-                    <span>{item.title}</span>
+                    <span className="font-medium">{item.title}</span>
                     {!!item.badge && (
                       <span className="ml-auto min-w-5 rounded-full bg-destructive px-1.5 text-center text-xs font-semibold text-destructive-foreground">
                         {item.badge > 99 ? "99+" : item.badge}

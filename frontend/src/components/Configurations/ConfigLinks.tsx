@@ -305,7 +305,8 @@ function ConfigLinks() {
       {/* Grouped config links */}
       {categories.map((category) => (
         <div key={category} className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">
+          <h2 className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="h-px w-5 bg-primary/45" />
             {category}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -324,10 +325,10 @@ function ConfigLinks() {
                     }
                   }}
                   className={cn(
-                    "group relative flex items-start gap-3 rounded-xl border p-4 text-left transition-[border-color,box-shadow,background-color] duration-200 ease-out",
+                    "specimen-rail group relative flex items-start gap-3 rounded-xl border p-4 pl-5 text-left shadow-[var(--shadow-card)] transition-[border-color,box-shadow,background-color,transform] duration-200 ease-out",
                     "active:scale-[0.98]",
                     allowed
-                      ? "border-border bg-card hover:border-primary/30 hover:bg-accent/40 hover:shadow-sm cursor-pointer"
+                      ? "cursor-pointer border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/30"
                       : "border-border/50 bg-muted/30 cursor-not-allowed opacity-60",
                   )}
                 >

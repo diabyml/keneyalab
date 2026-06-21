@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
+import { PageHeader } from "@/components/Common/PageHeader"
 import { ResultsView } from "@/components/Results/ResultsView"
 
 export const Route = createFileRoute("/_layout/results/")({
@@ -10,12 +11,11 @@ export const Route = createFileRoute("/_layout/results/")({
 function ResultsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Résultats</h1>
-        <p className="text-muted-foreground">
-          Saisir, contrôler et vérifier les résultats d'analyses
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Phase analytique"
+        title="Résultats"
+        description="Saisir, contrôler et vérifier les résultats d'analyses"
+      />
       <ResultsView />
     </div>
   )

@@ -2,6 +2,18 @@ import { useMemo } from "react"
 import type { ReportSnapshot, ReportTemplateSnapshot } from "./reportTypes"
 import { SandboxRenderer } from "./SandboxRenderer"
 
+const REPORT_COMPONENT_TEXT_STYLES = `
+  .report-component-content,
+  .report-component-content * {
+    color: #000;
+  }
+
+  .report-component-content strong,
+  .report-component-content b {
+    font-weight: 700;
+  }
+`
+
 function valueAt(source: unknown, path: string): unknown {
   return path.split(".").reduce<unknown>((value, key) => {
     if (!value || typeof value !== "object") return ""
@@ -47,17 +59,23 @@ export function ReportDocument({
   )
 
   return (
-    <article className="report-a4 relative mx-auto min-h-[297mm] w-[210mm] bg-white p-[14mm] text-slate-900 shadow-sm print:min-h-0 print:w-auto print:p-0 print:shadow-none">
-      <style>{`${templates.header.css_source}\n${templates.details.css_source}\n${templates.footer.css_source}`}</style>
+    <article className="report-a4 relative mx-auto min-h-[297mm] w-[210mm] bg-white p-[14mm] text-black shadow-sm print:min-h-0 print:w-auto print:p-0 print:shadow-none">
+      <style>{`${templates.header.css_source}\n${templates.details.css_source}\n${templates.footer.css_source}\n${REPORT_COMPONENT_TEXT_STYLES}`}</style>
       {voided && (
         <div className="absolute inset-x-0 top-[42%] z-10 -rotate-12 text-center text-7xl font-black tracking-[0.2em] text-red-600/15">
           ANNULÉ
         </div>
       )}
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: report HTML is allowlist-sanitized by the backend before storage */}
-      <div dangerouslySetInnerHTML={{ __html: header }} />
+      <div
+        className="report-component-content"
+        dangerouslySetInnerHTML={{ __html: header }}
+      />
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: report HTML is allowlist-sanitized by the backend before storage */}
-      <div dangerouslySetInnerHTML={{ __html: details }} />
+      <div
+        className="report-component-content"
+        dangerouslySetInnerHTML={{ __html: details }}
+      />
       <main className="min-h-[190mm]">
         {snapshot.categories.map((category) => {
           const key = category.id ?? "uncategorized"
@@ -76,7 +94,10 @@ export function ReportDocument({
         })}
       </main>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: report HTML is allowlist-sanitized by the backend before storage */}
-      <div dangerouslySetInnerHTML={{ __html: footer }} />
+      <div
+        className="report-component-content"
+        dangerouslySetInnerHTML={{ __html: footer }}
+      />
     </article>
   )
 }

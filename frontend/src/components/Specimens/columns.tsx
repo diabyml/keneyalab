@@ -4,8 +4,9 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { Ellipsis, Eye, TestTube } from "lucide-react"
 
 import type { PaymentStatus, SpecimenQueueItemPublic } from "@/client"
+import { OperationalId } from "@/components/Common/OperationalId"
+import { StatusBadge } from "@/components/Common/StatusBadge"
 import { formatDateTime } from "@/components/Orders/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -31,9 +32,9 @@ export function specimenQueueColumns({
         <Link
           to="/orders/$orderId"
           params={{ orderId: row.original.order_id }}
-          className="font-mono text-sm font-medium text-primary hover:underline"
+          className="hover:underline"
         >
-          {row.original.accession_number}
+          <OperationalId>{row.original.accession_number}</OperationalId>
         </Link>
       ),
     }),
@@ -69,9 +70,17 @@ export function specimenQueueColumns({
     helper.accessor("payment_status", {
       header: "Paiement",
       cell: ({ getValue }) => (
-        <Badge variant="outline">
+        <StatusBadge
+          tone={
+            getValue() === "paid"
+              ? "success"
+              : getValue() === "partial"
+                ? "progress"
+                : "warning"
+          }
+        >
           {PAYMENT_LABELS[getValue() as PaymentStatus]}
-        </Badge>
+        </StatusBadge>
       ),
     }),
     helper.accessor("created_at", {

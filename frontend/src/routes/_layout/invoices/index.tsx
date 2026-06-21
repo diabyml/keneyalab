@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
+import { PageHeader } from "@/components/Common/PageHeader"
 import { InvoicesView } from "@/components/Invoices/InvoicesView"
 
 export const Route = createFileRoute("/_layout/invoices/")({
@@ -10,12 +11,11 @@ export const Route = createFileRoute("/_layout/invoices/")({
 function RouteComponent() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Factures</h1>
-        <p className="text-muted-foreground">
-          Suivre les encaissements, remboursements et corrections
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Gestion financière"
+        title="Factures"
+        description="Suivre les encaissements, remboursements et corrections"
+      />
       <InvoicesView />
     </div>
   )

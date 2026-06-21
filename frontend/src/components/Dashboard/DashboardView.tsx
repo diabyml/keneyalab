@@ -29,8 +29,9 @@ import {
   DashboardService,
   type DashboardStatusPointPublic,
 } from "@/client"
+import { PageHeader } from "@/components/Common/PageHeader"
+import { StatusBadge } from "@/components/Common/StatusBadge"
 import { formatDateTime } from "@/components/Orders/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -182,51 +183,50 @@ function DashboardShell({
 }) {
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Tableau de bord
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Bonjour {userName}. Vue opérationnelle du laboratoire.
-          </p>
-          {generatedAt && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Actualisé le {formatDateTime(generatedAt)}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-md border bg-background p-0.5">
-            {[
-              ["today", "Aujourd'hui"],
-              ["week", "7 jours"],
-              ["month", "Mois"],
-            ].map(([value, label]) => (
-              <Button
-                key={value}
-                type="button"
-                size="sm"
-                variant={period === value ? "secondary" : "ghost"}
-                className="h-8 px-3"
-                onClick={() => setPeriod(value as Period)}
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={isFetching}
-            onClick={onRefresh}
-          >
-            <RefreshCw className={cn("size-4", isFetching && "animate-spin")} />
-            Actualiser
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Centre de contrôle"
+        title="Tableau de bord"
+        description={`Bonjour ${userName}. Vue opérationnelle du laboratoire.`}
+        metadata={
+          generatedAt
+            ? `Actualisé le ${formatDateTime(generatedAt)}`
+            : undefined
+        }
+        actions={
+          <>
+            <div className="inline-flex rounded-md border bg-background p-0.5">
+              {[
+                ["today", "Aujourd'hui"],
+                ["week", "7 jours"],
+                ["month", "Mois"],
+              ].map(([value, label]) => (
+                <Button
+                  key={value}
+                  type="button"
+                  size="sm"
+                  variant={period === value ? "secondary" : "ghost"}
+                  className="h-8 px-3"
+                  onClick={() => setPeriod(value as Period)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isFetching}
+              onClick={onRefresh}
+            >
+              <RefreshCw
+                className={cn("size-4", isFetching && "animate-spin")}
+              />
+              Actualiser
+            </Button>
+          </>
+        }
+      />
       {children}
     </div>
   )
@@ -313,16 +313,22 @@ function MetricGrid({ data }: { data: DashboardPublic }) {
         return (
           <Card
             key={card.key}
-            className="transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-sm"
+            className={cn(
+              "specimen-rail transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-y-0.5 hover:border-primary/25",
+              card.key === "critical" && "[--rail-color:var(--destructive)]",
+              card.key === "finance" && "[--rail-color:var(--warning)]",
+            )}
           >
             <CardHeader className="pb-0">
-              <CardTitle className="flex items-center gap-2 text-muted-foreground">
-                <Icon className="size-4" />
+              <CardTitle className="flex items-center gap-2.5 text-muted-foreground">
+                <span className="flex size-7 items-center justify-center rounded-md bg-primary/9 text-primary">
+                  <Icon className="size-3.5" />
+                </span>
                 {card.title}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold tabular-nums">
+              <div className="font-heading text-2xl font-semibold tabular-nums tracking-tight">
                 {card.metric ? metricValue(card.metric) : "0"}
               </div>
               {card.detail && (
@@ -340,7 +346,7 @@ function MetricGrid({ data }: { data: DashboardPublic }) {
 
 function WorkflowPanel({ data }: { data: DashboardPublic }) {
   return (
-    <Card>
+    <Card className="border-primary/10">
       <CardHeader>
         <CardTitle>Flux de travail</CardTitle>
         <CardDescription>
@@ -416,13 +422,18 @@ function QueueItem({
   return (
     <a
       href={href}
-      className="group rounded-md border p-3 transition-[background-color,transform] duration-150 ease-out hover:-translate-y-0.5 hover:bg-muted/40"
+      className={cn(
+        "specimen-rail group rounded-lg border bg-surface/55 p-3 pl-4 transition-[background-color,transform,border-color] duration-150 ease-out hover:-translate-y-0.5 hover:border-primary/25 hover:bg-accent/35",
+        destructive && "[--rail-color:var(--destructive)]",
+      )}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-muted-foreground">
           {title}
         </span>
-        <Badge variant={destructive ? "destructive" : "outline"}>{badge}</Badge>
+        <StatusBadge tone={destructive ? "critical" : "pending"}>
+          {badge}
+        </StatusBadge>
       </div>
       <div className="mt-2 font-medium">{primary}</div>
       <div className="mt-1 text-xs text-muted-foreground">{secondary}</div>
@@ -433,7 +444,7 @@ function QueueItem({
 function QuickActions({ data }: { data: DashboardPublic }) {
   const actions = data.quick_actions ?? []
   return (
-    <Card>
+    <Card className="bg-[linear-gradient(145deg,var(--card),var(--surface))]">
       <CardHeader>
         <CardTitle>Actions rapides</CardTitle>
         <CardDescription>Accès directs selon vos permissions.</CardDescription>
@@ -443,7 +454,7 @@ function QuickActions({ data }: { data: DashboardPublic }) {
           <Button
             key={action.key}
             variant="outline"
-            className="h-auto w-full justify-start gap-3 p-3 text-left"
+            className="h-auto w-full justify-start gap-3 border-border/80 p-3 text-left hover:border-primary/30"
             asChild
           >
             <a href={action.href}>

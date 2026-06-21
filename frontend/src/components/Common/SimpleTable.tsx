@@ -4,7 +4,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Download } from "lucide-react"
+import { Download, Inbox } from "lucide-react"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -74,7 +74,7 @@ export function SimpleTable<TData extends object, TValue>({
     <Card className="overflow-hidden p-0">
       <div className="flex flex-col gap-4">
         {enableSelection && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/20 p-3">
+          <div className="flex min-h-12 flex-wrap items-center justify-between gap-3 border-b border-border/75 bg-surface px-3 py-2">
             <div className="text-sm text-muted-foreground">
               <span className="font-medium text-foreground">
                 {selectedIds.size}
@@ -158,9 +158,14 @@ export function SimpleTable<TData extends object, TValue>({
               <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={columns.length + (enableSelection ? 1 : 0)}
-                  className="h-32 text-center text-muted-foreground"
+                  className="h-44 text-center text-muted-foreground"
                 >
-                  Aucun résultat trouvé.
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex size-9 items-center justify-center rounded-full bg-muted">
+                      <Inbox className="size-4" />
+                    </div>
+                    <span>Aucun résultat trouvé.</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

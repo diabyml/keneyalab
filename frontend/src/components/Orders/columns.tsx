@@ -3,7 +3,8 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { createColumnHelper } from "@tanstack/react-table"
 
 import type { OrderListItemPublic, OrderStatus, PaymentStatus } from "@/client"
-import { Badge } from "@/components/ui/badge"
+import { OperationalId } from "@/components/Common/OperationalId"
+import { StatusBadge } from "@/components/Common/StatusBadge"
 import { OrderActionsMenu } from "./OrderActionsMenu"
 import {
   formatDateTime,
@@ -13,6 +14,28 @@ import {
 } from "./utils"
 
 const columnHelper = createColumnHelper<OrderListItemPublic>()
+
+const orderTone: Record<
+  OrderStatus,
+  "pending" | "progress" | "success" | "warning" | "critical"
+> = {
+  registered: "pending",
+  collected: "progress",
+  in_progress: "progress",
+  partial_results: "warning",
+  completed: "success",
+  cancelled: "critical",
+}
+
+const paymentTone: Record<
+  PaymentStatus,
+  "warning" | "progress" | "success" | "neutral"
+> = {
+  unpaid: "warning",
+  partial: "progress",
+  paid: "success",
+  refunded: "neutral",
+}
 
 interface OrderColumnsOptions {
   showPatient?: boolean
@@ -30,9 +53,9 @@ export function getOrderColumns({
         <Link
           to="/orders/$orderId"
           params={{ orderId: row.original.id }}
-          className="font-mono text-sm text-primary font-medium hover:underline focus-visible:underline"
+          className="hover:underline focus-visible:underline"
         >
-          {getValue()}
+          <OperationalId>{getValue()}</OperationalId>
         </Link>
       ),
     }),
@@ -62,9 +85,9 @@ export function getOrderColumns({
     columnHelper.accessor("status", {
       header: "Statut",
       cell: ({ getValue }) => (
-        <Badge variant="outline">
+        <StatusBadge tone={orderTone[getValue() as OrderStatus]}>
           {ORDER_STATUS_LABELS[getValue() as OrderStatus]}
-        </Badge>
+        </StatusBadge>
       ),
     }),
     columnHelper.accessor("net_amount", {
@@ -75,8 +98,11 @@ export function getOrderColumns({
     }),
     columnHelper.accessor("payment_status", {
       header: "Paiement",
-      cell: ({ getValue }) =>
-        PAYMENT_STATUS_LABELS[getValue() as PaymentStatus],
+      cell: ({ getValue }) => (
+        <StatusBadge tone={paymentTone[getValue() as PaymentStatus]}>
+          {PAYMENT_STATUS_LABELS[getValue() as PaymentStatus]}
+        </StatusBadge>
+      ),
     }),
     columnHelper.accessor("created_at", {
       header: "Créée le",

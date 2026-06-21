@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
+import { PageHeader } from "@/components/Common/PageHeader"
 import { OrderCreateView } from "@/components/Orders/OrderCreateView"
 
 export const Route = createFileRoute("/_layout/orders/new")({
@@ -10,12 +11,12 @@ export const Route = createFileRoute("/_layout/orders/new")({
 function RouteComponent() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Nouvelle demande</h1>
-        <p className="text-muted-foreground">
-          Patient, examens, prélèvements et règlement
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Nouvelle réception"
+        title="Nouvelle demande"
+        description="Patient, examens, prélèvements et règlement"
+        backTo="/orders"
+      />
       <OrderCreateView />
     </div>
   )

@@ -4,7 +4,15 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Download } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Download,
+  Inbox,
+} from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -114,16 +122,22 @@ export function ServerDataTable<TData extends object, TValue>({
     })
   }
 
-  const sortLabel = (columnId: string) => {
+  const sortIcon = (columnId: string) => {
     const mapped = sortableColumns[columnId]
-    if (!mapped || mapped !== sortBy) return null
-    return sortOrder === "asc" ? " ↑" : " ↓"
+    if (!mapped || mapped !== sortBy) {
+      return <ChevronsUpDown className="size-3 opacity-45" />
+    }
+    return sortOrder === "asc" ? (
+      <ArrowUp className="size-3 text-primary" />
+    ) : (
+      <ArrowDown className="size-3 text-primary" />
+    )
   }
 
   return (
     <Card className="overflow-hidden p-0">
       {enableSelection && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/20 p-3">
+        <div className="flex min-h-12 flex-wrap items-center justify-between gap-3 border-b border-border/75 bg-surface px-3 py-2">
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">
               {selectedIds.size}
@@ -173,10 +187,11 @@ export function ServerDataTable<TData extends object, TValue>({
                     {mappedSort && onSortChange ? (
                       <button
                         type="button"
+                        className="-mx-1 inline-flex items-center gap-1.5 rounded px-1 py-1 transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                         onClick={() => onSortChange(mappedSort)}
                       >
                         {content}
-                        {sortLabel(header.column.id)}
+                        {sortIcon(header.column.id)}
                       </button>
                     ) : (
                       content
@@ -200,9 +215,14 @@ export function ServerDataTable<TData extends object, TValue>({
             <TableRow className="hover:bg-transparent">
               <TableCell
                 colSpan={columns.length + (enableSelection ? 1 : 0)}
-                className="h-32 text-center text-muted-foreground"
+                className="h-44 text-center text-muted-foreground"
               >
-                {emptyMessage}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-muted">
+                    <Inbox className="size-4" />
+                  </div>
+                  <span>{emptyMessage}</span>
+                </div>
               </TableCell>
             </TableRow>
           ) : (
@@ -237,7 +257,7 @@ export function ServerDataTable<TData extends object, TValue>({
         </TableBody>
       </Table>
 
-      <div className="flex flex-col gap-3 border-t bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-border/75 bg-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <span>
             <span className="font-medium text-foreground">{totalCount}</span>{" "}

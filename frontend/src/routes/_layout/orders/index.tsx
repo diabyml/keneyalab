@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
+import { PageHeader } from "@/components/Common/PageHeader"
 import { OrdersView } from "@/components/Orders/OrdersView"
 
 export const Route = createFileRoute("/_layout/orders/")({
@@ -10,12 +11,11 @@ export const Route = createFileRoute("/_layout/orders/")({
 function RouteComponent() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Demandes</h1>
-        <p className="text-muted-foreground">
-          Enregistrer et suivre les demandes d'analyses
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Circuit pré-analytique"
+        title="Demandes"
+        description="Enregistrer et suivre les demandes d'analyses"
+      />
       <OrdersView />
     </div>
   )

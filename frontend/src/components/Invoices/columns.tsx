@@ -3,8 +3,9 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { createColumnHelper } from "@tanstack/react-table"
 
 import type { InvoiceListItemPublic, PaymentStatus } from "@/client"
+import { OperationalId } from "@/components/Common/OperationalId"
+import { StatusBadge } from "@/components/Common/StatusBadge"
 import { formatDateTime, formatMoney } from "@/components/Orders/utils"
-import { Badge } from "@/components/ui/badge"
 import { InvoiceActionsMenu } from "./InvoiceActionsMenu"
 import { INVOICE_STATUS_LABELS } from "./utils"
 
@@ -19,9 +20,9 @@ export const invoiceColumns: ColumnDef<InvoiceListItemPublic, any>[] = [
         params={{ invoiceId: row.original.id }}
         className="block"
       >
-        <div className="font-mono text-sm font-medium text-primary hover:underline">
+        <OperationalId className="hover:underline">
           {row.original.invoice_number}
-        </div>
+        </OperationalId>
         <div className="text-xs text-muted-foreground">
           Version {row.original.version}
           {row.original.is_voided ? " · Annulée" : ""}
@@ -52,9 +53,9 @@ export const invoiceColumns: ColumnDef<InvoiceListItemPublic, any>[] = [
       <Link
         to="/orders/$orderId"
         params={{ orderId: row.original.order_id }}
-        className="font-mono text-xs text-primary hover:underline"
+        className="hover:underline"
       >
-        {row.original.accession_number}
+        <OperationalId>{row.original.accession_number}</OperationalId>
       </Link>
     ),
   }),
@@ -79,9 +80,19 @@ export const invoiceColumns: ColumnDef<InvoiceListItemPublic, any>[] = [
   helper.accessor("payment_status", {
     header: "Statut",
     cell: ({ getValue }) => (
-      <Badge variant="outline">
+      <StatusBadge
+        tone={
+          getValue() === "paid"
+            ? "success"
+            : getValue() === "partial"
+              ? "progress"
+              : getValue() === "refunded"
+                ? "neutral"
+                : "warning"
+        }
+      >
         {INVOICE_STATUS_LABELS[getValue() as PaymentStatus]}
-      </Badge>
+      </StatusBadge>
     ),
   }),
   helper.accessor("created_at", {

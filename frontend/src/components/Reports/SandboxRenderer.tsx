@@ -113,7 +113,7 @@ function createDocument(code: string, css: string, category: ReportCategory) {
   <html><head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
-    <style>html,body{margin:0;background:transparent;color:#172033;font:11px Inter,Arial,sans-serif}*{box-sizing:border-box}h3{font-size:11px;margin:10px 0 4px}.report-result-image{max-width:180px;max-height:100px}.result-comment{display:block;margin-top:3px;color:#64748b;font-style:italic}${css}</style>
+    <style>html,body{margin:0;background:transparent;color:#000;font:11px Inter,Arial,sans-serif}*{box-sizing:border-box}h3{font-size:11px;margin:10px 0 4px}.report-result-image{max-width:180px;max-height:100px}.result-comment{display:block;margin-top:3px;color:#000;font-style:italic}${css}#root,#root *{color:#000}#root strong,#root b{font-weight:700}#root table,#root th,#root td{border-color:#374151}.result-abnormal,.result-abnormal *,.result-critical,.result-critical *{color:#b91c1c;font-weight:700}</style>
   </head><body><div id="root"></div><script>${runtime.replace(/<\/script>/g, "<\\/script>")}</script></body></html>`
 }
 

@@ -34,7 +34,9 @@ function UserInfo({ fullName, email }: UserInfoProps) {
       </Avatar>
       <div className="flex flex-col items-start min-w-0">
         <p className="text-sm font-medium truncate w-full">{fullName}</p>
-        <p className="text-xs text-muted-foreground truncate w-full">{email}</p>
+        <p className="w-full truncate text-xs text-sidebar-foreground/55">
+          {email}
+        </p>
       </div>
     </div>
   )
@@ -66,7 +68,7 @@ export function User({ user }: { user: any }) {
               data-testid="user-menu"
             >
               <UserInfo fullName={user?.full_name} email={user?.email} />
-              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+              <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/45" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
