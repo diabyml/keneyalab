@@ -1,5 +1,11 @@
 # Development Workflows
 
+
+# on leneovo fix start
+sudo systemctl stop apache2
+sudo systemctl stop postgresql
+docker compose up
+
 ## Clear db except rbac system
 docker compose exec backend python scripts/clear_data.py
 
