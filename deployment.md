@@ -183,6 +183,9 @@ You can set several other environment variables:
 * `SMTP_USER`: The SMTP server user to send emails.
 * `SMTP_PASSWORD`: The SMTP server password to send emails.
 * `EMAILS_FROM_EMAIL`: The email account to send emails from.
+* `WHATSAPP_API_VERSION`: The Meta Graph API version for WhatsApp Cloud API, e.g. `v21.0`.
+* `WHATSAPP_PHONE_NUMBER_ID`: The WhatsApp Cloud API phone number ID.
+* `WHATSAPP_ACCESS_TOKEN`: The WhatsApp Cloud API access token.
 * `POSTGRES_SERVER`: The hostname of the PostgreSQL server. You can leave the default of `db`, provided by the same Docker Compose. You normally wouldn't need to change this unless you are using a third-party provider.
 * `POSTGRES_PORT`: The port of the PostgreSQL server. You can leave the default. You normally wouldn't need to change this unless you are using a third-party provider.
 * `POSTGRES_USER`: The Postgres user, you can leave the default.
@@ -305,6 +308,8 @@ The current Github Actions workflows expect these secrets:
 * `STACK_NAME_PRODUCTION`
 * `STACK_NAME_STAGING`
 * `EMAILS_FROM_EMAIL`
+* `WHATSAPP_PHONE_NUMBER_ID`
+* `WHATSAPP_ACCESS_TOKEN`
 * `FIRST_SUPERUSER`
 * `FIRST_SUPERUSER_PASSWORD`
 * `POSTGRES_PASSWORD`

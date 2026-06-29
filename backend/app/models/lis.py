@@ -179,6 +179,25 @@ class NotificationStatus(str, Enum):
     failed = "failed"
 
 
+class ReagentLotStatus(str, Enum):
+    active = "active"
+    depleted = "depleted"
+    disposed = "disposed"
+
+
+class ReagentMovementType(str, Enum):
+    received = "received"
+    used = "used"
+    adjusted = "adjusted"
+    disposed = "disposed"
+
+
+class ReagentExpiryStatus(str, Enum):
+    ok = "ok"
+    expiring = "expiring"
+    expired = "expired"
+
+
 class CriticalMethod(str, Enum):
     call = "call"
     sms = "sms"
@@ -500,6 +519,24 @@ class NotificationFilters(CreatedAtFilter, SortFilter, PaginationFilter):
     status: NotificationStatus | None = None
     sent_from: datetime | None = None
     sent_to: datetime | None = None
+
+
+class ReagentFilters(SearchFilter, SoftDeleteFilter, CreatedAtFilter, SortFilter, PaginationFilter):
+    stock_status: str | None = None
+    expiry_status: ReagentExpiryStatus | None = None
+
+
+class ReagentLotFilters(SearchFilter, CreatedAtFilter, SortFilter, PaginationFilter):
+    reagent_id: uuid.UUID | None = None
+    status: ReagentLotStatus | None = None
+    expiry_status: ReagentExpiryStatus | None = None
+    low_stock: bool | None = None
+
+
+class ReagentMovementFilters(CreatedAtFilter, SortFilter, PaginationFilter):
+    reagent_id: uuid.UUID | None = None
+    lot_id: uuid.UUID | None = None
+    movement_type: ReagentMovementType | None = None
 
 
 class InsurancePricingFilters(CreatedAtFilter, SortFilter, PaginationFilter):
@@ -2530,6 +2567,9 @@ class Report(ReportBase, table=True):
     template_snapshot: Any = Field(
         default_factory=dict, sa_column=Column(JSONB, nullable=False)
     )
+    render_config: Any = Field(
+        default_factory=dict, sa_column=Column(JSONB, nullable=False)
+    )
     delivery_metadata: Any = Field(
         default_factory=dict, sa_column=Column(JSONB, nullable=False)
     )
@@ -2541,6 +2581,12 @@ class Report(ReportBase, table=True):
     )
 
 
+class ReportRenderConfig(SQLModel):
+    category_order: list[str] = Field(default_factory=list)
+    category_page_breaks: dict[str, bool] = Field(default_factory=dict)
+    hidden_analyte_ids: list[str] = Field(default_factory=list)
+
+
 class ReportPublic(ReportBase, TimestampPublic):
     released_by_id: uuid.UUID
     released_at: datetime | None = None
@@ -2548,6 +2594,7 @@ class ReportPublic(ReportBase, TimestampPublic):
     is_voided: bool
     snapshot: Any = Field(default_factory=dict)
     template_snapshot: Any = Field(default_factory=dict)
+    render_config: ReportRenderConfig = Field(default_factory=ReportRenderConfig)
     delivery_metadata: Any = Field(default_factory=dict)
 
 
@@ -2574,6 +2621,7 @@ class ReportReleaseRequest(SQLModel):
     channel: ReportChannel = ReportChannel.print
     recipient: str | None = Field(default=None, min_length=3, max_length=320)
     recipient_note: str | None = None
+    render_config: ReportRenderConfig | None = None
 
 
 class NotificationBase(SQLModel):
@@ -2618,6 +2666,197 @@ class NotificationPublic(NotificationBase, TimestampPublic):
 class NotificationsPublic(SQLModel):
     data: list[NotificationPublic]
     count: int
+
+
+class ReagentSettingsBase(SQLModel):
+    default_expiry_warning_days: int = Field(default=30, ge=1, le=3650)
+    expiry_alerts_enabled: bool = True
+    low_stock_alerts_enabled: bool = True
+
+
+class ReagentSettingsUpdate(SQLModel):
+    default_expiry_warning_days: int | None = Field(default=None, ge=1, le=3650)
+    expiry_alerts_enabled: bool | None = None
+    low_stock_alerts_enabled: bool | None = None
+
+
+class ReagentSettings(ReagentSettingsBase, table=True):
+    __tablename__ = "reagent_settings"
+
+    id: int = Field(default=1, primary_key=True)
+    updated_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    updated_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+
+
+class ReagentSettingsPublic(ReagentSettingsBase, TimestampPublic):
+    id: int
+    updated_by_id: uuid.UUID | None = None
+
+
+class ReagentBase(SQLModel):
+    code: str = Field(min_length=1, max_length=50)
+    name: str = Field(min_length=1, max_length=255)
+    unit_label: str = Field(min_length=1, max_length=50)
+    storage_condition: str | None = Field(default=None, max_length=255)
+    storage_location: str | None = Field(default=None, max_length=255)
+    supplier: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, sa_column=Column(Text))
+    minimum_stock_level: Decimal | None = Field(
+        default=None, sa_column=Column(Numeric(12, 3), nullable=True)
+    )
+    expiry_warning_days_override: int | None = Field(default=None, ge=1, le=3650)
+
+
+class ReagentCreate(ReagentBase):
+    pass
+
+
+class ReagentUpdate(SQLModel):
+    code: str | None = Field(default=None, min_length=1, max_length=50)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    unit_label: str | None = Field(default=None, min_length=1, max_length=50)
+    storage_condition: str | None = Field(default=None, max_length=255)
+    storage_location: str | None = Field(default=None, max_length=255)
+    supplier: str | None = Field(default=None, max_length=255)
+    notes: str | None = None
+    minimum_stock_level: Decimal | None = None
+    expiry_warning_days_override: int | None = Field(default=None, ge=1, le=3650)
+
+
+class Reagent(ReagentBase, table=True):
+    __tablename__ = "reagents"
+    __table_args__ = (UniqueConstraint("code", name="uq_reagents_code"),)
+
+    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
+    is_deleted: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    updated_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+
+
+class ReagentPublic(ReagentBase, SoftDeletePublic):
+    total_stock: Decimal = Decimal("0.000")
+    active_lot_count: int = 0
+    expiring_lot_count: int = 0
+    expired_lot_count: int = 0
+    low_stock: bool = False
+
+
+class ReagentsPublic(SQLModel):
+    data: list[ReagentPublic]
+    count: int
+
+
+class ReagentLotBase(SQLModel):
+    reagent_id: uuid.UUID = Field(foreign_key="reagents.id")
+    lot_number: str = Field(min_length=1, max_length=100)
+    expiry_date: date
+    received_date: date
+    initial_quantity: Decimal = Field(sa_column=Column(Numeric(12, 3), nullable=False))
+    unit_cost: Decimal | None = Field(default=None, sa_column=Column(Numeric(12, 2)))
+    supplier_name: str | None = Field(default=None, max_length=255)
+    location: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, sa_column=Column(Text))
+
+
+class ReagentLotCreate(ReagentLotBase):
+    pass
+
+
+class ReagentLotUpdate(SQLModel):
+    lot_number: str | None = Field(default=None, min_length=1, max_length=100)
+    expiry_date: date | None = None
+    received_date: date | None = None
+    unit_cost: Decimal | None = None
+    supplier_name: str | None = Field(default=None, max_length=255)
+    location: str | None = Field(default=None, max_length=255)
+    notes: str | None = None
+
+
+class ReagentLot(ReagentLotBase, table=True):
+    __tablename__ = "reagent_lots"
+    __table_args__ = (
+        UniqueConstraint("reagent_id", "lot_number", name="uq_reagent_lots_reagent_lot"),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
+    current_quantity: Decimal = Field(sa_column=Column(Numeric(12, 3), nullable=False))
+    status: ReagentLotStatus = Field(
+        default=ReagentLotStatus.active,
+        sa_column=Column(pg_enum(ReagentLotStatus, "reagent_lot_status"), nullable=False),
+    )
+    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    updated_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+
+
+class ReagentLotPublic(ReagentLotBase, TimestampPublic):
+    current_quantity: Decimal
+    status: ReagentLotStatus
+    reagent_name: str | None = None
+    reagent_code: str | None = None
+    unit_label: str | None = None
+    expiry_status: ReagentExpiryStatus = ReagentExpiryStatus.ok
+    days_until_expiry: int | None = None
+
+
+class ReagentLotsPublic(SQLModel):
+    data: list[ReagentLotPublic]
+    count: int
+
+
+class ReagentMovementCreate(SQLModel):
+    lot_id: uuid.UUID
+    movement_type: ReagentMovementType
+    quantity: Decimal = Field(gt=0)
+    reason: str = Field(min_length=1, max_length=255)
+    notes: str | None = None
+
+
+class ReagentStockMovement(SQLModel, table=True):
+    __tablename__ = "reagent_stock_movements"
+
+    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
+    reagent_id: uuid.UUID = Field(foreign_key="reagents.id")
+    lot_id: uuid.UUID = Field(foreign_key="reagent_lots.id")
+    movement_type: ReagentMovementType = Field(
+        sa_column=Column(pg_enum(ReagentMovementType, "reagent_movement_type"), nullable=False)
+    )
+    quantity: Decimal = Field(sa_column=Column(Numeric(12, 3), nullable=False))
+    balance_after: Decimal = Field(sa_column=Column(Numeric(12, 3), nullable=False))
+    reason: str = Field(max_length=255)
+    notes: str | None = Field(default=None, sa_column=Column(Text))
+    performed_by_id: uuid.UUID = Field(foreign_key="user.id")
+    performed_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+
+
+class ReagentStockMovementPublic(SQLModel):
+    id: uuid.UUID
+    reagent_id: uuid.UUID
+    lot_id: uuid.UUID
+    movement_type: ReagentMovementType
+    quantity: Decimal
+    balance_after: Decimal
+    reason: str
+    notes: str | None = None
+    performed_by_id: uuid.UUID
+    performed_at: datetime
+    created_at: datetime
+    reagent_name: str | None = None
+    reagent_code: str | None = None
+    lot_number: str | None = None
+
+
+class ReagentStockMovementsPublic(SQLModel):
+    data: list[ReagentStockMovementPublic]
+    count: int
+
+
+class ReagentAlertSummaryPublic(SQLModel):
+    expiring_count: int
+    expired_count: int
+    low_stock_count: int
+    total_count: int
 
 
 class InsurancePricingBase(SQLModel):

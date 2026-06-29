@@ -5,11 +5,13 @@ import uuid
 from datetime import date, datetime, timezone
 from html import escape
 from html.parser import HTMLParser
+from textwrap import wrap
 from typing import Any
 
 from pydantic import EmailStr, TypeAdapter
 from sqlmodel import Session, select
 
+from app.core.config import settings
 from app.core.exceptions import BusinessRuleError, NotFoundError
 from app.models.lis import (
     Category,
@@ -30,6 +32,7 @@ from app.models.lis import (
     ReportPreviewPublic,
     ReportPublic,
     ReportReleaseRequest,
+    ReportRenderConfig,
     ReportRenderer,
     ReportRendererCreate,
     ReportRendererPublic,
@@ -46,12 +49,141 @@ from app.models.lis import (
 from app.repositories import report as report_repo
 from app.services import lab_settings as lab_settings_service
 from app.services import result as result_service
-from app.utils import send_email
+from app.utils import send_email, send_whatsapp_document, upload_whatsapp_media
 
 GENDER_LABELS = {
     "male": "Masculin",
     "female": "Féminin",
 }
+
+UNCATEGORIZED_REPORT_KEY = "uncategorized"
+
+
+def _default_render_config() -> dict[str, Any]:
+    return {
+        "category_order": [],
+        "category_page_breaks": {},
+        "hidden_analyte_ids": [],
+    }
+
+
+def _category_key(category: dict[str, Any]) -> str:
+    return str(category.get("id") or UNCATEGORIZED_REPORT_KEY)
+
+
+def _normalize_render_config(
+    render_config: ReportRenderConfig | dict[str, Any] | None,
+) -> dict[str, Any]:
+    if render_config is None:
+        return _default_render_config()
+    if isinstance(render_config, ReportRenderConfig):
+        value = render_config.model_dump(mode="json")
+    else:
+        value = dict(render_config)
+    return {
+        "category_order": [
+            str(item)
+            for item in value.get("category_order", [])
+            if str(item).strip()
+        ],
+        "category_page_breaks": {
+            str(key): bool(enabled)
+            for key, enabled in dict(value.get("category_page_breaks") or {}).items()
+            if str(key).strip()
+        },
+        "hidden_analyte_ids": [
+            str(item)
+            for item in value.get("hidden_analyte_ids", [])
+            if str(item).strip()
+        ],
+    }
+
+
+def _unique(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    unique_values: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique_values.append(value)
+    return unique_values
+
+
+def _apply_render_config(
+    snapshot: dict[str, Any],
+    render_config: ReportRenderConfig | dict[str, Any] | None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    config = _normalize_render_config(render_config)
+    categories = [dict(category) for category in snapshot.get("categories") or []]
+    category_keys = [_category_key(category) for category in categories]
+    known_categories = set(category_keys)
+
+    requested_order = _unique(config["category_order"])
+    unknown_order = [key for key in requested_order if key not in known_categories]
+    unknown_breaks = [
+        key for key in config["category_page_breaks"] if key not in known_categories
+    ]
+    if unknown_order or unknown_breaks:
+        raise BusinessRuleError(
+            "Configuration de rendu invalide : catégorie inconnue"
+        )
+
+    known_analytes: set[str] = set()
+    for category in categories:
+        for test in category.get("tests") or []:
+            for analyte in test.get("analytes") or []:
+                analyte_id = str(analyte.get("analyte_id") or "")
+                if analyte_id:
+                    known_analytes.add(analyte_id)
+
+    hidden_analytes = _unique(config["hidden_analyte_ids"])
+    if any(analyte_id not in known_analytes for analyte_id in hidden_analytes):
+        raise BusinessRuleError(
+            "Configuration de rendu invalide : ligne de résultat inconnue"
+        )
+
+    final_order = requested_order + [
+        key for key in category_keys if key not in requested_order
+    ]
+    by_key = {_category_key(category): category for category in categories}
+    hidden_set = set(hidden_analytes)
+    rendered_categories: list[dict[str, Any]] = []
+
+    for key in final_order:
+        category = by_key.get(key)
+        if category is None:
+            continue
+        rendered_tests: list[dict[str, Any]] = []
+        for test in category.get("tests") or []:
+            rendered_analytes = [
+                dict(analyte)
+                for analyte in test.get("analytes") or []
+                if str(analyte.get("analyte_id") or "") not in hidden_set
+            ]
+            if not rendered_analytes:
+                continue
+            rendered_test = dict(test)
+            rendered_test["analytes"] = rendered_analytes
+            rendered_tests.append(rendered_test)
+        if not rendered_tests:
+            continue
+        rendered_category = dict(category)
+        rendered_category["tests"] = rendered_tests
+        rendered_categories.append(rendered_category)
+
+    rendered_snapshot = dict(snapshot)
+    rendered_snapshot["categories"] = rendered_categories
+    normalized_config = {
+        "category_order": final_order,
+        "category_page_breaks": {
+            key: True
+            for key, enabled in config["category_page_breaks"].items()
+            if enabled
+        },
+        "hidden_analyte_ids": hidden_analytes,
+    }
+    return rendered_snapshot, normalized_config
 
 ALLOWED_TAGS = {
     "div",
@@ -880,15 +1012,34 @@ def _validate_email_recipient(recipient: str) -> str:
         raise BusinessRuleError("Adresse e-mail invalide") from exc
 
 
+def _validate_whatsapp_recipient(recipient: str) -> str:
+    normalized = re.sub(r"[\s().-]+", "", recipient.strip())
+    if normalized.startswith("00"):
+        normalized = f"+{normalized[2:]}"
+    if not re.fullmatch(r"\+[1-9][0-9]{7,14}", normalized):
+        raise BusinessRuleError(
+            "Numéro WhatsApp invalide. Utilisez le format international, ex. +22370000000"
+        )
+    return normalized
+
+
 def _report_email_html(report: Report, recipient_note: str | None = None) -> str:
     snapshot = dict(report.snapshot or {})
     order = dict(snapshot.get("order") or {})
     patient = dict(snapshot.get("patient") or {})
     doctor = dict(snapshot.get("doctor") or {})
     lab = dict(snapshot.get("lab") or {})
+    render_config = _normalize_render_config(report.render_config or {})
+    page_breaks = set(render_config["category_page_breaks"])
 
     category_sections: list[str] = []
     for category in snapshot.get("categories") or []:
+        category_key = _category_key(dict(category))
+        section_style = (
+            ' style="break-before:page;page-break-before:always"'
+            if category_key in page_breaks
+            else ""
+        )
         test_sections: list[str] = []
         for test in category.get("tests") or []:
             rows: list[str] = []
@@ -929,8 +1080,9 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
                 f"<tbody>{''.join(rows)}</tbody></table>"
             )
         category_sections.append(
+            f"<section{section_style}>"
             f"<h2>{escape(str(category.get('name') or 'Résultats'))}</h2>"
-            f"{''.join(test_sections)}"
+            f"{''.join(test_sections)}</section>"
         )
 
     note_html = (
@@ -990,7 +1142,7 @@ def _send_report_email(
 ) -> ReportPublic:
     metadata = dict(report.delivery_metadata or {})
     attempts = list(metadata.get("attempts", []))
-    attempt = {
+    attempt: dict[str, Any] = {
         "channel": ReportChannel.email.value,
         "recipient": recipient,
         "recipient_note": recipient_note,
@@ -1033,6 +1185,279 @@ def _send_report_email(
     return ReportPublic.model_validate(report)
 
 
+def _pdf_text(value: object) -> str:
+    return str(value or "").replace("\n", " ").strip()
+
+
+def _wrap_pdf_line(value: object, width: int = 94) -> list[str]:
+    text = _pdf_text(value)
+    return wrap(text, width=width) or [""]
+
+
+def _pdf_escape(value: str) -> bytes:
+    escaped = value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+    return escaped.encode("cp1252", errors="replace")
+
+
+def _pdf_stream_line(value: str, *, font_size: int = 9) -> bytes:
+    return b"/F1 " + str(font_size).encode() + b" Tf (" + _pdf_escape(value) + b") Tj\n"
+
+
+def _report_pdf_lines(report: Report) -> list[tuple[str, int]]:
+    snapshot = dict(report.snapshot or {})
+    order = dict(snapshot.get("order") or {})
+    patient = dict(snapshot.get("patient") or {})
+    doctor = dict(snapshot.get("doctor") or {})
+    lab = dict(snapshot.get("lab") or {})
+    render_config = _normalize_render_config(report.render_config or {})
+    page_breaks = set(render_config["category_page_breaks"])
+    lab_name = str(lab.get("display_name") or settings.PROJECT_NAME)
+    accession = str(order.get("accession_number") or "")
+    patient_name = str(patient.get("name") or "")
+    lines: list[tuple[str, int]] = [
+        (lab_name.upper(), 16),
+        ("COMPTE RENDU D'ANALYSES MEDICALES", 13),
+        (f"Version: {report.version}", 9),
+        ("", 9),
+        (f"Demande: {accession or '-'}", 10),
+        (f"Patient: {patient_name or '-'}", 10),
+        (f"Identifiant: {_pdf_text(patient.get('identifier')) or '-'}", 9),
+        (
+            "Ne(e) le: "
+            f"{_pdf_text(patient.get('date_of_birth')) or '-'}"
+            f"  Age: {_pdf_text(patient.get('age')) or '-'}",
+            9,
+        ),
+        (
+            "Sexe/contexte: "
+            f"{_pdf_text(patient.get('gender_label')) or '-'} / "
+            f"{_pdf_text(patient.get('context')) or '-'}",
+            9,
+        ),
+        (f"Prescripteur: {_pdf_text(doctor.get('name')) or '-'}", 9),
+        ("", 9),
+    ]
+    for category in snapshot.get("categories") or []:
+        category_key = _category_key(dict(category))
+        if category_key in page_breaks and lines:
+            lines.append(("\f", 0))
+        lines.append((_pdf_text(category.get("name") or "Resultats").upper(), 12))
+        for test in category.get("tests") or []:
+            lines.append((f"- {_pdf_text(test.get('catalog_name') or 'Analyse')}", 10))
+            for analyte in test.get("analytes") or []:
+                value = analyte.get("result_value") or (
+                    "Image jointe au resultat" if analyte.get("image_url") else "-"
+                )
+                flags = []
+                if analyte.get("is_critical"):
+                    flags.append("CRITIQUE")
+                elif analyte.get("is_abnormal"):
+                    flags.append("ANORMAL")
+                status = ", ".join(flags) or "Normal"
+                row = (
+                    f"  {_pdf_text(analyte.get('analyte_name'))}: {_pdf_text(value)} "
+                    f"{_pdf_text(analyte.get('unit_name'))} | Ref: "
+                    f"{_pdf_text(analyte.get('reference_text')) or '-'} | {status}"
+                )
+                for line in _wrap_pdf_line(row):
+                    lines.append((line, 8))
+                comments = "; ".join(
+                    _pdf_text(comment.get("comment"))
+                    for comment in analyte.get("comments") or []
+                    if comment.get("comment")
+                )
+                if comments:
+                    for line in _wrap_pdf_line(f"    Commentaire: {comments}"):
+                        lines.append((line, 8))
+            lines.append(("", 8))
+        lines.append(("", 8))
+    lines.extend(
+        [
+            ("", 9),
+            (
+                "Document confidentiel. Les resultats doivent etre interpretes "
+                "avec le contexte clinique.",
+                8,
+            ),
+        ]
+    )
+    return lines
+
+
+def _render_report_pdf(report: Report) -> bytes:
+    lines = _report_pdf_lines(report)
+    pages: list[list[tuple[str, int]]] = []
+    current: list[tuple[str, int]] = []
+    y = 790
+    for text, size in lines:
+        if text == "\f":
+            if current:
+                pages.append(current)
+                current = []
+            y = 790
+            continue
+        line_height = max(size + 5, 12)
+        if y - line_height < 48 and current:
+            pages.append(current)
+            current = []
+            y = 790
+        current.append((text, size))
+        y -= line_height
+    if current:
+        pages.append(current)
+
+    objects: dict[int, bytes] = {}
+    page_count = len(pages)
+    font_obj_id = 3
+    page_obj_ids = [4 + index * 2 for index in range(page_count)]
+    content_obj_ids = [5 + index * 2 for index in range(page_count)]
+    kids = b" ".join(f"{obj_id} 0 R".encode() for obj_id in page_obj_ids)
+    objects[1] = b"<< /Type /Catalog /Pages 2 0 R >>"
+    objects[2] = (
+        b"<< /Type /Pages /Kids [" + kids + b"] /Count " + str(page_count).encode() + b" >>"
+    )
+    objects[font_obj_id] = b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+
+    for index, page_lines in enumerate(pages):
+        page_id = page_obj_ids[index]
+        content_id = content_obj_ids[index]
+        stream = b"BT\n50 790 Td\n"
+        previous_size = 9
+        for text, size in page_lines:
+            stream += _pdf_stream_line(text, font_size=size)
+            line_height = max(size + 5, 12)
+            stream += f"0 -{line_height} Td\n".encode()
+            previous_size = size
+        if previous_size:
+            stream += b"ET\n"
+        objects[content_id] = (
+            b"<< /Length "
+            + str(len(stream)).encode()
+            + b" >>\nstream\n"
+            + stream
+            + b"endstream"
+        )
+        objects[page_id] = (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+            b"/Resources << /Font << /F1 "
+            + str(font_obj_id).encode()
+            + b" 0 R >> >> /Contents "
+            + str(content_id).encode()
+            + b" 0 R >>"
+        )
+
+    output = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = {0: 0}
+    for obj_id in sorted(objects):
+        offsets[obj_id] = len(output)
+        output.extend(f"{obj_id} 0 obj\n".encode())
+        output.extend(objects[obj_id])
+        output.extend(b"\nendobj\n")
+    xref_offset = len(output)
+    output.extend(f"xref\n0 {max(objects) + 1}\n".encode())
+    output.extend(b"0000000000 65535 f \n")
+    for obj_id in range(1, max(objects) + 1):
+        output.extend(f"{offsets[obj_id]:010d} 00000 n \n".encode())
+    output.extend(
+        f"trailer\n<< /Size {max(objects) + 1} /Root 1 0 R >>\n"
+        f"startxref\n{xref_offset}\n%%EOF\n".encode()
+    )
+    return bytes(output)
+
+
+def _report_whatsapp_caption(report: Report, recipient_note: str | None = None) -> str:
+    snapshot = dict(report.snapshot or {})
+    order = dict(snapshot.get("order") or {})
+    lab = dict(snapshot.get("lab") or {})
+    lab_name = str(lab.get("display_name") or settings.PROJECT_NAME)
+    accession = str(order.get("accession_number") or "")
+    parts = [
+        f"{lab_name} - Compte rendu d'analyses",
+        f"Demande: {accession}" if accession else "",
+        f"Version: {report.version}",
+    ]
+    if recipient_note:
+        parts.append(recipient_note.strip())
+    return "\n".join(part for part in parts if part)
+
+
+def _report_pdf_filename(report: Report) -> str:
+    snapshot = dict(report.snapshot or {})
+    order = dict(snapshot.get("order") or {})
+    accession = re.sub(r"[^A-Za-z0-9_-]+", "-", str(order.get("accession_number") or "rapport"))
+    return f"compte-rendu-{accession}-v{report.version}.pdf"
+
+
+def _send_report_whatsapp(
+    *,
+    session: Session,
+    report: Report,
+    recipient: str,
+    recipient_note: str | None,
+) -> ReportPublic:
+    metadata = dict(report.delivery_metadata or {})
+    attempts = list(metadata.get("attempts", []))
+    attempt: dict[str, Any] = {
+        "channel": ReportChannel.whatsapp.value,
+        "recipient": recipient,
+        "recipient_note": recipient_note,
+        "status": DeliveryStatus.pending.value,
+        "requested_at": datetime.now(timezone.utc).isoformat(),
+        "provider": "whatsapp_cloud_api",
+    }
+    attempts.append(attempt)
+    try:
+        filename = _report_pdf_filename(report)
+        upload_response = upload_whatsapp_media(
+            filename=filename,
+            content_type="application/pdf",
+            data=_render_report_pdf(report),
+        )
+        media_id = str(upload_response.get("id") or "")
+        if not media_id:
+            raise RuntimeError("WhatsApp n'a pas retourné d'identifiant média")
+        response = send_whatsapp_document(
+            recipient=recipient,
+            media_id=media_id,
+            filename=filename,
+            caption=_report_whatsapp_caption(
+                report=report, recipient_note=recipient_note
+            ),
+        )
+    except Exception as exc:
+        attempt["status"] = DeliveryStatus.failed.value
+        attempt["failed_at"] = datetime.now(timezone.utc).isoformat()
+        attempt["error"] = str(exc)
+        report.channel = ReportChannel.whatsapp
+        report.recipient_note = recipient_note
+        report.delivery_status = DeliveryStatus.failed
+        report.delivery_metadata = {
+            "attempts": attempts,
+            "provider": "whatsapp_cloud_api",
+        }
+        session.add(report)
+        session.commit()
+        raise BusinessRuleError(
+            "Le rapport a été publié, mais l'envoi WhatsApp a échoué"
+        ) from exc
+
+    attempt["status"] = DeliveryStatus.sent.value
+    attempt["sent_at"] = datetime.now(timezone.utc).isoformat()
+    attempt["media_id"] = media_id
+    attempt["provider_response"] = response
+    report.channel = ReportChannel.whatsapp
+    report.recipient_note = recipient_note
+    report.delivery_status = DeliveryStatus.sent
+    report.delivery_metadata = {
+        "attempts": attempts,
+        "provider": "whatsapp_cloud_api",
+    }
+    session.add(report)
+    session.commit()
+    session.refresh(report)
+    return ReportPublic.model_validate(report)
+
+
 def release_report(
     *,
     session: Session,
@@ -1040,19 +1465,20 @@ def release_report(
     user_id: uuid.UUID,
     request: ReportReleaseRequest,
 ) -> ReportPublic:
-    recipient = (
-        _validate_email_recipient(request.recipient)
-        if request.channel == ReportChannel.email and request.recipient
-        else None
-    )
-    if request.channel == ReportChannel.email and recipient is None:
+    recipient: str | None = None
+    if request.channel == ReportChannel.email and request.recipient:
+        recipient = _validate_email_recipient(request.recipient)
+    elif request.channel == ReportChannel.whatsapp and request.recipient:
+        recipient = _validate_whatsapp_recipient(request.recipient)
+    if request.channel in {ReportChannel.email, ReportChannel.whatsapp} and recipient is None:
         raise BusinessRuleError(
-            "L'adresse e-mail est obligatoire pour publier et envoyer"
+            "Le destinataire est obligatoire pour publier et envoyer"
         )
     if request.channel not in {
         ReportChannel.print,
         ReportChannel.portal,
         ReportChannel.email,
+        ReportChannel.whatsapp,
     }:
         raise BusinessRuleError("Canal de publication invalide")
     snapshot, templates, blockers = _build_snapshot(
@@ -1062,6 +1488,9 @@ def release_report(
         raise BusinessRuleError(
             "Tous les résultats doivent être vérifiés avant publication"
         )
+    snapshot, normalized_render_config = _apply_render_config(
+        snapshot, request.render_config
+    )
     for previous in report_repo.list_order_reports(
         session=session, order_id=order_id
     ):
@@ -1083,6 +1512,7 @@ def release_report(
         ),
         snapshot=snapshot,
         template_snapshot=templates,
+        render_config=normalized_render_config,
         delivery_metadata={},
     )
     session.add(report)
@@ -1090,6 +1520,13 @@ def release_report(
     session.refresh(report)
     if request.channel == ReportChannel.email and recipient:
         return _send_report_email(
+            session=session,
+            report=report,
+            recipient=recipient,
+            recipient_note=request.recipient_note,
+        )
+    if request.channel == ReportChannel.whatsapp and recipient:
+        return _send_report_whatsapp(
             session=session,
             report=report,
             recipient=recipient,
@@ -1147,24 +1584,9 @@ def deliver_report(
             recipient=_validate_email_recipient(recipient),
             recipient_note=request.recipient_note,
         )
-    elif not re.fullmatch(r"\+?[0-9][0-9 .-]{6,20}", recipient):
-        raise BusinessRuleError("Numéro WhatsApp invalide")
-    metadata = dict(report.delivery_metadata or {})
-    attempts = list(metadata.get("attempts", []))
-    attempts.append(
-        {
-            "channel": request.channel.value,
-            "recipient": recipient,
-            "recipient_note": request.recipient_note,
-            "status": "not_configured",
-            "requested_at": datetime.now(timezone.utc).isoformat(),
-        }
+    return _send_report_whatsapp(
+        session=session,
+        report=report,
+        recipient=_validate_whatsapp_recipient(recipient),
+        recipient_note=request.recipient_note,
     )
-    report.channel = request.channel
-    report.recipient_note = request.recipient_note
-    report.delivery_status = DeliveryStatus.pending
-    report.delivery_metadata = {"attempts": attempts, "provider": "not_configured"}
-    session.add(report)
-    session.commit()
-    session.refresh(report)
-    return ReportPublic.model_validate(report)

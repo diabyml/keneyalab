@@ -13,12 +13,15 @@ Preserved tables:
 All other tables are deleted in FK-safe dependency order.
 """
 
+# ruff: noqa: I001, T201
+
 import sys
 
 from sqlalchemy import text
-from sqlmodel import Session
+from sqlmodel import SQLModel, Session
 
 from app.core.db import engine
+from app.models import *  # noqa: F403
 
 # Deletion order: deepest leaf tables first, working up to root reference tables.
 # Each phase only touches tables whose dependents have already been cleared.
@@ -30,6 +33,7 @@ TABLES_BY_PHASE: list[list[str]] = [
     [
         "daily_sequences",
         "audit_logs",
+        "reagent_stock_movements",
         "catalog_specimen_requirements",
         "catalog_panel_items",
         "consistency_rule_analytes",
@@ -52,9 +56,15 @@ TABLES_BY_PHASE: list[list[str]] = [
         "insurance_pricing",
         "notifications",
         "finance_settings",
+        "lab_settings",
+        "reagent_lots",
+        "reagent_settings",
         "payment_transactions",
         "analyte_results",
         "reports",
+        "report_settings",
+        "report_component_versions",
+        "report_renderer_versions",
     ],
     # Phase 3 — order sub-entities, invoices, commissions, rules
     [
@@ -68,6 +78,8 @@ TABLES_BY_PHASE: list[list[str]] = [
         "consistency_rules",
         "reflex_rules",
         "report_templates",
+        "report_components",
+        "report_renderers",
     ],
     # Phase 4 — orders (root of the clinical workflow)
     [
@@ -94,6 +106,7 @@ TABLES_BY_PHASE: list[list[str]] = [
         "rejection_reasons",
         "insurance_providers",
         "instruments",
+        "reagents",
     ],
 ]
 
@@ -107,7 +120,21 @@ PRESERVED_TABLES: set[str] = {
 }
 
 
+def validate_table_coverage() -> None:
+    listed_tables = {table for phase in TABLES_BY_PHASE for table in phase}
+    known_tables = set(SQLModel.metadata.tables)
+    missing = known_tables - listed_tables - PRESERVED_TABLES
+    if missing:
+        print("ERROR: clear_data.py does not handle these tables:")
+        for table in sorted(missing):
+            print(f"  - {table}")
+        print("Add them to TABLES_BY_PHASE or PRESERVED_TABLES before running.")
+        sys.exit(1)
+
+
 def main() -> None:
+    validate_table_coverage()
+
     print("=" * 60)
     print("  Keneya Lab — Data Cleanup Script")
     print("=" * 60)

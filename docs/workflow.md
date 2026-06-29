@@ -1,5 +1,8 @@
 # Development Workflows
 
+<!-- Rebuild project -->
+docker compose up -d --build --force-recreate backend frontend prestart
+
 
 # on leneovo fix start
 sudo systemctl stop apache2
@@ -9,9 +12,35 @@ docker compose up
 ## Clear db except rbac system
 docker compose exec backend python scripts/clear_data.py
 
+## Persistent Docker volumes
+
+Application data is stored in Docker named volumes:
+
+- `app-db-data` stores PostgreSQL data.
+- `app-minio-data` stores uploaded lab logos and result images in MinIO.
+
+Do not run `docker compose down -v` on a local deployment unless you intentionally
+want to delete the database and uploaded files.
+
 ## To access adminer: http://adminer.localhost/
 
 ## Mailcatcher  http://localhost:1080
+
+## WhatsApp Cloud API
+
+Set these values in `.env`, then restart the backend:
+
+```bash
+WHATSAPP_API_VERSION=v21.0
+WHATSAPP_PHONE_NUMBER_ID=your_meta_phone_number_id
+WHATSAPP_ACCESS_TOKEN=your_permanent_or_test_token
+
+docker compose up -d --force-recreate backend
+```
+
+Use international phone numbers when sending reports, for example `+22370000000`.
+WhatsApp delivery uploads the released report as a PDF document and sends that
+PDF as an attachment.
 
 
 ## run permissions seed
@@ -21,6 +50,9 @@ docker compose exec backend python -c "from app.core.db import init_db; from app
 
 ## seed catalog demo
 docker compose exec backend python -m app.seed_catalog_demo  --confirm-delete
+
+## seed all-in-one demo order with normal, abnormal, and critical results
+docker compose exec backend python -m app.seed_demo_order_results
 
 ## Fresh build backend and Frontend
 ```bash

@@ -5,13 +5,14 @@ import {
   HandCoins,
   Home,
   Microscope,
+  PackageSearch,
   ReceiptText,
   Settings2,
   Stethoscope,
   UserRound,
 } from "lucide-react"
 
-import { CriticalNotificationsService } from "@/client"
+import { CriticalNotificationsService, ReagentsService } from "@/client"
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import {
@@ -35,12 +36,19 @@ export function AppSidebar() {
   const canViewSpecimens = usePermission("specimens", "view")
   const canViewResults = usePermission("results", "view")
   const canViewCritical = usePermission("critical_notifications", "view")
+  const canViewReagents = usePermission("reagents", "view")
   const canViewInvoices = usePermission("invoices", "view")
   const canViewCommissions = usePermission("commissions", "view")
   const criticalCountQuery = useQuery({
     queryKey: ["critical-notifications", "unacknowledged-count"],
     queryFn: () => CriticalNotificationsService.readUnacknowledgedCount(),
     enabled: canViewCritical,
+    refetchInterval: 30_000,
+  })
+  const reagentAlertsQuery = useQuery({
+    queryKey: ["reagents", "alert-summary"],
+    queryFn: () => ReagentsService.readReagentAlertSummary(),
+    enabled: canViewReagents,
     refetchInterval: 30_000,
   })
 
@@ -64,6 +72,15 @@ export function AppSidebar() {
       title: "Résultats",
       path: "/results",
       badge: criticalCountQuery.data?.count,
+    })
+  }
+
+  if (canViewReagents) {
+    items.push({
+      icon: PackageSearch,
+      title: "Réactifs",
+      path: "/reagents",
+      badge: reagentAlertsQuery.data?.total_count,
     })
   }
 

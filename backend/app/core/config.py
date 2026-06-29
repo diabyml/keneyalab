@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     MINIO_SECURE: bool = False
     RESULT_IMAGE_MAX_BYTES: int = 10 * 1024 * 1024
     RESULT_IMAGE_URL_EXPIRE_SECONDS: int = 900
+    WHATSAPP_API_VERSION: str = "v21.0"
+    WHATSAPP_PHONE_NUMBER_ID: str | None = None
+    WHATSAPP_ACCESS_TOKEN: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -99,6 +102,11 @@ class Settings(BaseSettings):
     @property
     def emails_enabled(self) -> bool:
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def whatsapp_enabled(self) -> bool:
+        return bool(self.WHATSAPP_PHONE_NUMBER_ID and self.WHATSAPP_ACCESS_TOKEN)
 
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr

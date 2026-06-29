@@ -394,34 +394,3 @@ a:active:not(:disabled) {
     overflow-wrap: anywhere;
   }
 }
-
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 14mm;
-  }
-
-  body[data-print-target="report"] * {
-    visibility: hidden;
-  }
-
-  body[data-print-target="report"] .report-a4,
-  body[data-print-target="report"] .report-a4 * {
-    visibility: visible;
-  }
-
-  body[data-print-target="report"] .report-a4 {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    min-height: 0;
-    width: 100%;
-    padding: 0;
-    background: #fff;
-    box-shadow: none;
-  }
-
-  body[data-print-target="report"] .report-a4 iframe {
-    break-inside: avoid;
-  }
-}

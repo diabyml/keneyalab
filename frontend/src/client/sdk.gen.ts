@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AnalytesReadAnalytesData, AnalytesReadAnalytesResponse, AnalytesCreateAnalyteData, AnalytesCreateAnalyteResponse, AnalytesReadAnalyteData, AnalytesReadAnalyteResponse, AnalytesUpdateAnalyteData, AnalytesUpdateAnalyteResponse, AnalytesDeleteAnalyteData, AnalytesDeleteAnalyteResponse, AnalytesRestoreAnalyteData, AnalytesRestoreAnalyteResponse, AuditLogsReadAuditLogsData, AuditLogsReadAuditLogsResponse, AuditLogsReadAuditSummaryData, AuditLogsReadAuditSummaryResponse, AuditLogsReadAuditActorsData, AuditLogsReadAuditActorsResponse, AuditLogsExportAuditLogsData, AuditLogsExportAuditLogsResponse, AuditLogsReadAuditLogData, AuditLogsReadAuditLogResponse, AutomatedRulesReadConsistencyRulesData, AutomatedRulesReadConsistencyRulesResponse, AutomatedRulesCreateConsistencyRuleData, AutomatedRulesCreateConsistencyRuleResponse, AutomatedRulesPreviewConsistencyRuleData, AutomatedRulesPreviewConsistencyRuleResponse, AutomatedRulesReadConsistencyRuleData, AutomatedRulesReadConsistencyRuleResponse, AutomatedRulesUpdateConsistencyRuleData, AutomatedRulesUpdateConsistencyRuleResponse, AutomatedRulesDeleteConsistencyRuleData, AutomatedRulesDeleteConsistencyRuleResponse, AutomatedRulesRestoreConsistencyRuleData, AutomatedRulesRestoreConsistencyRuleResponse, AutomatedRulesReadReflexRulesData, AutomatedRulesReadReflexRulesResponse, AutomatedRulesCreateReflexRuleData, AutomatedRulesCreateReflexRuleResponse, AutomatedRulesPreviewReflexRuleData, AutomatedRulesPreviewReflexRuleResponse, AutomatedRulesReadReflexRuleData, AutomatedRulesReadReflexRuleResponse, AutomatedRulesUpdateReflexRuleData, AutomatedRulesUpdateReflexRuleResponse, AutomatedRulesDeleteReflexRuleData, AutomatedRulesDeleteReflexRuleResponse, AutomatedRulesRestoreReflexRuleData, AutomatedRulesRestoreReflexRuleResponse, CatalogReadCatalogData, CatalogReadCatalogResponse, CatalogCreateCatalogData, CatalogCreateCatalogResponse, CatalogReadCatalogEntryData, CatalogReadCatalogEntryResponse, CatalogUpdateCatalogData, CatalogUpdateCatalogResponse, CatalogDeleteCatalogData, CatalogDeleteCatalogResponse, CatalogRestoreCatalogData, CatalogRestoreCatalogResponse, CatalogAddCatalogAnalyteData, CatalogAddCatalogAnalyteResponse, CatalogReorderCatalogAnalytesData, CatalogReorderCatalogAnalytesResponse, CatalogRemoveCatalogAnalyteData, CatalogRemoveCatalogAnalyteResponse, CatalogUpsertCatalogSpecimenRequirementData, CatalogUpsertCatalogSpecimenRequirementResponse, CatalogRemoveCatalogSpecimenRequirementData, CatalogRemoveCatalogSpecimenRequirementResponse, CatalogAddCatalogPanelItemData, CatalogAddCatalogPanelItemResponse, CatalogReorderCatalogPanelItemsData, CatalogReorderCatalogPanelItemsResponse, CatalogRemoveCatalogPanelItemData, CatalogRemoveCatalogPanelItemResponse, CategoriesReadCategoriesData, CategoriesReadCategoriesResponse, CategoriesCreateCategoryData, CategoriesCreateCategoryResponse, CategoriesReorderCategoriesData, CategoriesReorderCategoriesResponse, CategoriesReadCategoryData, CategoriesReadCategoryResponse, CategoriesUpdateCategoryData, CategoriesUpdateCategoryResponse, CategoriesDeleteCategoryData, CategoriesDeleteCategoryResponse, CategoriesRestoreCategoryData, CategoriesRestoreCategoryResponse, CriticalNotificationsReadCriticalNotificationsData, CriticalNotificationsReadCriticalNotificationsResponse, CriticalNotificationsReadUnacknowledgedCountResponse, CriticalNotificationsReadCriticalRecipientsData, CriticalNotificationsReadCriticalRecipientsResponse, CriticalNotificationsCreateCriticalNotificationData, CriticalNotificationsCreateCriticalNotificationResponse, CriticalNotificationsReadCriticalNotificationData, CriticalNotificationsReadCriticalNotificationResponse, CriticalNotificationsAcknowledgeCriticalNotificationData, CriticalNotificationsAcknowledgeCriticalNotificationResponse, DashboardReadDashboardData, DashboardReadDashboardResponse, DoctorCommissionConfigsUpdateDoctorCommissionConfigData, DoctorCommissionConfigsUpdateDoctorCommissionConfigResponse, DoctorCommissionEntriesReadEntriesData, DoctorCommissionEntriesReadEntriesResponse, DoctorCommissionEntriesReadEntryData, DoctorCommissionEntriesReadEntryResponse, DoctorCommissionEntriesCreateAdjustmentData, DoctorCommissionEntriesCreateAdjustmentResponse, DoctorCommissionPaymentsReadPaymentsData, DoctorCommissionPaymentsReadPaymentsResponse, DoctorCommissionPaymentsCreatePaymentData, DoctorCommissionPaymentsCreatePaymentResponse, DoctorCommissionPaymentsReadDoctorOptionsData, DoctorCommissionPaymentsReadDoctorOptionsResponse, DoctorCommissionPaymentsReadPaymentMethodOptionsData, DoctorCommissionPaymentsReadPaymentMethodOptionsResponse, DoctorCommissionPaymentsReadPayableLinesData, DoctorCommissionPaymentsReadPayableLinesResponse, DoctorCommissionPaymentsPreviewPaymentData, DoctorCommissionPaymentsPreviewPaymentResponse, DoctorCommissionPaymentsReadPaymentData, DoctorCommissionPaymentsReadPaymentResponse, DoctorsReadDoctorsData, DoctorsReadDoctorsResponse, DoctorsCreateDoctorData, DoctorsCreateDoctorResponse, DoctorsReadDoctorData, DoctorsReadDoctorResponse, DoctorsUpdateDoctorData, DoctorsUpdateDoctorResponse, DoctorsDeleteDoctorData, DoctorsDeleteDoctorResponse, DoctorsRestoreDoctorData, DoctorsRestoreDoctorResponse, DoctorsReadDoctorCommissionConfigsData, DoctorsReadDoctorCommissionConfigsResponse, DoctorsCreateDoctorCommissionConfigData, DoctorsCreateDoctorCommissionConfigResponse, FinanceSettingsReadFinanceSettingsResponse, FinanceSettingsUpdateFinanceSettingsData, FinanceSettingsUpdateFinanceSettingsResponse, FormulasPreviewFormulaData, FormulasPreviewFormulaResponse, InsurancePricingsReadInsurancePricingsData, InsurancePricingsReadInsurancePricingsResponse, InsurancePricingsCreateInsurancePricingData, InsurancePricingsCreateInsurancePricingResponse, InsurancePricingsUpdateInsurancePricingData, InsurancePricingsUpdateInsurancePricingResponse, InsurancePricingsDeleteInsurancePricingData, InsurancePricingsDeleteInsurancePricingResponse, InsuranceProvidersReadInsuranceProvidersData, InsuranceProvidersReadInsuranceProvidersResponse, InsuranceProvidersCreateInsuranceProviderData, InsuranceProvidersCreateInsuranceProviderResponse, InsuranceProvidersReadInsuranceProviderData, InsuranceProvidersReadInsuranceProviderResponse, InsuranceProvidersUpdateInsuranceProviderData, InsuranceProvidersUpdateInsuranceProviderResponse, InsuranceProvidersDeleteInsuranceProviderData, InsuranceProvidersDeleteInsuranceProviderResponse, InsuranceProvidersRestoreInsuranceProviderData, InsuranceProvidersRestoreInsuranceProviderResponse, InvoicesReadInvoicesData, InvoicesReadInvoicesResponse, InvoicesReadInvoiceSummaryData, InvoicesReadInvoiceSummaryResponse, InvoicesReadInvoicePaymentMethodOptionsData, InvoicesReadInvoicePaymentMethodOptionsResponse, InvoicesReadInvoiceInsuranceProviderOptionsData, InvoicesReadInvoiceInsuranceProviderOptionsResponse, InvoicesReadInvoiceData, InvoicesReadInvoiceResponse, InvoicesCollectInvoicePaymentData, InvoicesCollectInvoicePaymentResponse, InvoicesRefundInvoicePaymentData, InvoicesRefundInvoicePaymentResponse, InvoicesReissueInvoiceData, InvoicesReissueInvoiceResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LabSettingsReadLabSettingsResponse, LabSettingsUpdateLabSettingsData, LabSettingsUpdateLabSettingsResponse, LabSettingsUploadLabLogoData, LabSettingsUploadLabLogoResponse, LabSettingsDeleteLabLogoResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OrdersReadOrdersData, OrdersReadOrdersResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrderCatalogOptionsData, OrdersReadOrderCatalogOptionsResponse, OrdersReadPaymentMethodOptionsResponse, OrdersReadOrderCatalogOptionData, OrdersReadOrderCatalogOptionResponse, OrdersSuggestedPatientIdentifierResponse, OrdersPreviewOrderData, OrdersPreviewOrderResponse, OrdersReadOrderData, OrdersReadOrderResponse, OrdersUpdateOrderData, OrdersUpdateOrderResponse, OrdersPreviewOrderUpdateData, OrdersPreviewOrderUpdateResponse, OrdersCancelOrderData, OrdersCancelOrderResponse, OrdersCustomizeOrderItemAnalytesData, OrdersCustomizeOrderItemAnalytesResponse, OrdersReadOrderRevisionsData, OrdersReadOrderRevisionsResponse, PatientContextsReadPatientContextsData, PatientContextsReadPatientContextsResponse, PatientContextsCreatePatientContextData, PatientContextsCreatePatientContextResponse, PatientContextsReadPatientContextData, PatientContextsReadPatientContextResponse, PatientContextsUpdatePatientContextData, PatientContextsUpdatePatientContextResponse, PatientContextsDeletePatientContextData, PatientContextsDeletePatientContextResponse, PatientContextsRestorePatientContextData, PatientContextsRestorePatientContextResponse, PatientsReadPatientsData, PatientsReadPatientsResponse, PatientsCreatePatientData, PatientsCreatePatientResponse, PatientsReadPatientData, PatientsReadPatientResponse, PatientsUpdatePatientData, PatientsUpdatePatientResponse, PatientsDeletePatientData, PatientsDeletePatientResponse, PatientsRestorePatientData, PatientsRestorePatientResponse, PatientsReadPatientInsurancesData, PatientsReadPatientInsurancesResponse, PatientsCreatePatientInsuranceData, PatientsCreatePatientInsuranceResponse, PatientsUpdatePatientInsuranceData, PatientsUpdatePatientInsuranceResponse, PatientsDeletePatientInsuranceData, PatientsDeletePatientInsuranceResponse, PatientsRestorePatientInsuranceData, PatientsRestorePatientInsuranceResponse, PaymentMethodsReadPaymentMethodsData, PaymentMethodsReadPaymentMethodsResponse, PaymentMethodsCreatePaymentMethodData, PaymentMethodsCreatePaymentMethodResponse, PaymentMethodsReadPaymentMethodData, PaymentMethodsReadPaymentMethodResponse, PaymentMethodsUpdatePaymentMethodData, PaymentMethodsUpdatePaymentMethodResponse, PaymentMethodsDeletePaymentMethodData, PaymentMethodsDeletePaymentMethodResponse, PaymentMethodsRestorePaymentMethodData, PaymentMethodsRestorePaymentMethodResponse, PrivateCreateUserData, PrivateCreateUserResponse, RbacListPermissionsData, RbacListPermissionsResponse, RbacCreatePermissionData, RbacCreatePermissionResponse, RbacDeletePermissionData, RbacDeletePermissionResponse, RbacListRolesData, RbacListRolesResponse, RbacCreateRoleData, RbacCreateRoleResponse, RbacGetRoleData, RbacGetRoleResponse, RbacUpdateRoleData, RbacUpdateRoleResponse, RbacDeleteRoleData, RbacDeleteRoleResponse, RbacAddPermissionToRoleData, RbacAddPermissionToRoleResponse, RbacRemovePermissionFromRoleData, RbacRemovePermissionFromRoleResponse, RbacListUserRolesData, RbacListUserRolesResponse, RbacAssignRoleToUserData, RbacAssignRoleToUserResponse, RbacRemoveRoleFromUserData, RbacRemoveRoleFromUserResponse, RejectionReasonsReadRejectionReasonsData, RejectionReasonsReadRejectionReasonsResponse, RejectionReasonsCreateRejectionReasonData, RejectionReasonsCreateRejectionReasonResponse, RejectionReasonsReadRejectionReasonData, RejectionReasonsReadRejectionReasonResponse, RejectionReasonsUpdateRejectionReasonData, RejectionReasonsUpdateRejectionReasonResponse, RejectionReasonsDeleteRejectionReasonData, RejectionReasonsDeleteRejectionReasonResponse, RejectionReasonsRestoreRejectionReasonData, RejectionReasonsRestoreRejectionReasonResponse, ReportsReadReportComponentsData, ReportsReadReportComponentsResponse, ReportsCreateReportComponentData, ReportsCreateReportComponentResponse, ReportsReadReportComponentData, ReportsReadReportComponentResponse, ReportsUpdateReportComponentData, ReportsUpdateReportComponentResponse, ReportsPublishReportComponentData, ReportsPublishReportComponentResponse, ReportsArchiveReportComponentData, ReportsArchiveReportComponentResponse, ReportsReadReportRenderersResponse, ReportsCreateReportRendererData, ReportsCreateReportRendererResponse, ReportsReadReportRendererData, ReportsReadReportRendererResponse, ReportsUpdateReportRendererData, ReportsUpdateReportRendererResponse, ReportsPublishReportRendererData, ReportsPublishReportRendererResponse, ReportsArchiveReportRendererData, ReportsArchiveReportRendererResponse, ReportsReadReportSettingsResponse, ReportsSetDefaultReportComponentData, ReportsSetDefaultReportComponentResponse, ReportsSetDefaultReportRendererData, ReportsSetDefaultReportRendererResponse, ReportsAssignCategoryReportRendererData, ReportsAssignCategoryReportRendererResponse, ReportsReadSampleReportPreviewResponse, ReportsReadOrderReportPreviewData, ReportsReadOrderReportPreviewResponse, ReportsReleaseOrderReportData, ReportsReleaseOrderReportResponse, ReportsReadOrderReportsData, ReportsReadOrderReportsResponse, ReportsReadReportData, ReportsReadReportResponse, ReportsVoidReportData, ReportsVoidReportResponse, ReportsDeliverReportData, ReportsDeliverReportResponse, ResultsReadResultQueueData, ResultsReadResultQueueResponse, ResultsReadResultWorkspaceData, ResultsReadResultWorkspaceResponse, ResultsEnterResultsData, ResultsEnterResultsResponse, ResultsUploadResultImageData, ResultsUploadResultImageResponse, ResultsAddResultCommentData, ResultsAddResultCommentResponse, ResultsCorrectVerifiedResultData, ResultsCorrectVerifiedResultResponse, ResultsCorrectVerifiedImageResultData, ResultsCorrectVerifiedImageResultResponse, ResultsVerifyResultData, ResultsVerifyResultResponse, ResultsVerifyOrderData, ResultsVerifyOrderResponse, SpecimensReadSpecimenTypeOptionsData, SpecimensReadSpecimenTypeOptionsResponse, SpecimensReadCollectionQueueData, SpecimensReadCollectionQueueResponse, SpecimensReadRejectionReasonOptionsData, SpecimensReadRejectionReasonOptionsResponse, SpecimensReadCollectionWorkspaceData, SpecimensReadCollectionWorkspaceResponse, SpecimensCollectSpecimensData, SpecimensCollectSpecimensResponse, SpecimensCollectAllSpecimensData, SpecimensCollectAllSpecimensResponse, SpecimensRejectSpecimenData, SpecimensRejectSpecimenResponse, SpecimenTypesReadSpecimenTypesData, SpecimenTypesReadSpecimenTypesResponse, SpecimenTypesCreateSpecimenTypeData, SpecimenTypesCreateSpecimenTypeResponse, SpecimenTypesReadSpecimenTypeData, SpecimenTypesReadSpecimenTypeResponse, SpecimenTypesUpdateSpecimenTypeData, SpecimenTypesUpdateSpecimenTypeResponse, SpecimenTypesDeleteSpecimenTypeData, SpecimenTypesDeleteSpecimenTypeResponse, SpecimenTypesRestoreSpecimenTypeData, SpecimenTypesRestoreSpecimenTypeResponse, TitlesReadTitlesData, TitlesReadTitlesResponse, TitlesCreateTitleData, TitlesCreateTitleResponse, TitlesReadTitleData, TitlesReadTitleResponse, TitlesUpdateTitleData, TitlesUpdateTitleResponse, TitlesDeleteTitleData, TitlesDeleteTitleResponse, TitlesRestoreTitleData, TitlesRestoreTitleResponse, UnitsReadUnitsData, UnitsReadUnitsResponse, UnitsCreateUnitData, UnitsCreateUnitResponse, UnitsReadUnitData, UnitsReadUnitResponse, UnitsUpdateUnitData, UnitsUpdateUnitResponse, UnitsDeleteUnitData, UnitsDeleteUnitResponse, UnitsRestoreUnitData, UnitsRestoreUnitResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersReadUserMePermissionsResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, ValidationRulesReadValidationRulesData, ValidationRulesReadValidationRulesResponse, ValidationRulesCreateValidationRuleData, ValidationRulesCreateValidationRuleResponse, ValidationRulesSimulateValidationRuleData, ValidationRulesSimulateValidationRuleResponse, ValidationRulesUpdateValidationRuleData, ValidationRulesUpdateValidationRuleResponse, ValidationRulesReadValidationRuleData, ValidationRulesReadValidationRuleResponse } from './types.gen';
+import type { AnalytesReadAnalytesData, AnalytesReadAnalytesResponse, AnalytesCreateAnalyteData, AnalytesCreateAnalyteResponse, AnalytesReadAnalyteData, AnalytesReadAnalyteResponse, AnalytesUpdateAnalyteData, AnalytesUpdateAnalyteResponse, AnalytesDeleteAnalyteData, AnalytesDeleteAnalyteResponse, AnalytesRestoreAnalyteData, AnalytesRestoreAnalyteResponse, AuditLogsReadAuditLogsData, AuditLogsReadAuditLogsResponse, AuditLogsReadAuditSummaryData, AuditLogsReadAuditSummaryResponse, AuditLogsReadAuditActorsData, AuditLogsReadAuditActorsResponse, AuditLogsExportAuditLogsData, AuditLogsExportAuditLogsResponse, AuditLogsReadAuditLogData, AuditLogsReadAuditLogResponse, AutomatedRulesReadConsistencyRulesData, AutomatedRulesReadConsistencyRulesResponse, AutomatedRulesCreateConsistencyRuleData, AutomatedRulesCreateConsistencyRuleResponse, AutomatedRulesPreviewConsistencyRuleData, AutomatedRulesPreviewConsistencyRuleResponse, AutomatedRulesReadConsistencyRuleData, AutomatedRulesReadConsistencyRuleResponse, AutomatedRulesUpdateConsistencyRuleData, AutomatedRulesUpdateConsistencyRuleResponse, AutomatedRulesDeleteConsistencyRuleData, AutomatedRulesDeleteConsistencyRuleResponse, AutomatedRulesRestoreConsistencyRuleData, AutomatedRulesRestoreConsistencyRuleResponse, AutomatedRulesReadReflexRulesData, AutomatedRulesReadReflexRulesResponse, AutomatedRulesCreateReflexRuleData, AutomatedRulesCreateReflexRuleResponse, AutomatedRulesPreviewReflexRuleData, AutomatedRulesPreviewReflexRuleResponse, AutomatedRulesReadReflexRuleData, AutomatedRulesReadReflexRuleResponse, AutomatedRulesUpdateReflexRuleData, AutomatedRulesUpdateReflexRuleResponse, AutomatedRulesDeleteReflexRuleData, AutomatedRulesDeleteReflexRuleResponse, AutomatedRulesRestoreReflexRuleData, AutomatedRulesRestoreReflexRuleResponse, CatalogReadCatalogData, CatalogReadCatalogResponse, CatalogCreateCatalogData, CatalogCreateCatalogResponse, CatalogReadCatalogEntryData, CatalogReadCatalogEntryResponse, CatalogUpdateCatalogData, CatalogUpdateCatalogResponse, CatalogDeleteCatalogData, CatalogDeleteCatalogResponse, CatalogRestoreCatalogData, CatalogRestoreCatalogResponse, CatalogAddCatalogAnalyteData, CatalogAddCatalogAnalyteResponse, CatalogReorderCatalogAnalytesData, CatalogReorderCatalogAnalytesResponse, CatalogRemoveCatalogAnalyteData, CatalogRemoveCatalogAnalyteResponse, CatalogUpsertCatalogSpecimenRequirementData, CatalogUpsertCatalogSpecimenRequirementResponse, CatalogRemoveCatalogSpecimenRequirementData, CatalogRemoveCatalogSpecimenRequirementResponse, CatalogAddCatalogPanelItemData, CatalogAddCatalogPanelItemResponse, CatalogReorderCatalogPanelItemsData, CatalogReorderCatalogPanelItemsResponse, CatalogRemoveCatalogPanelItemData, CatalogRemoveCatalogPanelItemResponse, CategoriesReadCategoriesData, CategoriesReadCategoriesResponse, CategoriesCreateCategoryData, CategoriesCreateCategoryResponse, CategoriesReorderCategoriesData, CategoriesReorderCategoriesResponse, CategoriesReadCategoryData, CategoriesReadCategoryResponse, CategoriesUpdateCategoryData, CategoriesUpdateCategoryResponse, CategoriesDeleteCategoryData, CategoriesDeleteCategoryResponse, CategoriesRestoreCategoryData, CategoriesRestoreCategoryResponse, CriticalNotificationsReadCriticalNotificationsData, CriticalNotificationsReadCriticalNotificationsResponse, CriticalNotificationsReadUnacknowledgedCountResponse, CriticalNotificationsReadCriticalRecipientsData, CriticalNotificationsReadCriticalRecipientsResponse, CriticalNotificationsCreateCriticalNotificationData, CriticalNotificationsCreateCriticalNotificationResponse, CriticalNotificationsReadCriticalNotificationData, CriticalNotificationsReadCriticalNotificationResponse, CriticalNotificationsAcknowledgeCriticalNotificationData, CriticalNotificationsAcknowledgeCriticalNotificationResponse, DashboardReadDashboardData, DashboardReadDashboardResponse, DoctorCommissionConfigsUpdateDoctorCommissionConfigData, DoctorCommissionConfigsUpdateDoctorCommissionConfigResponse, DoctorCommissionEntriesReadEntriesData, DoctorCommissionEntriesReadEntriesResponse, DoctorCommissionEntriesReadEntryData, DoctorCommissionEntriesReadEntryResponse, DoctorCommissionEntriesCreateAdjustmentData, DoctorCommissionEntriesCreateAdjustmentResponse, DoctorCommissionPaymentsReadPaymentsData, DoctorCommissionPaymentsReadPaymentsResponse, DoctorCommissionPaymentsCreatePaymentData, DoctorCommissionPaymentsCreatePaymentResponse, DoctorCommissionPaymentsReadDoctorOptionsData, DoctorCommissionPaymentsReadDoctorOptionsResponse, DoctorCommissionPaymentsReadPaymentMethodOptionsData, DoctorCommissionPaymentsReadPaymentMethodOptionsResponse, DoctorCommissionPaymentsReadPayableLinesData, DoctorCommissionPaymentsReadPayableLinesResponse, DoctorCommissionPaymentsPreviewPaymentData, DoctorCommissionPaymentsPreviewPaymentResponse, DoctorCommissionPaymentsReadPaymentData, DoctorCommissionPaymentsReadPaymentResponse, DoctorsReadDoctorsData, DoctorsReadDoctorsResponse, DoctorsCreateDoctorData, DoctorsCreateDoctorResponse, DoctorsReadDoctorData, DoctorsReadDoctorResponse, DoctorsUpdateDoctorData, DoctorsUpdateDoctorResponse, DoctorsDeleteDoctorData, DoctorsDeleteDoctorResponse, DoctorsRestoreDoctorData, DoctorsRestoreDoctorResponse, DoctorsReadDoctorCommissionConfigsData, DoctorsReadDoctorCommissionConfigsResponse, DoctorsCreateDoctorCommissionConfigData, DoctorsCreateDoctorCommissionConfigResponse, FinanceSettingsReadFinanceSettingsResponse, FinanceSettingsUpdateFinanceSettingsData, FinanceSettingsUpdateFinanceSettingsResponse, FormulasPreviewFormulaData, FormulasPreviewFormulaResponse, InsurancePricingsReadInsurancePricingsData, InsurancePricingsReadInsurancePricingsResponse, InsurancePricingsCreateInsurancePricingData, InsurancePricingsCreateInsurancePricingResponse, InsurancePricingsUpdateInsurancePricingData, InsurancePricingsUpdateInsurancePricingResponse, InsurancePricingsDeleteInsurancePricingData, InsurancePricingsDeleteInsurancePricingResponse, InsuranceProvidersReadInsuranceProvidersData, InsuranceProvidersReadInsuranceProvidersResponse, InsuranceProvidersCreateInsuranceProviderData, InsuranceProvidersCreateInsuranceProviderResponse, InsuranceProvidersReadInsuranceProviderData, InsuranceProvidersReadInsuranceProviderResponse, InsuranceProvidersUpdateInsuranceProviderData, InsuranceProvidersUpdateInsuranceProviderResponse, InsuranceProvidersDeleteInsuranceProviderData, InsuranceProvidersDeleteInsuranceProviderResponse, InsuranceProvidersRestoreInsuranceProviderData, InsuranceProvidersRestoreInsuranceProviderResponse, InvoicesReadInvoicesData, InvoicesReadInvoicesResponse, InvoicesReadInvoiceSummaryData, InvoicesReadInvoiceSummaryResponse, InvoicesReadInvoicePaymentMethodOptionsData, InvoicesReadInvoicePaymentMethodOptionsResponse, InvoicesReadInvoiceInsuranceProviderOptionsData, InvoicesReadInvoiceInsuranceProviderOptionsResponse, InvoicesReadInvoiceData, InvoicesReadInvoiceResponse, InvoicesCollectInvoicePaymentData, InvoicesCollectInvoicePaymentResponse, InvoicesRefundInvoicePaymentData, InvoicesRefundInvoicePaymentResponse, InvoicesReissueInvoiceData, InvoicesReissueInvoiceResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LabSettingsReadLabSettingsResponse, LabSettingsUpdateLabSettingsData, LabSettingsUpdateLabSettingsResponse, LabSettingsUploadLabLogoData, LabSettingsUploadLabLogoResponse, LabSettingsDeleteLabLogoResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, OrdersReadOrdersData, OrdersReadOrdersResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrderCatalogOptionsData, OrdersReadOrderCatalogOptionsResponse, OrdersReadPaymentMethodOptionsResponse, OrdersReadOrderCatalogOptionData, OrdersReadOrderCatalogOptionResponse, OrdersSuggestedPatientIdentifierResponse, OrdersPreviewOrderData, OrdersPreviewOrderResponse, OrdersReadOrderData, OrdersReadOrderResponse, OrdersUpdateOrderData, OrdersUpdateOrderResponse, OrdersPreviewOrderUpdateData, OrdersPreviewOrderUpdateResponse, OrdersCancelOrderData, OrdersCancelOrderResponse, OrdersCustomizeOrderItemAnalytesData, OrdersCustomizeOrderItemAnalytesResponse, OrdersReadOrderRevisionsData, OrdersReadOrderRevisionsResponse, PatientContextsReadPatientContextsData, PatientContextsReadPatientContextsResponse, PatientContextsCreatePatientContextData, PatientContextsCreatePatientContextResponse, PatientContextsReadPatientContextData, PatientContextsReadPatientContextResponse, PatientContextsUpdatePatientContextData, PatientContextsUpdatePatientContextResponse, PatientContextsDeletePatientContextData, PatientContextsDeletePatientContextResponse, PatientContextsRestorePatientContextData, PatientContextsRestorePatientContextResponse, PatientsReadPatientsData, PatientsReadPatientsResponse, PatientsCreatePatientData, PatientsCreatePatientResponse, PatientsReadPatientData, PatientsReadPatientResponse, PatientsUpdatePatientData, PatientsUpdatePatientResponse, PatientsDeletePatientData, PatientsDeletePatientResponse, PatientsRestorePatientData, PatientsRestorePatientResponse, PatientsReadPatientInsurancesData, PatientsReadPatientInsurancesResponse, PatientsCreatePatientInsuranceData, PatientsCreatePatientInsuranceResponse, PatientsUpdatePatientInsuranceData, PatientsUpdatePatientInsuranceResponse, PatientsDeletePatientInsuranceData, PatientsDeletePatientInsuranceResponse, PatientsRestorePatientInsuranceData, PatientsRestorePatientInsuranceResponse, PaymentMethodsReadPaymentMethodsData, PaymentMethodsReadPaymentMethodsResponse, PaymentMethodsCreatePaymentMethodData, PaymentMethodsCreatePaymentMethodResponse, PaymentMethodsReadPaymentMethodData, PaymentMethodsReadPaymentMethodResponse, PaymentMethodsUpdatePaymentMethodData, PaymentMethodsUpdatePaymentMethodResponse, PaymentMethodsDeletePaymentMethodData, PaymentMethodsDeletePaymentMethodResponse, PaymentMethodsRestorePaymentMethodData, PaymentMethodsRestorePaymentMethodResponse, PrivateCreateUserData, PrivateCreateUserResponse, RbacListPermissionsData, RbacListPermissionsResponse, RbacCreatePermissionData, RbacCreatePermissionResponse, RbacDeletePermissionData, RbacDeletePermissionResponse, RbacListRolesData, RbacListRolesResponse, RbacCreateRoleData, RbacCreateRoleResponse, RbacGetRoleData, RbacGetRoleResponse, RbacUpdateRoleData, RbacUpdateRoleResponse, RbacDeleteRoleData, RbacDeleteRoleResponse, RbacAddPermissionToRoleData, RbacAddPermissionToRoleResponse, RbacRemovePermissionFromRoleData, RbacRemovePermissionFromRoleResponse, RbacListUserRolesData, RbacListUserRolesResponse, RbacAssignRoleToUserData, RbacAssignRoleToUserResponse, RbacRemoveRoleFromUserData, RbacRemoveRoleFromUserResponse, ReagentsReadReagentsData, ReagentsReadReagentsResponse, ReagentsCreateReagentData, ReagentsCreateReagentResponse, ReagentsReadReagentAlertSummaryResponse, ReagentsReadReagentSettingsResponse, ReagentsUpdateReagentSettingsData, ReagentsUpdateReagentSettingsResponse, ReagentsReadReagentLotsData, ReagentsReadReagentLotsResponse, ReagentsCreateReagentLotData, ReagentsCreateReagentLotResponse, ReagentsUpdateReagentLotData, ReagentsUpdateReagentLotResponse, ReagentsReadReagentMovementsData, ReagentsReadReagentMovementsResponse, ReagentsCreateReagentMovementData, ReagentsCreateReagentMovementResponse, ReagentsReadReagentData, ReagentsReadReagentResponse, ReagentsUpdateReagentData, ReagentsUpdateReagentResponse, ReagentsDeleteReagentData, ReagentsDeleteReagentResponse, ReagentsRestoreReagentData, ReagentsRestoreReagentResponse, RejectionReasonsReadRejectionReasonsData, RejectionReasonsReadRejectionReasonsResponse, RejectionReasonsCreateRejectionReasonData, RejectionReasonsCreateRejectionReasonResponse, RejectionReasonsReadRejectionReasonData, RejectionReasonsReadRejectionReasonResponse, RejectionReasonsUpdateRejectionReasonData, RejectionReasonsUpdateRejectionReasonResponse, RejectionReasonsDeleteRejectionReasonData, RejectionReasonsDeleteRejectionReasonResponse, RejectionReasonsRestoreRejectionReasonData, RejectionReasonsRestoreRejectionReasonResponse, ReportsReadReportComponentsData, ReportsReadReportComponentsResponse, ReportsCreateReportComponentData, ReportsCreateReportComponentResponse, ReportsReadReportComponentData, ReportsReadReportComponentResponse, ReportsUpdateReportComponentData, ReportsUpdateReportComponentResponse, ReportsPublishReportComponentData, ReportsPublishReportComponentResponse, ReportsArchiveReportComponentData, ReportsArchiveReportComponentResponse, ReportsReadReportRenderersResponse, ReportsCreateReportRendererData, ReportsCreateReportRendererResponse, ReportsReadReportRendererData, ReportsReadReportRendererResponse, ReportsUpdateReportRendererData, ReportsUpdateReportRendererResponse, ReportsPublishReportRendererData, ReportsPublishReportRendererResponse, ReportsArchiveReportRendererData, ReportsArchiveReportRendererResponse, ReportsReadReportSettingsResponse, ReportsSetDefaultReportComponentData, ReportsSetDefaultReportComponentResponse, ReportsSetDefaultReportRendererData, ReportsSetDefaultReportRendererResponse, ReportsAssignCategoryReportRendererData, ReportsAssignCategoryReportRendererResponse, ReportsReadSampleReportPreviewResponse, ReportsReadOrderReportPreviewData, ReportsReadOrderReportPreviewResponse, ReportsReleaseOrderReportData, ReportsReleaseOrderReportResponse, ReportsReadOrderReportsData, ReportsReadOrderReportsResponse, ReportsReadReportData, ReportsReadReportResponse, ReportsVoidReportData, ReportsVoidReportResponse, ReportsDeliverReportData, ReportsDeliverReportResponse, ResultsReadResultQueueData, ResultsReadResultQueueResponse, ResultsReadResultWorkspaceData, ResultsReadResultWorkspaceResponse, ResultsEnterResultsData, ResultsEnterResultsResponse, ResultsUploadResultImageData, ResultsUploadResultImageResponse, ResultsAddResultCommentData, ResultsAddResultCommentResponse, ResultsCorrectVerifiedResultData, ResultsCorrectVerifiedResultResponse, ResultsCorrectVerifiedImageResultData, ResultsCorrectVerifiedImageResultResponse, ResultsVerifyResultData, ResultsVerifyResultResponse, ResultsVerifyOrderData, ResultsVerifyOrderResponse, SpecimensReadSpecimenTypeOptionsData, SpecimensReadSpecimenTypeOptionsResponse, SpecimensReadCollectionQueueData, SpecimensReadCollectionQueueResponse, SpecimensReadRejectionReasonOptionsData, SpecimensReadRejectionReasonOptionsResponse, SpecimensReadCollectionWorkspaceData, SpecimensReadCollectionWorkspaceResponse, SpecimensCollectSpecimensData, SpecimensCollectSpecimensResponse, SpecimensCollectAllSpecimensData, SpecimensCollectAllSpecimensResponse, SpecimensRejectSpecimenData, SpecimensRejectSpecimenResponse, SpecimenTypesReadSpecimenTypesData, SpecimenTypesReadSpecimenTypesResponse, SpecimenTypesCreateSpecimenTypeData, SpecimenTypesCreateSpecimenTypeResponse, SpecimenTypesReadSpecimenTypeData, SpecimenTypesReadSpecimenTypeResponse, SpecimenTypesUpdateSpecimenTypeData, SpecimenTypesUpdateSpecimenTypeResponse, SpecimenTypesDeleteSpecimenTypeData, SpecimenTypesDeleteSpecimenTypeResponse, SpecimenTypesRestoreSpecimenTypeData, SpecimenTypesRestoreSpecimenTypeResponse, TitlesReadTitlesData, TitlesReadTitlesResponse, TitlesCreateTitleData, TitlesCreateTitleResponse, TitlesReadTitleData, TitlesReadTitleResponse, TitlesUpdateTitleData, TitlesUpdateTitleResponse, TitlesDeleteTitleData, TitlesDeleteTitleResponse, TitlesRestoreTitleData, TitlesRestoreTitleResponse, UnitsReadUnitsData, UnitsReadUnitsResponse, UnitsCreateUnitData, UnitsCreateUnitResponse, UnitsReadUnitData, UnitsReadUnitResponse, UnitsUpdateUnitData, UnitsUpdateUnitResponse, UnitsDeleteUnitData, UnitsDeleteUnitResponse, UnitsRestoreUnitData, UnitsRestoreUnitResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersReadUserMePermissionsResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse, ValidationRulesReadValidationRulesData, ValidationRulesReadValidationRulesResponse, ValidationRulesCreateValidationRuleData, ValidationRulesCreateValidationRuleResponse, ValidationRulesSimulateValidationRuleData, ValidationRulesSimulateValidationRuleResponse, ValidationRulesUpdateValidationRuleData, ValidationRulesUpdateValidationRuleResponse, ValidationRulesReadValidationRuleData, ValidationRulesReadValidationRuleResponse } from './types.gen';
 
 export class AnalytesService {
     /**
@@ -3653,6 +3653,302 @@ export class RbacService {
             path: {
                 user_id: data.userId,
                 role_id: data.roleId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class ReagentsService {
+    /**
+     * Read Reagents
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.includeDeleted
+     * @param data.isDeleted
+     * @param data.search
+     * @param data.stockStatus
+     * @param data.expiryStatus
+     * @returns ReagentsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readReagents(data: ReagentsReadReagentsData = {}): CancelablePromise<ReagentsReadReagentsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/reagents/',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                include_deleted: data.includeDeleted,
+                is_deleted: data.isDeleted,
+                search: data.search,
+                stock_status: data.stockStatus,
+                expiry_status: data.expiryStatus
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Reagent
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns ReagentPublic Successful Response
+     * @throws ApiError
+     */
+    public static createReagent(data: ReagentsCreateReagentData): CancelablePromise<ReagentsCreateReagentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/reagents/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Reagent Alert Summary
+     * @returns ReagentAlertSummaryPublic Successful Response
+     * @throws ApiError
+     */
+    public static readReagentAlertSummary(): CancelablePromise<ReagentsReadReagentAlertSummaryResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/reagents/alerts/summary'
+        });
+    }
+    
+    /**
+     * Read Reagent Settings
+     * @returns ReagentSettingsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readReagentSettings(): CancelablePromise<ReagentsReadReagentSettingsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/reagents/settings'
+        });
+    }
+    
+    /**
+     * Update Reagent Settings
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns ReagentSettingsPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateReagentSettings(data: ReagentsUpdateReagentSettingsData): CancelablePromise<ReagentsUpdateReagentSettingsResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/reagents/settings',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Reagent Lots
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.reagentId
+     * @param data.status
+     * @param data.search
+     * @param data.expiryStatus
+     * @returns ReagentLotsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readReagentLots(data: ReagentsReadReagentLotsData = {}): CancelablePromise<ReagentsReadReagentLotsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/reagents/lots',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                reagent_id: data.reagentId,
+                status: data.status,
+                search: data.search,
+                expiry_status: data.expiryStatus
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Reagent Lot
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns ReagentLotPublic Successful Response
+     * @throws ApiError
+     */
+    public static createReagentLot(data: ReagentsCreateReagentLotData): CancelablePromise<ReagentsCreateReagentLotResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/reagents/lots',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Reagent Lot
+     * @param data The data for the request.
+     * @param data.lotId
+     * @param data.requestBody
+     * @returns ReagentLotPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateReagentLot(data: ReagentsUpdateReagentLotData): CancelablePromise<ReagentsUpdateReagentLotResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/reagents/lots/{lot_id}',
+            path: {
+                lot_id: data.lotId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Reagent Movements
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.reagentId
+     * @param data.lotId
+     * @returns ReagentStockMovementsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readReagentMovements(data: ReagentsReadReagentMovementsData = {}): CancelablePromise<ReagentsReadReagentMovementsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/reagents/movements',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                reagent_id: data.reagentId,
+                lot_id: data.lotId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Reagent Movement
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns ReagentStockMovementPublic Successful Response
+     * @throws ApiError
+     */
+    public static createReagentMovement(data: ReagentsCreateReagentMovementData): CancelablePromise<ReagentsCreateReagentMovementResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/reagents/movements',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Reagent
+     * @param data The data for the request.
+     * @param data.reagentId
+     * @returns ReagentPublic Successful Response
+     * @throws ApiError
+     */
+    public static readReagent(data: ReagentsReadReagentData): CancelablePromise<ReagentsReadReagentResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/reagents/{reagent_id}',
+            path: {
+                reagent_id: data.reagentId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Reagent
+     * @param data The data for the request.
+     * @param data.reagentId
+     * @param data.requestBody
+     * @returns ReagentPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateReagent(data: ReagentsUpdateReagentData): CancelablePromise<ReagentsUpdateReagentResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/reagents/{reagent_id}',
+            path: {
+                reagent_id: data.reagentId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Reagent
+     * @param data The data for the request.
+     * @param data.reagentId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteReagent(data: ReagentsDeleteReagentData): CancelablePromise<ReagentsDeleteReagentResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/reagents/{reagent_id}',
+            path: {
+                reagent_id: data.reagentId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Restore Reagent
+     * @param data The data for the request.
+     * @param data.reagentId
+     * @returns ReagentPublic Successful Response
+     * @throws ApiError
+     */
+    public static restoreReagent(data: ReagentsRestoreReagentData): CancelablePromise<ReagentsRestoreReagentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/reagents/{reagent_id}/restore',
+            path: {
+                reagent_id: data.reagentId
             },
             errors: {
                 422: 'Validation Error'

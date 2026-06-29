@@ -35,6 +35,7 @@ function Layout() {
       ["/orders", "Demandes"],
       ["/specimens", "Prélèvements"],
       ["/results", "Résultats"],
+      ["/reagents", "Réactifs"],
       ["/invoices", "Facturation"],
       ["/commissions", "Commissions"],
       ["/patients", "Patients"],

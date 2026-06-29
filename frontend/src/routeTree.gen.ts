@@ -17,6 +17,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutUserAccountRouteImport } from './routes/_layout/user-account'
 import { Route as LayoutSpecimensRouteImport } from './routes/_layout/specimens'
 import { Route as LayoutResultsRouteImport } from './routes/_layout/results'
+import { Route as LayoutReagentsRouteImport } from './routes/_layout/reagents'
 import { Route as LayoutPatientsRouteImport } from './routes/_layout/patients'
 import { Route as LayoutOrdersRouteImport } from './routes/_layout/orders'
 import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
@@ -107,6 +108,11 @@ const LayoutSpecimensRoute = LayoutSpecimensRouteImport.update({
 const LayoutResultsRoute = LayoutResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutReagentsRoute = LayoutReagentsRouteImport.update({
+  id: '/reagents',
+  path: '/reagents',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutPatientsRoute = LayoutPatientsRouteImport.update({
@@ -415,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/items': typeof LayoutItemsRoute
   '/orders': typeof LayoutOrdersRouteWithChildren
   '/patients': typeof LayoutPatientsRouteWithChildren
+  '/reagents': typeof LayoutReagentsRoute
   '/results': typeof LayoutResultsRouteWithChildren
   '/specimens': typeof LayoutSpecimensRoute
   '/user-account': typeof LayoutUserAccountRoute
@@ -468,6 +475,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof LayoutAdminRoute
   '/items': typeof LayoutItemsRoute
+  '/reagents': typeof LayoutReagentsRoute
   '/specimens': typeof LayoutSpecimensRoute
   '/user-account': typeof LayoutUserAccountRoute
   '/': typeof LayoutIndexRoute
@@ -529,6 +537,7 @@ export interface FileRoutesById {
   '/_layout/items': typeof LayoutItemsRoute
   '/_layout/orders': typeof LayoutOrdersRouteWithChildren
   '/_layout/patients': typeof LayoutPatientsRouteWithChildren
+  '/_layout/reagents': typeof LayoutReagentsRoute
   '/_layout/results': typeof LayoutResultsRouteWithChildren
   '/_layout/specimens': typeof LayoutSpecimensRoute
   '/_layout/user-account': typeof LayoutUserAccountRoute
@@ -593,6 +602,7 @@ export interface FileRouteTypes {
     | '/items'
     | '/orders'
     | '/patients'
+    | '/reagents'
     | '/results'
     | '/specimens'
     | '/user-account'
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/items'
+    | '/reagents'
     | '/specimens'
     | '/user-account'
     | '/'
@@ -706,6 +717,7 @@ export interface FileRouteTypes {
     | '/_layout/items'
     | '/_layout/orders'
     | '/_layout/patients'
+    | '/_layout/reagents'
     | '/_layout/results'
     | '/_layout/specimens'
     | '/_layout/user-account'
@@ -818,6 +830,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/results'
       preLoaderRoute: typeof LayoutResultsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/reagents': {
+      id: '/_layout/reagents'
+      path: '/reagents'
+      fullPath: '/reagents'
+      preLoaderRoute: typeof LayoutReagentsRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/patients': {
@@ -1382,6 +1401,7 @@ interface LayoutRouteChildren {
   LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutOrdersRoute: typeof LayoutOrdersRouteWithChildren
   LayoutPatientsRoute: typeof LayoutPatientsRouteWithChildren
+  LayoutReagentsRoute: typeof LayoutReagentsRoute
   LayoutResultsRoute: typeof LayoutResultsRouteWithChildren
   LayoutSpecimensRoute: typeof LayoutSpecimensRoute
   LayoutUserAccountRoute: typeof LayoutUserAccountRoute
@@ -1399,6 +1419,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutItemsRoute: LayoutItemsRoute,
   LayoutOrdersRoute: LayoutOrdersRouteWithChildren,
   LayoutPatientsRoute: LayoutPatientsRouteWithChildren,
+  LayoutReagentsRoute: LayoutReagentsRoute,
   LayoutResultsRoute: LayoutResultsRouteWithChildren,
   LayoutSpecimensRoute: LayoutSpecimensRoute,
   LayoutUserAccountRoute: LayoutUserAccountRoute,

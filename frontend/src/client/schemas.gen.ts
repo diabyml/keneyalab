@@ -8069,6 +8069,1087 @@ export const PrivateUserCreateSchema = {
     title: 'PrivateUserCreate'
 } as const;
 
+export const ReagentAlertSummaryPublicSchema = {
+    properties: {
+        expiring_count: {
+            type: 'integer',
+            title: 'Expiring Count'
+        },
+        expired_count: {
+            type: 'integer',
+            title: 'Expired Count'
+        },
+        low_stock_count: {
+            type: 'integer',
+            title: 'Low Stock Count'
+        },
+        total_count: {
+            type: 'integer',
+            title: 'Total Count'
+        }
+    },
+    type: 'object',
+    required: ['expiring_count', 'expired_count', 'low_stock_count', 'total_count'],
+    title: 'ReagentAlertSummaryPublic'
+} as const;
+
+export const ReagentCreateSchema = {
+    properties: {
+        code: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            title: 'Code'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        unit_label: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            title: 'Unit Label'
+        },
+        storage_condition: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Storage Condition'
+        },
+        storage_location: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Storage Location'
+        },
+        supplier: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Supplier'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        minimum_stock_level: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Minimum Stock Level'
+        },
+        expiry_warning_days_override: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 3650,
+                    minimum: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Expiry Warning Days Override'
+        }
+    },
+    type: 'object',
+    required: ['code', 'name', 'unit_label'],
+    title: 'ReagentCreate'
+} as const;
+
+export const ReagentExpiryStatusSchema = {
+    type: 'string',
+    enum: ['ok', 'expiring', 'expired'],
+    title: 'ReagentExpiryStatus'
+} as const;
+
+export const ReagentLotCreateSchema = {
+    properties: {
+        reagent_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Reagent Id'
+        },
+        lot_number: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            title: 'Lot Number'
+        },
+        expiry_date: {
+            type: 'string',
+            format: 'date',
+            title: 'Expiry Date'
+        },
+        received_date: {
+            type: 'string',
+            format: 'date',
+            title: 'Received Date'
+        },
+        initial_quantity: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                }
+            ],
+            title: 'Initial Quantity'
+        },
+        unit_cost: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit Cost'
+        },
+        supplier_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Supplier Name'
+        },
+        location: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Location'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    required: ['reagent_id', 'lot_number', 'expiry_date', 'received_date', 'initial_quantity'],
+    title: 'ReagentLotCreate'
+} as const;
+
+export const ReagentLotPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        reagent_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Reagent Id'
+        },
+        lot_number: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            title: 'Lot Number'
+        },
+        expiry_date: {
+            type: 'string',
+            format: 'date',
+            title: 'Expiry Date'
+        },
+        received_date: {
+            type: 'string',
+            format: 'date',
+            title: 'Received Date'
+        },
+        initial_quantity: {
+            type: 'string',
+            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+            title: 'Initial Quantity'
+        },
+        unit_cost: {
+            anyOf: [
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit Cost'
+        },
+        supplier_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Supplier Name'
+        },
+        location: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Location'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        current_quantity: {
+            type: 'string',
+            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+            title: 'Current Quantity'
+        },
+        status: {
+            '$ref': '#/components/schemas/ReagentLotStatus'
+        },
+        reagent_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reagent Name'
+        },
+        reagent_code: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reagent Code'
+        },
+        unit_label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit Label'
+        },
+        expiry_status: {
+            '$ref': '#/components/schemas/ReagentExpiryStatus',
+            default: 'ok'
+        },
+        days_until_expiry: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Days Until Expiry'
+        }
+    },
+    type: 'object',
+    required: ['id', 'reagent_id', 'lot_number', 'expiry_date', 'received_date', 'initial_quantity', 'current_quantity', 'status'],
+    title: 'ReagentLotPublic'
+} as const;
+
+export const ReagentLotStatusSchema = {
+    type: 'string',
+    enum: ['active', 'depleted', 'disposed'],
+    title: 'ReagentLotStatus'
+} as const;
+
+export const ReagentLotUpdateSchema = {
+    properties: {
+        lot_number: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lot Number'
+        },
+        expiry_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Expiry Date'
+        },
+        received_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Received Date'
+        },
+        unit_cost: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit Cost'
+        },
+        supplier_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Supplier Name'
+        },
+        location: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Location'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    title: 'ReagentLotUpdate'
+} as const;
+
+export const ReagentLotsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ReagentLotPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ReagentLotsPublic'
+} as const;
+
+export const ReagentMovementCreateSchema = {
+    properties: {
+        lot_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Lot Id'
+        },
+        movement_type: {
+            '$ref': '#/components/schemas/ReagentMovementType'
+        },
+        quantity: {
+            anyOf: [
+                {
+                    type: 'number',
+                    exclusiveMinimum: 0
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                }
+            ],
+            title: 'Quantity'
+        },
+        reason: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Reason'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        }
+    },
+    type: 'object',
+    required: ['lot_id', 'movement_type', 'quantity', 'reason'],
+    title: 'ReagentMovementCreate'
+} as const;
+
+export const ReagentMovementTypeSchema = {
+    type: 'string',
+    enum: ['received', 'used', 'adjusted', 'disposed'],
+    title: 'ReagentMovementType'
+} as const;
+
+export const ReagentPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        is_deleted: {
+            type: 'boolean',
+            title: 'Is Deleted'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        code: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            title: 'Code'
+        },
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        unit_label: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            title: 'Unit Label'
+        },
+        storage_condition: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Storage Condition'
+        },
+        storage_location: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Storage Location'
+        },
+        supplier: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Supplier'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        minimum_stock_level: {
+            anyOf: [
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Minimum Stock Level'
+        },
+        expiry_warning_days_override: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 3650,
+                    minimum: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Expiry Warning Days Override'
+        },
+        total_stock: {
+            type: 'string',
+            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+            title: 'Total Stock',
+            default: '0.000'
+        },
+        active_lot_count: {
+            type: 'integer',
+            title: 'Active Lot Count',
+            default: 0
+        },
+        expiring_lot_count: {
+            type: 'integer',
+            title: 'Expiring Lot Count',
+            default: 0
+        },
+        expired_lot_count: {
+            type: 'integer',
+            title: 'Expired Lot Count',
+            default: 0
+        },
+        low_stock: {
+            type: 'boolean',
+            title: 'Low Stock',
+            default: false
+        }
+    },
+    type: 'object',
+    required: ['id', 'is_deleted', 'code', 'name', 'unit_label'],
+    title: 'ReagentPublic'
+} as const;
+
+export const ReagentSettingsPublicSchema = {
+    properties: {
+        id: {
+            type: 'integer',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        default_expiry_warning_days: {
+            type: 'integer',
+            maximum: 3650,
+            minimum: 1,
+            title: 'Default Expiry Warning Days',
+            default: 30
+        },
+        expiry_alerts_enabled: {
+            type: 'boolean',
+            title: 'Expiry Alerts Enabled',
+            default: true
+        },
+        low_stock_alerts_enabled: {
+            type: 'boolean',
+            title: 'Low Stock Alerts Enabled',
+            default: true
+        },
+        updated_by_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated By Id'
+        }
+    },
+    type: 'object',
+    required: ['id'],
+    title: 'ReagentSettingsPublic'
+} as const;
+
+export const ReagentSettingsUpdateSchema = {
+    properties: {
+        default_expiry_warning_days: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 3650,
+                    minimum: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Default Expiry Warning Days'
+        },
+        expiry_alerts_enabled: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Expiry Alerts Enabled'
+        },
+        low_stock_alerts_enabled: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Low Stock Alerts Enabled'
+        }
+    },
+    type: 'object',
+    title: 'ReagentSettingsUpdate'
+} as const;
+
+export const ReagentStockMovementPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        reagent_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Reagent Id'
+        },
+        lot_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Lot Id'
+        },
+        movement_type: {
+            '$ref': '#/components/schemas/ReagentMovementType'
+        },
+        quantity: {
+            type: 'string',
+            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+            title: 'Quantity'
+        },
+        balance_after: {
+            type: 'string',
+            pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+            title: 'Balance After'
+        },
+        reason: {
+            type: 'string',
+            title: 'Reason'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        performed_by_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Performed By Id'
+        },
+        performed_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Performed At'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        reagent_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reagent Name'
+        },
+        reagent_code: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reagent Code'
+        },
+        lot_number: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Lot Number'
+        }
+    },
+    type: 'object',
+    required: ['id', 'reagent_id', 'lot_id', 'movement_type', 'quantity', 'balance_after', 'reason', 'performed_by_id', 'performed_at', 'created_at'],
+    title: 'ReagentStockMovementPublic'
+} as const;
+
+export const ReagentStockMovementsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ReagentStockMovementPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ReagentStockMovementsPublic'
+} as const;
+
+export const ReagentUpdateSchema = {
+    properties: {
+        code: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Code'
+        },
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        unit_label: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Unit Label'
+        },
+        storage_condition: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Storage Condition'
+        },
+        storage_location: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Storage Location'
+        },
+        supplier: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Supplier'
+        },
+        notes: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Notes'
+        },
+        minimum_stock_level: {
+            anyOf: [
+                {
+                    type: 'number'
+                },
+                {
+                    type: 'string',
+                    pattern: '^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Minimum Stock Level'
+        },
+        expiry_warning_days_override: {
+            anyOf: [
+                {
+                    type: 'integer',
+                    maximum: 3650,
+                    minimum: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Expiry Warning Days Override'
+        }
+    },
+    type: 'object',
+    title: 'ReagentUpdate'
+} as const;
+
+export const ReagentsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ReagentPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'ReagentsPublic'
+} as const;
+
 export const ReflexRuleCreateSchema = {
     properties: {
         trigger_analyte_id: {
@@ -8873,6 +9954,9 @@ export const ReportPublicSchema = {
         template_snapshot: {
             title: 'Template Snapshot'
         },
+        render_config: {
+            '$ref': '#/components/schemas/ReportRenderConfig'
+        },
         delivery_metadata: {
             title: 'Delivery Metadata'
         }
@@ -8911,10 +9995,48 @@ export const ReportReleaseRequestSchema = {
                 }
             ],
             title: 'Recipient Note'
+        },
+        render_config: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/ReportRenderConfig'
+                },
+                {
+                    type: 'null'
+                }
+            ]
         }
     },
     type: 'object',
     title: 'ReportReleaseRequest'
+} as const;
+
+export const ReportRenderConfigSchema = {
+    properties: {
+        category_order: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Category Order'
+        },
+        category_page_breaks: {
+            additionalProperties: {
+                type: 'boolean'
+            },
+            type: 'object',
+            title: 'Category Page Breaks'
+        },
+        hidden_analyte_ids: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Hidden Analyte Ids'
+        }
+    },
+    type: 'object',
+    title: 'ReportRenderConfig'
 } as const;
 
 export const ReportRendererCreateSchema = {

@@ -6,6 +6,7 @@ import pytest
 from app.core.exceptions import BusinessRuleError
 from app.models.lis import Report, ReportChannel
 from app.services.report import (
+    _apply_render_config,
     _patient_age,
     _report_email_html,
     _validate_email_recipient,
@@ -13,6 +14,45 @@ from app.services.report import (
     validate_css,
     validate_jsx,
 )
+
+
+def _render_config_snapshot() -> dict:
+    return {
+        "order": {"accession_number": "KL-001"},
+        "patient": {"name": "Aminata"},
+        "doctor": {"name": "Dr Diallo"},
+        "lab": {"display_name": "Keneya Lab"},
+        "categories": [
+            {
+                "id": "cat-a",
+                "name": "Biochimie",
+                "tests": [
+                    {
+                        "order_item_id": "item-a",
+                        "catalog_name": "Créatinine",
+                        "analytes": [
+                            {"analyte_id": "crea", "analyte_name": "Créatinine"},
+                            {"analyte_id": "uree", "analyte_name": "Urée"},
+                        ],
+                    }
+                ],
+            },
+            {
+                "id": "cat-b",
+                "name": "Coagulation",
+                "tests": [
+                    {
+                        "order_item_id": "item-b",
+                        "catalog_name": "TP - INR",
+                        "analytes": [
+                            {"analyte_id": "tp", "analyte_name": "TP"},
+                            {"analyte_id": "inr", "analyte_name": "INR"},
+                        ],
+                    }
+                ],
+            },
+        ],
+    }
 
 
 def test_sanitize_html_removes_scripts_and_event_handlers() -> None:
@@ -107,6 +147,68 @@ def test_report_email_uses_immutable_snapshot_and_escapes_values() -> None:
     assert "Sensible" in html
     assert "Aminata &lt;Traoré&gt;" in html
     assert "À remettre au patient" in html
+
+
+def test_apply_render_config_orders_filters_and_keeps_page_breaks() -> None:
+    snapshot, config = _apply_render_config(
+        _render_config_snapshot(),
+        {
+            "category_order": ["cat-b"],
+            "category_page_breaks": {"cat-b": True, "cat-a": False},
+            "hidden_analyte_ids": ["inr", "uree"],
+        },
+    )
+
+    assert config == {
+        "category_order": ["cat-b", "cat-a"],
+        "category_page_breaks": {"cat-b": True},
+        "hidden_analyte_ids": ["inr", "uree"],
+    }
+    assert [category["id"] for category in snapshot["categories"]] == [
+        "cat-b",
+        "cat-a",
+    ]
+    assert snapshot["categories"][0]["tests"][0]["analytes"] == [
+        {"analyte_id": "tp", "analyte_name": "TP"}
+    ]
+    assert snapshot["categories"][1]["tests"][0]["analytes"] == [
+        {"analyte_id": "crea", "analyte_name": "Créatinine"}
+    ]
+
+
+def test_apply_render_config_removes_empty_tests_and_categories() -> None:
+    snapshot, _ = _apply_render_config(
+        _render_config_snapshot(),
+        {"hidden_analyte_ids": ["tp", "inr"]},
+    )
+
+    assert [category["id"] for category in snapshot["categories"]] == ["cat-a"]
+
+
+def test_apply_render_config_rejects_unknown_category() -> None:
+    with pytest.raises(BusinessRuleError, match="catégorie inconnue"):
+        _apply_render_config(
+            _render_config_snapshot(),
+            {"category_order": ["missing"]},
+        )
+
+
+def test_apply_render_config_rejects_unknown_analyte() -> None:
+    with pytest.raises(BusinessRuleError, match="ligne de résultat inconnue"):
+        _apply_render_config(
+            _render_config_snapshot(),
+            {"hidden_analyte_ids": ["missing"]},
+        )
+
+
+def test_apply_render_config_accepts_missing_config() -> None:
+    snapshot, config = _apply_render_config(_render_config_snapshot(), None)
+
+    assert [category["id"] for category in snapshot["categories"]] == [
+        "cat-a",
+        "cat-b",
+    ]
+    assert config["hidden_analyte_ids"] == []
 
 
 def test_validate_email_recipient_rejects_invalid_address() -> None:

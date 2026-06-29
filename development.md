@@ -1,4 +1,10 @@
 # FastAPI Project - Development
+Frontend:   http://localhost:5173
+Backend:    http://localhost:8000
+Adminer:    http://localhost:8080
+Mailcatcher http://localhost:1080
+Traefik:    http://localhost:8090
+MinIO:      http://localhost:9000
 
 ## Docker Compose
 

@@ -12,12 +12,14 @@ from __future__ import annotations
 import argparse
 import logging
 from collections.abc import Iterable
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, TypeVar
 
 from sqlalchemy import delete
 from sqlmodel import Session, select
 
+from app.core.config import settings
 from app.core.db import engine
 from app.models import (
     Analyte,
@@ -33,25 +35,41 @@ from app.models import (
     ConsistencyRule,
     ConsistencyRuleAnalyte,
     CriticalNotification,
+    CustomerCredit,
     DoctorCommissionEntry,
     DoctorCommissionPayment,
     DoctorCommissionPaymentEntry,
     FormulaResultType,
     InsurancePricing,
     Invoice,
+    InvoiceBalanceTransfer,
+    InvoiceLine,
     Notification,
     Order,
     OrderCatalogItemAnalyte,
     OrderItem,
+    OrderItemSpecimen,
+    OrderRevision,
     OrderSpecimen,
     PatientContext,
+    PaymentMethod,
+    PaymentRefund,
+    PaymentTransaction,
+    Reagent,
+    ReagentLot,
+    ReagentLotStatus,
+    ReagentMovementType,
+    ReagentSettings,
+    ReagentStockMovement,
     ReflexRule,
     Report,
     RuleSeverity,
     SpecimenType,
     TargetGenderType,
+    Title,
     TriggerOperator,
     Unit,
+    User,
     ValidationRule,
 )
 from app.services import formula as formula_service
@@ -61,9 +79,18 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 DELETE_ORDER = [
+    ReagentStockMovement,
+    ReagentLot,
+    Reagent,
+    ReagentSettings,
     DoctorCommissionPaymentEntry,
     DoctorCommissionPayment,
     DoctorCommissionEntry,
+    CustomerCredit,
+    InvoiceBalanceTransfer,
+    PaymentRefund,
+    PaymentTransaction,
+    InvoiceLine,
     Invoice,
     Report,
     Notification,
@@ -71,8 +98,10 @@ DELETE_ORDER = [
     AnalyteResultComment,
     AnalyteResult,
     OrderCatalogItemAnalyte,
+    OrderItemSpecimen,
     OrderItem,
     OrderSpecimen,
+    OrderRevision,
     Order,
     InsurancePricing,
     ReflexRule,
@@ -127,6 +156,8 @@ def delete_existing_data(session: Session) -> None:
 
 
 def seed_catalog_data(session: Session) -> None:
+    ensure_titles(session)
+    ensure_payment_methods(session)
     units = create_units(session)
     specimen_types = create_specimen_types(session)
     categories = create_categories(session)
@@ -138,6 +169,25 @@ def seed_catalog_data(session: Session) -> None:
     attach_panels(session, catalog)
     create_validation_rules(session, analytes, contexts)
     create_automated_rules(session, analytes, catalog)
+    create_reagent_inventory(session)
+
+
+def ensure_titles(session: Session) -> dict[str, Title]:
+    names = ["Dr", "Pr", "M.", "Mme", "Mlle", "Enfant"]
+    return ensure_lookup_names(session, Title, names)
+
+
+def ensure_payment_methods(session: Session) -> dict[str, PaymentMethod]:
+    names = [
+        "Espèces",
+        "Carte bancaire",
+        "Mobile money",
+        "Chèque",
+        "Virement bancaire",
+        "Assurance",
+        "Compte client",
+    ]
+    return ensure_lookup_names(session, PaymentMethod, names)
 
 
 def create_units(session: Session) -> dict[str, Unit]:
@@ -203,7 +253,9 @@ def ensure_patient_contexts(session: Session) -> dict[str, PatientContext]:
     names = ["Ambulatoire", "Hospitalisé", "Urgence", "Grossesse"]
     contexts: dict[str, PatientContext] = {}
     for name in names:
-        existing = session.exec(select(PatientContext).where(PatientContext.name == name)).first()
+        existing = session.exec(
+            select(PatientContext).where(PatientContext.name == name)
+        ).first()
         if existing is None:
             existing = PatientContext(name=name)
             session.add(existing)
@@ -217,46 +269,134 @@ def ensure_patient_contexts(session: Session) -> dict[str, PatientContext]:
 
 def create_analytes(session: Session, units: dict[str, Unit]) -> dict[str, Analyte]:
     rows: list[dict[str, Any]] = [
-        numeric("HB", "Hémoglobine", "g/dL", "Valeurs usuelles adulte: 12,0 - 17,5 g/dL"),
-        numeric("HCT", "Hématocrite", "%", "Interprétation selon âge et sexe."),
-        numeric("RBC", "Globules rouges", "10^12/L", "Numération érythrocytaire."),
-        numeric("WBC", "Leucocytes", "10^9/L", "Numération leucocytaire totale."),
-        numeric("PLT", "Plaquettes", "10^9/L", "Numération plaquettaire."),
-        numeric("MCV", "Volume globulaire moyen", "fL", "Indice érythrocytaire."),
-        numeric("MCH", "Teneur corpusculaire moyenne en hémoglobine", "pg", "Indice érythrocytaire."),
-        numeric("NEUT", "Neutrophiles", "10^9/L", "Formule leucocytaire."),
-        numeric("LYMPH", "Lymphocytes", "10^9/L", "Formule leucocytaire."),
-        numeric("GLU", "Glycémie", "mg/dL", "À interpréter selon le contexte clinique."),
-        numeric("UREE", "Urée", "mg/dL", "Fonction rénale et hydratation."),
-        numeric("CREAT", "Créatinine", "mg/dL", "Fonction rénale."),
-        numeric("NA", "Sodium", "mmol/L", "Ionogramme sanguin."),
-        numeric("K", "Potassium", "mmol/L", "Ionogramme sanguin."),
-        numeric("CL", "Chlorure", "mmol/L", "Ionogramme sanguin."),
-        numeric("CA", "Calcium total", "mg/dL", "Calcémie totale."),
-        numeric("CHOL", "Cholestérol total", "mg/dL", "Bilan lipidique."),
-        numeric("HDL", "Cholestérol HDL", "mg/dL", "Bilan lipidique."),
-        numeric("LDL", "Cholestérol LDL calculé", "mg/dL", "Formule de Friedewald si triglycérides compatibles.", True, "{CHOL} - {HDL} - ({TG} / 5)"),
-        numeric("TG", "Triglycérides", "mg/dL", "Bilan lipidique."),
-        numeric("RATIO_CHOL_HDL", "Ratio cholestérol total / HDL", "ratio", "Ratio cardiovasculaire calculé.", True, "{CHOL} / {HDL}"),
-        numeric("AST", "ASAT", "U/L", "Transaminase hépatique."),
-        numeric("ALT", "ALAT", "U/L", "Transaminase hépatique."),
-        numeric("GGT", "Gamma-GT", "U/L", "Enzyme hépatobiliaire."),
-        numeric("PAL", "Phosphatases alcalines", "U/L", "Enzyme hépatobiliaire."),
-        numeric("BILT", "Bilirubine totale", "mg/dL", "Bilan hépatique."),
-        numeric("BILD", "Bilirubine directe", "mg/dL", "Bilan hépatique."),
-        numeric("CRP", "Protéine C-réactive", "mg/L", "Marqueur inflammatoire."),
-        numeric("TSH", "TSH ultrasensible", "mUI/L", "Exploration thyroïdienne."),
-        numeric("FT4", "Thyroxine libre T4L", "ng/dL", "Exploration thyroïdienne complémentaire."),
-        numeric("HBA1C", "Hémoglobine glyquée HbA1c", "%", "Suivi glycémique sur 2 à 3 mois."),
-        numeric("TP", "Taux de prothrombine", "%", "Coagulation."),
-        numeric("INR", "INR", "ratio", "Surveillance anticoagulante."),
-        numeric("TCA", "Temps de céphaline activée", "s", "Coagulation."),
-        options("NITRITES_U", "Nitrites urinaires", ["Négatif", "Positif"]),
-        options("LEU_U", "Leucocytes urinaires", ["Négatif", "Trace", "Positif", "Fortement positif"]),
-        options("PROT_U", "Protéines urinaires", ["Négatif", "Trace", "+", "++", "+++"]),
-        options("GLU_U", "Glucose urinaire", ["Négatif", "Trace", "+", "++", "+++"]),
-        text("ECBU_DIRECT", "Examen direct ECBU", "Description microscopique en français."),
-        text("ECBU_CULTURE", "Culture ECBU", "Résultat de culture et antibiogramme si applicable."),
+        numeric(
+            "HB", "Hémoglobine", "g/dL", "Homme: 13,0-17,5; femme: 12,0-16,0 g/dL."
+        ),
+        numeric("HCT", "Hématocrite", "%", "Homme: 40-52 %; femme: 36-46 %."),
+        numeric(
+            "RBC",
+            "Globules rouges",
+            "10^12/L",
+            "Homme: 4,5-5,9; femme: 4,0-5,2 x10^12/L.",
+        ),
+        numeric("WBC", "Leucocytes", "10^9/L", "Adulte: 4,0-10,0 x10^9/L."),
+        numeric("PLT", "Plaquettes", "10^9/L", "Adulte: 150-450 x10^9/L."),
+        numeric("MCV", "Volume globulaire moyen", "fL", "Adulte: 80-100 fL."),
+        numeric(
+            "MCH",
+            "Teneur corpusculaire moyenne en hémoglobine",
+            "pg",
+            "Adulte: 27-33 pg.",
+        ),
+        numeric("NEUT", "Neutrophiles", "10^9/L", "Adulte: 1,5-7,5 x10^9/L."),
+        numeric("LYMPH", "Lymphocytes", "10^9/L", "Adulte: 1,0-4,0 x10^9/L."),
+        numeric(
+            "GLU",
+            "Glycémie",
+            "mg/dL",
+            "À jeun: 70-110 mg/dL; urgence/non à jeun: cible clinique <180 mg/dL.",
+        ),
+        numeric("UREE", "Urée", "mg/dL", "Adulte: 15-45 mg/dL."),
+        numeric(
+            "CREAT",
+            "Créatinine",
+            "mg/dL",
+            "Adulte: 0,6-1,3 mg/dL, selon masse musculaire.",
+        ),
+        numeric("NA", "Sodium", "mmol/L", "Adulte: 135-145 mmol/L."),
+        numeric("K", "Potassium", "mmol/L", "Adulte: 3,5-5,1 mmol/L."),
+        numeric("CL", "Chlorure", "mmol/L", "Adulte: 98-107 mmol/L."),
+        numeric("CA", "Calcium total", "mg/dL", "Adulte: 8,6-10,2 mg/dL."),
+        numeric("CHOL", "Cholestérol total", "mg/dL", "Souhaitable: <200 mg/dL."),
+        numeric(
+            "HDL",
+            "Cholestérol HDL",
+            "mg/dL",
+            "Bas si <40 mg/dL; protecteur si >=60 mg/dL.",
+        ),
+        numeric(
+            "LDL",
+            "Cholestérol LDL calculé",
+            "mg/dL",
+            "Objectif usuel: <130 mg/dL, plus bas selon risque cardiovasculaire.",
+            True,
+            "{CHOL} - {HDL} - ({TG} / 5)",
+        ),
+        numeric(
+            "TG", "Triglycérides", "mg/dL", "Normal: <150 mg/dL; élevé si >=200 mg/dL."
+        ),
+        numeric(
+            "RATIO_CHOL_HDL",
+            "Ratio cholestérol total / HDL",
+            "ratio",
+            "Risque plus faible en général si ratio <4,5.",
+            True,
+            "{CHOL} / {HDL}",
+        ),
+        numeric("AST", "ASAT", "U/L", "Adulte: <40 U/L."),
+        numeric("ALT", "ALAT", "U/L", "Adulte: <45 U/L."),
+        numeric("GGT", "Gamma-GT", "U/L", "Adulte: <60 U/L."),
+        numeric("PAL", "Phosphatases alcalines", "U/L", "Adulte: 40-130 U/L."),
+        numeric("BILT", "Bilirubine totale", "mg/dL", "Adulte: <1,2 mg/dL."),
+        numeric("BILD", "Bilirubine directe", "mg/dL", "Adulte: <0,3 mg/dL."),
+        numeric("CRP", "Protéine C-réactive", "mg/L", "Adulte: <5 mg/L."),
+        numeric("TSH", "TSH ultrasensible", "mUI/L", "Adulte: 0,4-4,0 mUI/L."),
+        numeric("FT4", "Thyroxine libre T4L", "ng/dL", "Adulte: 0,8-1,8 ng/dL."),
+        numeric(
+            "HBA1C",
+            "Hémoglobine glyquée HbA1c",
+            "%",
+            "Sujet non diabétique: 4,0-5,7 %; objectif diabète souvent <7 %.",
+        ),
+        numeric(
+            "TP", "Taux de prothrombine", "%", "Adulte hors anticoagulant: 70-100 %."
+        ),
+        numeric(
+            "INR",
+            "INR",
+            "ratio",
+            "Hors anticoagulant: 0,8-1,2; cible AVK selon indication.",
+        ),
+        numeric(
+            "TCA",
+            "Temps de céphaline activée",
+            "s",
+            "Adulte: 25-40 s; dépend du réactif.",
+        ),
+        options(
+            "NITRITES_U",
+            "Nitrites urinaires",
+            ["Négatif", "Positif"],
+            "Normal: négatif.",
+        ),
+        options(
+            "LEU_U",
+            "Leucocytes urinaires",
+            ["Négatif", "Trace", "Positif", "Fortement positif"],
+            "Normal: négatif ou traces isolées.",
+        ),
+        options(
+            "PROT_U",
+            "Protéines urinaires",
+            ["Négatif", "Trace", "+", "++", "+++"],
+            "Normal: négatif ou traces.",
+        ),
+        options(
+            "GLU_U",
+            "Glucose urinaire",
+            ["Négatif", "Trace", "+", "++", "+++"],
+            "Normal: négatif.",
+        ),
+        text(
+            "ECBU_DIRECT",
+            "Examen direct ECBU",
+            "Leucocytes <10/mm3 et hématies <10/mm3 attendus; absence de germe à l'examen direct.",
+        ),
+        text(
+            "ECBU_CULTURE",
+            "Culture ECBU",
+            "Culture négative ou flore non significative; seuil significatif selon germe, contexte et mode de prélèvement.",
+        ),
     ]
     analytes: dict[str, Analyte] = {}
     for row in rows:
@@ -287,14 +427,16 @@ def numeric(
     }
 
 
-def options(code: str, name: str, values: list[str]) -> dict[str, Any]:
+def options(
+    code: str, name: str, values: list[str], reference_text: str
+) -> dict[str, Any]:
     return {
         "code": code,
         "name": name,
         "unit_name": None,
         "data_type": AnalyteDataType.options,
         "options_data": values,
-        "reference_text": "Résultat qualitatif.",
+        "reference_text": reference_text,
     }
 
 
@@ -308,7 +450,9 @@ def text(code: str, name: str, reference_text: str) -> dict[str, Any]:
     }
 
 
-def create_catalog(session: Session, categories: dict[str, Category]) -> dict[str, Catalog]:
+def create_catalog(
+    session: Session, categories: dict[str, Category]
+) -> dict[str, Catalog]:
     rows = [
         item("NFS", "Numération formule sanguine", "Hématologie", "3500.00"),
         item("GLY", "Glycémie à jeun", "Biochimie", "1500.00"),
@@ -325,7 +469,9 @@ def create_catalog(session: Session, categories: dict[str, Category]) -> dict[st
         item("TPINR", "TP - INR", "Coagulation", "4500.00"),
         item("TCA", "Temps de céphaline activée", "Coagulation", "3500.00"),
         item("BU", "Bandelette urinaire", "Urines", "2000.00"),
-        item("ECBU", "Examen cytobactériologique des urines", "Microbiologie", "9000.00"),
+        item(
+            "ECBU", "Examen cytobactériologique des urines", "Microbiologie", "9000.00"
+        ),
         panel("P_RENAL", "Bilan rénal", "Panels"),
         panel("P_METAB", "Bilan métabolique", "Panels"),
         panel("P_HEP_COMPLET", "Bilan hépatique complet", "Panels"),
@@ -397,11 +543,23 @@ def attach_analytes(
 
 
 def attach_specimens(
-    session: Session, catalog: dict[str, Catalog], specimen_types: dict[str, SpecimenType]
+    session: Session,
+    catalog: dict[str, Catalog],
+    specimen_types: dict[str, SpecimenType],
 ) -> None:
     rows = [
-        ("NFS", "Sang total EDTA", "2.00", "Tube EDTA bien homogénéisé. Éviter les caillots."),
-        ("GLY", "Plasma hépariné", "1.00", "Prélèvement à jeun recommandé. Centrifuger rapidement."),
+        (
+            "NFS",
+            "Sang total EDTA",
+            "2.00",
+            "Tube EDTA bien homogénéisé. Éviter les caillots.",
+        ),
+        (
+            "GLY",
+            "Plasma hépariné",
+            "1.00",
+            "Prélèvement à jeun recommandé. Centrifuger rapidement.",
+        ),
         ("UREE", "Sérum", "1.00", "Sérum non hémolysé."),
         ("CREAT", "Sérum", "1.00", "Sérum non hémolysé."),
         ("IONO", "Plasma hépariné", "1.00", "Éviter l'hémolyse, acheminer rapidement."),
@@ -411,11 +569,26 @@ def attach_specimens(
         ("CRP", "Sérum", "1.00", "Aucun jeûne requis."),
         ("TSH", "Sérum", "1.00", "Prélever de préférence le matin."),
         ("T4L", "Sérum", "1.00", "Prélever de préférence le matin."),
-        ("HBA1C", "Sang total EDTA", "2.00", "Tube EDTA, conservation à 2-8 °C si délai."),
-        ("TPINR", "Plasma citraté", "2.70", "Respecter le remplissage du tube citraté."),
+        (
+            "HBA1C",
+            "Sang total EDTA",
+            "2.00",
+            "Tube EDTA, conservation à 2-8 °C si délai.",
+        ),
+        (
+            "TPINR",
+            "Plasma citraté",
+            "2.70",
+            "Respecter le remplissage du tube citraté.",
+        ),
         ("TCA", "Plasma citraté", "2.70", "Respecter le remplissage du tube citraté."),
         ("BU", "Urine", "10.00", "Urine fraîche, analyser dans les 2 heures."),
-        ("ECBU", "Urine", "10.00", "Milieu de jet dans flacon stérile avant antibiotique si possible."),
+        (
+            "ECBU",
+            "Urine",
+            "10.00",
+            "Milieu de jet dans flacon stérile avant antibiotique si possible.",
+        ),
     ]
     for catalog_code, specimen_name, volume, instructions in rows:
         session.add(
@@ -453,18 +626,117 @@ def create_validation_rules(
     session: Session, analytes: dict[str, Analyte], contexts: dict[str, PatientContext]
 ) -> None:
     numeric_rules = [
-        vr("HB", normal_min="13.0", normal_max="17.5", panic_min="7.0", panic_max="20.0", absurd_min="3.0", absurd_max="25.0", gender=TargetGenderType.male),
-        vr("HB", normal_min="12.0", normal_max="16.0", panic_min="7.0", panic_max="20.0", absurd_min="3.0", absurd_max="25.0", gender=TargetGenderType.female),
-        vr("WBC", normal_min="4.0", normal_max="10.0", panic_min="2.0", panic_max="30.0", absurd_min="0.1", absurd_max="100.0"),
-        vr("PLT", normal_min="150", normal_max="450", panic_min="50", panic_max="1000", absurd_min="5", absurd_max="2000"),
-        vr("GLU", normal_min="70", normal_max="110", panic_min="50", panic_max="400", absurd_min="20", absurd_max="800", context="Ambulatoire"),
-        vr("GLU", normal_min="70", normal_max="180", panic_min="50", panic_max="400", absurd_min="20", absurd_max="800", context="Urgence", priority=5),
-        vr("UREE", normal_min="15", normal_max="45", panic_max="150", absurd_min="1", absurd_max="300"),
-        vr("CREAT", normal_min="0.6", normal_max="1.3", panic_max="5.0", absurd_min="0.1", absurd_max="20.0"),
-        vr("NA", normal_min="135", normal_max="145", panic_min="120", panic_max="160", absurd_min="100", absurd_max="180"),
-        vr("K", normal_min="3.5", normal_max="5.1", panic_min="2.8", panic_max="6.2", absurd_min="1.5", absurd_max="9.0"),
-        vr("CL", normal_min="98", normal_max="107", panic_min="80", panic_max="125", absurd_min="60", absurd_max="150"),
-        vr("CA", normal_min="8.6", normal_max="10.2", panic_min="7.0", panic_max="13.0", absurd_min="4.0", absurd_max="18.0"),
+        vr(
+            "HB",
+            normal_min="13.0",
+            normal_max="17.5",
+            panic_min="7.0",
+            panic_max="20.0",
+            absurd_min="3.0",
+            absurd_max="25.0",
+            gender=TargetGenderType.male,
+        ),
+        vr(
+            "HB",
+            normal_min="12.0",
+            normal_max="16.0",
+            panic_min="7.0",
+            panic_max="20.0",
+            absurd_min="3.0",
+            absurd_max="25.0",
+            gender=TargetGenderType.female,
+        ),
+        vr(
+            "WBC",
+            normal_min="4.0",
+            normal_max="10.0",
+            panic_min="2.0",
+            panic_max="30.0",
+            absurd_min="0.1",
+            absurd_max="100.0",
+        ),
+        vr(
+            "PLT",
+            normal_min="150",
+            normal_max="450",
+            panic_min="50",
+            panic_max="1000",
+            absurd_min="5",
+            absurd_max="2000",
+        ),
+        vr(
+            "GLU",
+            normal_min="70",
+            normal_max="110",
+            panic_min="50",
+            panic_max="400",
+            absurd_min="20",
+            absurd_max="800",
+            context="Ambulatoire",
+        ),
+        vr(
+            "GLU",
+            normal_min="70",
+            normal_max="180",
+            panic_min="50",
+            panic_max="400",
+            absurd_min="20",
+            absurd_max="800",
+            context="Urgence",
+            priority=5,
+        ),
+        vr(
+            "UREE",
+            normal_min="15",
+            normal_max="45",
+            panic_max="150",
+            absurd_min="1",
+            absurd_max="300",
+        ),
+        vr(
+            "CREAT",
+            normal_min="0.6",
+            normal_max="1.3",
+            panic_max="5.0",
+            absurd_min="0.1",
+            absurd_max="20.0",
+        ),
+        vr(
+            "NA",
+            normal_min="135",
+            normal_max="145",
+            panic_min="120",
+            panic_max="160",
+            absurd_min="100",
+            absurd_max="180",
+        ),
+        vr(
+            "K",
+            normal_min="3.5",
+            normal_max="5.1",
+            panic_min="2.8",
+            panic_max="6.2",
+            absurd_min="1.5",
+            absurd_max="9.0",
+        ),
+        vr(
+            "CL",
+            normal_min="98",
+            normal_max="107",
+            panic_min="80",
+            panic_max="125",
+            absurd_min="60",
+            absurd_max="150",
+        ),
+        vr(
+            "CA",
+            normal_min="8.6",
+            normal_max="10.2",
+            panic_min="7.0",
+            panic_max="13.0",
+            absurd_min="4.0",
+            absurd_max="18.0",
+        ),
         vr("CHOL", normal_max="200", panic_max="350", absurd_max="600"),
         vr("HDL", normal_min="40", normal_max="90", absurd_min="5", absurd_max="150"),
         vr("LDL", normal_max="130", panic_max="250", absurd_min="0", absurd_max="500"),
@@ -472,16 +744,67 @@ def create_validation_rules(
         vr("AST", normal_max="40", panic_max="500", absurd_min="0", absurd_max="5000"),
         vr("ALT", normal_max="45", panic_max="500", absurd_min="0", absurd_max="5000"),
         vr("GGT", normal_max="60", panic_max="800", absurd_min="0", absurd_max="3000"),
-        vr("PAL", normal_min="40", normal_max="130", panic_max="1000", absurd_min="0", absurd_max="3000"),
+        vr(
+            "PAL",
+            normal_min="40",
+            normal_max="130",
+            panic_max="1000",
+            absurd_min="0",
+            absurd_max="3000",
+        ),
         vr("BILT", normal_max="1.2", panic_max="20", absurd_min="0", absurd_max="60"),
         vr("BILD", normal_max="0.3", panic_max="10", absurd_min="0", absurd_max="40"),
         vr("CRP", normal_max="5", panic_max="200", absurd_min="0", absurd_max="500"),
-        vr("TSH", normal_min="0.4", normal_max="4.0", panic_min="0.01", panic_max="50", absurd_min="0", absurd_max="200"),
-        vr("FT4", normal_min="0.8", normal_max="1.8", panic_min="0.3", panic_max="4.0", absurd_min="0", absurd_max="10"),
-        vr("HBA1C", normal_min="4.0", normal_max="5.7", panic_max="14.0", absurd_min="2.0", absurd_max="20.0"),
-        vr("TP", normal_min="70", normal_max="100", panic_min="20", absurd_min="1", absurd_max="150"),
-        vr("INR", normal_min="0.8", normal_max="1.2", panic_max="5.0", absurd_min="0.5", absurd_max="15.0"),
-        vr("TCA", normal_min="25", normal_max="40", panic_max="120", absurd_min="5", absurd_max="300"),
+        vr(
+            "TSH",
+            normal_min="0.4",
+            normal_max="4.0",
+            panic_min="0.01",
+            panic_max="50",
+            absurd_min="0",
+            absurd_max="200",
+        ),
+        vr(
+            "FT4",
+            normal_min="0.8",
+            normal_max="1.8",
+            panic_min="0.3",
+            panic_max="4.0",
+            absurd_min="0",
+            absurd_max="10",
+        ),
+        vr(
+            "HBA1C",
+            normal_min="4.0",
+            normal_max="5.7",
+            panic_max="14.0",
+            absurd_min="2.0",
+            absurd_max="20.0",
+        ),
+        vr(
+            "TP",
+            normal_min="70",
+            normal_max="100",
+            panic_min="20",
+            absurd_min="1",
+            absurd_max="150",
+        ),
+        vr(
+            "INR",
+            normal_min="0.8",
+            normal_max="1.2",
+            panic_max="5.0",
+            absurd_min="0.5",
+            absurd_max="15.0",
+        ),
+        vr(
+            "TCA",
+            normal_min="25",
+            normal_max="40",
+            panic_max="120",
+            absurd_min="5",
+            absurd_max="300",
+        ),
     ]
     for data in numeric_rules:
         context_name = data.pop("context", None)
@@ -506,7 +829,8 @@ def create_validation_rules(
         session.add(
             ValidationRule(
                 analyte_id=analytes[code].id,
-                allowed_values=allowed + [value for value in abnormal + critical if value not in allowed],
+                allowed_values=allowed
+                + [value for value in abnormal + critical if value not in allowed],
                 abnormal_values=abnormal,
                 critical_values=critical,
             )
@@ -588,7 +912,9 @@ def create_automated_rules(
         session.add(rule)
         session.flush()
         for code in codes:
-            session.add(ConsistencyRuleAnalyte(rule_id=rule.id, analyte_id=analytes[code].id))
+            session.add(
+                ConsistencyRuleAnalyte(rule_id=rule.id, analyte_id=analytes[code].id)
+            )
 
     reflex = [
         ("CRP", TriggerOperator.gt, "50", "NFS"),
@@ -610,6 +936,189 @@ def create_automated_rules(
     session.flush()
 
 
+def create_reagent_inventory(session: Session) -> None:
+    logger.info("Création du stock de réactifs de démonstration...")
+    performed_by_id = demo_user_id(session)
+    session.add(
+        ReagentSettings(
+            id=1,
+            default_expiry_warning_days=30,
+            expiry_alerts_enabled=True,
+            low_stock_alerts_enabled=True,
+            updated_by_id=performed_by_id,
+        )
+    )
+    session.flush()
+
+    reagents = keyed_by_code(
+        session,
+        [
+            Reagent(
+                code="R-GLU-OX",
+                name="Réactif glucose oxydase",
+                unit_label="mL",
+                storage_condition="2-8 °C",
+                storage_location="Frigo biochimie A",
+                supplier="BioSystems",
+                minimum_stock_level=Decimal("150.000"),
+                notes="Utilisé pour la glycémie et les panels métaboliques.",
+            ),
+            Reagent(
+                code="R-CREA-JAFFE",
+                name="Réactif créatinine Jaffé",
+                unit_label="mL",
+                storage_condition="15-25 °C",
+                storage_location="Armoire biochimie 2",
+                supplier="Spinreact",
+                minimum_stock_level=Decimal("100.000"),
+            ),
+            Reagent(
+                code="R-UREE-UV",
+                name="Réactif urée UV",
+                unit_label="mL",
+                storage_condition="2-8 °C",
+                storage_location="Frigo biochimie A",
+                supplier="BioSystems",
+                minimum_stock_level=Decimal("120.000"),
+            ),
+            Reagent(
+                code="R-CRP-LATEX",
+                name="Kit CRP latex",
+                unit_label="tests",
+                storage_condition="2-8 °C",
+                storage_location="Frigo immunologie",
+                supplier="Linear Chemicals",
+                minimum_stock_level=Decimal("40.000"),
+                expiry_warning_days_override=14,
+            ),
+            Reagent(
+                code="R-EDTA-CBC",
+                name="Diluent NFS",
+                unit_label="mL",
+                storage_condition="15-30 °C",
+                storage_location="Paillasse hématologie",
+                supplier="Mindray",
+                minimum_stock_level=Decimal("500.000"),
+            ),
+            Reagent(
+                code="R-TP-TCA",
+                name="Réactif TP/TCA",
+                unit_label="tests",
+                storage_condition="2-8 °C",
+                storage_location="Frigo coagulation",
+                supplier="Stago",
+                minimum_stock_level=Decimal("60.000"),
+            ),
+        ],
+    )
+
+    for row in reagent_lot_rows():
+        reagent_code = row.pop("reagent_code")
+        current_quantity = row.pop("current_quantity")
+        db_lot = ReagentLot(
+            **row,
+            reagent_id=reagents[reagent_code].id,
+            current_quantity=current_quantity,
+        )
+        session.add(db_lot)
+        session.flush()
+        if performed_by_id is None:
+            continue
+        session.add(
+            ReagentStockMovement(
+                reagent_id=reagents[reagent_code].id,
+                lot_id=db_lot.id,
+                movement_type=ReagentMovementType.received,
+                quantity=db_lot.initial_quantity,
+                balance_after=db_lot.initial_quantity,
+                reason="Réception initiale du seed démonstration",
+                performed_by_id=performed_by_id,
+            )
+        )
+        if current_quantity < db_lot.initial_quantity:
+            used_quantity = db_lot.initial_quantity - current_quantity
+            session.add(
+                ReagentStockMovement(
+                    reagent_id=reagents[reagent_code].id,
+                    lot_id=db_lot.id,
+                    movement_type=ReagentMovementType.used,
+                    quantity=used_quantity,
+                    balance_after=current_quantity,
+                    reason="Consommation démonstration",
+                    performed_by_id=performed_by_id,
+                )
+            )
+    session.flush()
+
+
+def demo_user_id(session: Session):
+    user = session.exec(
+        select(User).where(User.email == settings.FIRST_SUPERUSER)
+    ).first()
+    return user.id if user else None
+
+
+def reagent_lot_rows() -> list[dict[str, Any]]:
+    today = date.today()
+    return [
+        reagent_lot(
+            "R-GLU-OX", "GLU-2026-01", 500, 420, today + timedelta(days=180), "125.00"
+        ),
+        reagent_lot(
+            "R-GLU-OX", "GLU-2026-02", 200, 95, today + timedelta(days=18), "128.00"
+        ),
+        reagent_lot(
+            "R-CREA-JAFFE",
+            "CREA-2026-01",
+            250,
+            85,
+            today + timedelta(days=120),
+            "90.00",
+        ),
+        reagent_lot(
+            "R-UREE-UV", "UREE-2026-01", 300, 160, today + timedelta(days=45), "110.00"
+        ),
+        reagent_lot(
+            "R-CRP-LATEX", "CRP-2026-01", 100, 35, today + timedelta(days=10), "450.00"
+        ),
+        reagent_lot(
+            "R-EDTA-CBC", "NFS-2026-01", 1000, 760, today + timedelta(days=210), "65.00"
+        ),
+        reagent_lot(
+            "R-TP-TCA",
+            "COAG-2026-01",
+            120,
+            0,
+            today - timedelta(days=5),
+            "520.00",
+            ReagentLotStatus.depleted,
+        ),
+    ]
+
+
+def reagent_lot(
+    reagent_code: str,
+    lot_number: str,
+    initial_quantity: int,
+    current_quantity: int,
+    expiry_date: date,
+    unit_cost: str,
+    status: ReagentLotStatus = ReagentLotStatus.active,
+) -> dict[str, Any]:
+    return {
+        "reagent_code": reagent_code,
+        "lot_number": lot_number,
+        "expiry_date": expiry_date,
+        "received_date": date.today() - timedelta(days=30),
+        "initial_quantity": Decimal(f"{initial_quantity}.000"),
+        "current_quantity": Decimal(f"{current_quantity}.000"),
+        "unit_cost": Decimal(unit_cost),
+        "supplier_name": "Fournisseur démo",
+        "location": "Stock principal",
+        "status": status,
+    }
+
+
 def keyed_by_name(session: Session, items: Iterable[T]) -> dict[str, T]:
     result: dict[str, T] = {}
     for item in items:
@@ -619,9 +1128,37 @@ def keyed_by_name(session: Session, items: Iterable[T]) -> dict[str, T]:
     return result
 
 
+def keyed_by_code(session: Session, items: Iterable[T]) -> dict[str, T]:
+    result: dict[str, T] = {}
+    for item in items:
+        session.add(item)
+        session.flush()
+        result[item.code] = item  # type: ignore[attr-defined]
+    return result
+
+
+def ensure_lookup_names(
+    session: Session, model: type[T], names: Iterable[str]
+) -> dict[str, T]:
+    result: dict[str, T] = {}
+    for name in names:
+        existing = session.exec(select(model).where(model.name == name)).first()  # type: ignore[attr-defined]
+        if existing is None:
+            existing = model(name=name)  # type: ignore[call-arg]
+            session.add(existing)
+            session.flush()
+        else:
+            existing.is_deleted = False  # type: ignore[attr-defined]
+            session.add(existing)
+        result[name] = existing
+    return result
+
+
 def print_summary(session: Session) -> None:
     logger.info("\nSeed catalogue terminé.")
     for model in [
+        Title,
+        PaymentMethod,
         Unit,
         SpecimenType,
         Category,
@@ -635,6 +1172,9 @@ def print_summary(session: Session) -> None:
         ConsistencyRule,
         ConsistencyRuleAnalyte,
         ReflexRule,
+        Reagent,
+        ReagentLot,
+        ReagentStockMovement,
     ]:
         count = len(session.exec(select(model)).all())
         logger.info("  %-35s %s", model.__tablename__, count)

@@ -1394,6 +1394,164 @@ export type PrivateUserCreate = {
     is_verified?: boolean;
 };
 
+export type ReagentAlertSummaryPublic = {
+    expiring_count: number;
+    expired_count: number;
+    low_stock_count: number;
+    total_count: number;
+};
+
+export type ReagentCreate = {
+    code: string;
+    name: string;
+    unit_label: string;
+    storage_condition?: (string | null);
+    storage_location?: (string | null);
+    supplier?: (string | null);
+    notes?: (string | null);
+    minimum_stock_level?: (number | string | null);
+    expiry_warning_days_override?: (number | null);
+};
+
+export type ReagentExpiryStatus = 'ok' | 'expiring' | 'expired';
+
+export type ReagentLotCreate = {
+    reagent_id: string;
+    lot_number: string;
+    expiry_date: string;
+    received_date: string;
+    initial_quantity: (number | string);
+    unit_cost?: (number | string | null);
+    supplier_name?: (string | null);
+    location?: (string | null);
+    notes?: (string | null);
+};
+
+export type ReagentLotPublic = {
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    reagent_id: string;
+    lot_number: string;
+    expiry_date: string;
+    received_date: string;
+    initial_quantity: string;
+    unit_cost?: (string | null);
+    supplier_name?: (string | null);
+    location?: (string | null);
+    notes?: (string | null);
+    current_quantity: string;
+    status: ReagentLotStatus;
+    reagent_name?: (string | null);
+    reagent_code?: (string | null);
+    unit_label?: (string | null);
+    expiry_status?: ReagentExpiryStatus;
+    days_until_expiry?: (number | null);
+};
+
+export type ReagentLotsPublic = {
+    data: Array<ReagentLotPublic>;
+    count: number;
+};
+
+export type ReagentLotStatus = 'active' | 'depleted' | 'disposed';
+
+export type ReagentLotUpdate = {
+    lot_number?: (string | null);
+    expiry_date?: (string | null);
+    received_date?: (string | null);
+    unit_cost?: (number | string | null);
+    supplier_name?: (string | null);
+    location?: (string | null);
+    notes?: (string | null);
+};
+
+export type ReagentMovementCreate = {
+    lot_id: string;
+    movement_type: ReagentMovementType;
+    quantity: (number | string);
+    reason: string;
+    notes?: (string | null);
+};
+
+export type ReagentMovementType = 'received' | 'used' | 'adjusted' | 'disposed';
+
+export type ReagentPublic = {
+    id: string;
+    is_deleted: boolean;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    code: string;
+    name: string;
+    unit_label: string;
+    storage_condition?: (string | null);
+    storage_location?: (string | null);
+    supplier?: (string | null);
+    notes?: (string | null);
+    minimum_stock_level?: (string | null);
+    expiry_warning_days_override?: (number | null);
+    total_stock?: string;
+    active_lot_count?: number;
+    expiring_lot_count?: number;
+    expired_lot_count?: number;
+    low_stock?: boolean;
+};
+
+export type ReagentSettingsPublic = {
+    id: number;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    default_expiry_warning_days?: number;
+    expiry_alerts_enabled?: boolean;
+    low_stock_alerts_enabled?: boolean;
+    updated_by_id?: (string | null);
+};
+
+export type ReagentSettingsUpdate = {
+    default_expiry_warning_days?: (number | null);
+    expiry_alerts_enabled?: (boolean | null);
+    low_stock_alerts_enabled?: (boolean | null);
+};
+
+export type ReagentsPublic = {
+    data: Array<ReagentPublic>;
+    count: number;
+};
+
+export type ReagentStockMovementPublic = {
+    id: string;
+    reagent_id: string;
+    lot_id: string;
+    movement_type: ReagentMovementType;
+    quantity: string;
+    balance_after: string;
+    reason: string;
+    notes?: (string | null);
+    performed_by_id: string;
+    performed_at: string;
+    created_at: string;
+    reagent_name?: (string | null);
+    reagent_code?: (string | null);
+    lot_number?: (string | null);
+};
+
+export type ReagentStockMovementsPublic = {
+    data: Array<ReagentStockMovementPublic>;
+    count: number;
+};
+
+export type ReagentUpdate = {
+    code?: (string | null);
+    name?: (string | null);
+    unit_label?: (string | null);
+    storage_condition?: (string | null);
+    storage_location?: (string | null);
+    supplier?: (string | null);
+    notes?: (string | null);
+    minimum_stock_level?: (number | string | null);
+    expiry_warning_days_override?: (number | null);
+};
+
 export type ReflexRuleCreate = {
     trigger_analyte_id: string;
     trigger_operator: TriggerOperator;
@@ -1549,6 +1707,7 @@ export type ReportPublic = {
     is_voided: boolean;
     snapshot?: unknown;
     template_snapshot?: unknown;
+    render_config?: ReportRenderConfig;
     delivery_metadata?: unknown;
 };
 
@@ -1556,6 +1715,15 @@ export type ReportReleaseRequest = {
     channel?: ReportChannel;
     recipient?: (string | null);
     recipient_note?: (string | null);
+    render_config?: (ReportRenderConfig | null);
+};
+
+export type ReportRenderConfig = {
+    category_order?: Array<(string)>;
+    category_page_breaks?: {
+        [key: string]: (boolean);
+    };
+    hidden_analyte_ids?: Array<(string)>;
 };
 
 export type ReportRendererCreate = {
@@ -3286,6 +3454,98 @@ export type RbacRemoveRoleFromUserData = {
 };
 
 export type RbacRemoveRoleFromUserResponse = (void);
+
+export type ReagentsReadReagentsData = {
+    expiryStatus?: (ReagentExpiryStatus | null);
+    includeDeleted?: boolean;
+    isDeleted?: (boolean | null);
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+    stockStatus?: (string | null);
+};
+
+export type ReagentsReadReagentsResponse = (ReagentsPublic);
+
+export type ReagentsCreateReagentData = {
+    requestBody: ReagentCreate;
+};
+
+export type ReagentsCreateReagentResponse = (ReagentPublic);
+
+export type ReagentsReadReagentAlertSummaryResponse = (ReagentAlertSummaryPublic);
+
+export type ReagentsReadReagentSettingsResponse = (ReagentSettingsPublic);
+
+export type ReagentsUpdateReagentSettingsData = {
+    requestBody: ReagentSettingsUpdate;
+};
+
+export type ReagentsUpdateReagentSettingsResponse = (ReagentSettingsPublic);
+
+export type ReagentsReadReagentLotsData = {
+    expiryStatus?: (ReagentExpiryStatus | null);
+    limit?: number;
+    reagentId?: (string | null);
+    search?: (string | null);
+    skip?: number;
+    status?: (ReagentLotStatus | null);
+};
+
+export type ReagentsReadReagentLotsResponse = (ReagentLotsPublic);
+
+export type ReagentsCreateReagentLotData = {
+    requestBody: ReagentLotCreate;
+};
+
+export type ReagentsCreateReagentLotResponse = (ReagentLotPublic);
+
+export type ReagentsUpdateReagentLotData = {
+    lotId: string;
+    requestBody: ReagentLotUpdate;
+};
+
+export type ReagentsUpdateReagentLotResponse = (ReagentLotPublic);
+
+export type ReagentsReadReagentMovementsData = {
+    limit?: number;
+    lotId?: (string | null);
+    reagentId?: (string | null);
+    skip?: number;
+};
+
+export type ReagentsReadReagentMovementsResponse = (ReagentStockMovementsPublic);
+
+export type ReagentsCreateReagentMovementData = {
+    requestBody: ReagentMovementCreate;
+};
+
+export type ReagentsCreateReagentMovementResponse = (ReagentStockMovementPublic);
+
+export type ReagentsReadReagentData = {
+    reagentId: string;
+};
+
+export type ReagentsReadReagentResponse = (ReagentPublic);
+
+export type ReagentsUpdateReagentData = {
+    reagentId: string;
+    requestBody: ReagentUpdate;
+};
+
+export type ReagentsUpdateReagentResponse = (ReagentPublic);
+
+export type ReagentsDeleteReagentData = {
+    reagentId: string;
+};
+
+export type ReagentsDeleteReagentResponse = (Message);
+
+export type ReagentsRestoreReagentData = {
+    reagentId: string;
+};
+
+export type ReagentsRestoreReagentResponse = (ReagentPublic);
 
 export type RejectionReasonsReadRejectionReasonsData = {
     includeDeleted?: boolean;

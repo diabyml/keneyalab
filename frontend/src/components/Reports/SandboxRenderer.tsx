@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import { cn } from "@/lib/utils"
 import type { ReportCategory } from "./reportTypes"
 
 type CompilerResponse = { id: string; code?: string; error?: string }
@@ -28,7 +29,7 @@ function getCompiler() {
   return compiler
 }
 
-function compile(source: string) {
+export function compileReportRenderer(source: string) {
   return new Promise<string>((resolve, reject) => {
     const id = crypto.randomUUID()
     pending.set(id, { resolve, reject })
@@ -98,13 +99,37 @@ function createDocument(code: string, css: string, category: ReportCategory) {
         return section;
       }
     };
+    function reportHeight() {
+      const root = document.getElementById("root");
+      const height = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        root ? root.scrollHeight : 0,
+        root ? root.getBoundingClientRect().height : 0
+      );
+      parent.postMessage({ type: "report-renderer-ready", height }, "*");
+    }
+    function scheduleHeightReports() {
+      reportHeight();
+      requestAnimationFrame(() => {
+        reportHeight();
+        requestAnimationFrame(reportHeight);
+      });
+    }
     const category = ${safeJson(category)};
     try {
       ${code}
       const renderer = globalThis.__ReportRenderer;
       if (typeof renderer !== "function") throw new Error("Le composant Renderer est introuvable.");
       append(document.getElementById("root"), renderer({ category, ReportKit }));
-      parent.postMessage({ type: "report-renderer-ready", height: document.documentElement.scrollHeight }, "*");
+      if ("ResizeObserver" in window) {
+        const observer = new ResizeObserver(scheduleHeightReports);
+        observer.observe(document.documentElement);
+        observer.observe(document.body);
+        observer.observe(document.getElementById("root"));
+      }
+      window.addEventListener("load", scheduleHeightReports);
+      scheduleHeightReports();
     } catch (error) {
       parent.postMessage({ type: "report-renderer-error", message: error?.message || String(error) }, "*");
     }
@@ -113,7 +138,7 @@ function createDocument(code: string, css: string, category: ReportCategory) {
   <html><head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
-    <style>html,body{margin:0;background:transparent;color:#000;font:11px Inter,Arial,sans-serif}*{box-sizing:border-box}h3{font-size:11px;margin:10px 0 4px}.report-result-image{max-width:180px;max-height:100px}.result-comment{display:block;margin-top:3px;color:#000;font-style:italic}${css}#root,#root *{color:#000}#root strong,#root b{font-weight:700}#root table,#root th,#root td{border-color:#374151}.result-abnormal,.result-abnormal *,.result-critical,.result-critical *{color:#b91c1c;font-weight:700}</style>
+    <style>html,body{margin:0;background:transparent;color:#000;font:11px Inter,Arial,sans-serif;overflow:hidden}*{box-sizing:border-box}h3{font-size:11px;margin:10px 0 4px}.report-result-image{max-width:180px;max-height:100px}.result-comment{display:block;margin-top:3px;color:#000;font-style:italic}${css}#root,#root *{color:#000}#root strong,#root b{font-weight:700}#root table,#root th,#root td{border-color:#374151}.result-abnormal,.result-abnormal *,.result-critical,.result-critical *{color:#b91c1c;font-weight:700}</style>
   </head><body><div id="root"></div><script>${runtime.replace(/<\/script>/g, "<\\/script>")}</script></body></html>`
 }
 
@@ -121,10 +146,12 @@ export function SandboxRenderer({
   source,
   css,
   category,
+  className,
 }: {
   source: string
   css: string
   category: ReportCategory
+  className?: string
 }) {
   const frameRef = useRef<HTMLIFrameElement>(null)
   const [compiled, setCompiled] = useState("")
@@ -134,7 +161,7 @@ export function SandboxRenderer({
   useEffect(() => {
     let active = true
     setError("")
-    compile(source)
+    compileReportRenderer(source)
       .then((code) => {
         if (active) setCompiled(code)
       })
@@ -165,6 +192,10 @@ export function SandboxRenderer({
     [category, compiled, css],
   )
 
+  useEffect(() => {
+    if (srcDoc) setHeight(120)
+  }, [srcDoc])
+
   if (error) {
     return (
       <div className="flex gap-2 border border-red-200 bg-red-50 p-3 text-xs text-red-800">
@@ -183,7 +214,8 @@ export function SandboxRenderer({
       title={`Rendu ${category.name}`}
       sandbox="allow-scripts"
       srcDoc={srcDoc}
-      className="block w-full border-0 bg-transparent"
+      className={cn("block w-full border-0 bg-transparent", className)}
+      scrolling="no"
       style={{ height }}
     />
   )

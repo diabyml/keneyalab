@@ -25,6 +25,7 @@ from app.api.routes import (
     payment_methods,
     private,
     rbac,
+    reagents,
     rejection_reasons,
     reports,
     results,
@@ -69,6 +70,7 @@ api_router.include_router(invoices.router)
 api_router.include_router(results.router)
 api_router.include_router(reports.router)
 api_router.include_router(critical_notifications.router)
+api_router.include_router(reagents.router)
 api_router.include_router(dashboard.router)
 api_router.include_router(validation_rules.router)
 api_router.include_router(automated_rules.router)

@@ -76,6 +76,8 @@ export function CatalogPicker({ selected, onChange }: CatalogPickerProps) {
     )
     for (const detail of details) next.set(detail.id, detail)
     onChange(next)
+    setSearch("")
+    setDebouncedSearch("")
   }
 
   const toggleEntry = async (entry: CatalogSummaryPublic) => {

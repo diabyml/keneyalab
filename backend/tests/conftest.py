@@ -7,7 +7,14 @@ from sqlmodel import Session, delete
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import Item, User
+from app.models import (
+    Item,
+    Reagent,
+    ReagentLot,
+    ReagentSettings,
+    ReagentStockMovement,
+    User,
+)
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
@@ -19,6 +26,10 @@ def db() -> Generator[Session, None, None]:
         init_db(session)
         yield session
         # Clean up in reverse dependency order
+        session.execute(delete(ReagentStockMovement))
+        session.execute(delete(ReagentLot))
+        session.execute(delete(Reagent))
+        session.execute(delete(ReagentSettings))
         session.execute(delete(UserRole))
         session.execute(delete(RolePermission))
         session.execute(delete(Item))

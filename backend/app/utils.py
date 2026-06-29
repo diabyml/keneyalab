@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import emails  # type: ignore[import-untyped]
+import httpx
 import jwt
 from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
@@ -55,6 +56,121 @@ def send_email(
     logger.info(f"send email result: {response}")
     if response.status_code != 250:
         raise RuntimeError(f"Échec de l'envoi SMTP : {response}")
+
+
+def send_whatsapp_text(*, recipient: str, body: str) -> dict[str, Any]:
+    if not settings.whatsapp_enabled:
+        raise RuntimeError("Configuration WhatsApp manquante")
+    assert settings.WHATSAPP_PHONE_NUMBER_ID is not None
+    assert settings.WHATSAPP_ACCESS_TOKEN is not None
+
+    url = (
+        f"https://graph.facebook.com/{settings.WHATSAPP_API_VERSION}/"
+        f"{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
+    )
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": recipient,
+        "type": "text",
+        "text": {"preview_url": True, "body": body},
+    }
+    response = httpx.post(
+        url,
+        json=payload,
+        headers={
+            "Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}",
+            "Content-Type": "application/json",
+        },
+        timeout=15,
+    )
+    logger.info("send whatsapp result: %s %s", response.status_code, response.text)
+    try:
+        data = response.json()
+    except ValueError:
+        data = {"raw": response.text}
+    if response.status_code >= 400:
+        error = data.get("error", data)
+        raise RuntimeError(f"Échec de l'envoi WhatsApp : {error}")
+    return data
+
+
+def _whatsapp_url(path: str) -> str:
+    assert settings.WHATSAPP_PHONE_NUMBER_ID is not None
+    return (
+        f"https://graph.facebook.com/{settings.WHATSAPP_API_VERSION}/"
+        f"{settings.WHATSAPP_PHONE_NUMBER_ID}/{path}"
+    )
+
+
+def _whatsapp_headers() -> dict[str, str]:
+    assert settings.WHATSAPP_ACCESS_TOKEN is not None
+    return {"Authorization": f"Bearer {settings.WHATSAPP_ACCESS_TOKEN}"}
+
+
+def upload_whatsapp_media(
+    *, filename: str, content_type: str, data: bytes
+) -> dict[str, Any]:
+    if not settings.whatsapp_enabled:
+        raise RuntimeError("Configuration WhatsApp manquante")
+    response = httpx.post(
+        _whatsapp_url("media"),
+        data={
+            "messaging_product": "whatsapp",
+            "type": content_type,
+        },
+        files={"file": (filename, data, content_type)},
+        headers=_whatsapp_headers(),
+        timeout=30,
+    )
+    logger.info("upload whatsapp media result: %s %s", response.status_code, response.text)
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = {"raw": response.text}
+    if response.status_code >= 400:
+        error = payload.get("error", payload)
+        raise RuntimeError(f"Échec du téléversement WhatsApp : {error}")
+    return payload
+
+
+def send_whatsapp_document(
+    *,
+    recipient: str,
+    media_id: str,
+    filename: str,
+    caption: str | None = None,
+) -> dict[str, Any]:
+    if not settings.whatsapp_enabled:
+        raise RuntimeError("Configuration WhatsApp manquante")
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": recipient,
+        "type": "document",
+        "document": {
+            "id": media_id,
+            "filename": filename,
+        },
+    }
+    if caption:
+        payload["document"]["caption"] = caption
+    response = httpx.post(
+        _whatsapp_url("messages"),
+        json=payload,
+        headers={
+            **_whatsapp_headers(),
+            "Content-Type": "application/json",
+        },
+        timeout=15,
+    )
+    logger.info("send whatsapp document result: %s %s", response.status_code, response.text)
+    try:
+        data = response.json()
+    except ValueError:
+        data = {"raw": response.text}
+    if response.status_code >= 400:
+        error = data.get("error", data)
+        raise RuntimeError(f"Échec de l'envoi WhatsApp : {error}")
+    return data
 
 
 def generate_test_email(email_to: str) -> EmailData:

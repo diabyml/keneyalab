@@ -9,8 +9,9 @@ import {
   Printer,
   Send,
   ShieldCheck,
+  SlidersHorizontal,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import type { ReportChannel, ReportPublic } from "@/client"
 import { ReportsService } from "@/client"
@@ -30,8 +31,15 @@ import { Skeleton } from "@/components/ui/skeleton"
 import useCustomToast from "@/hooks/useCustomToast"
 import { usePermission } from "@/hooks/usePermission"
 import { handleError } from "@/utils"
-import { ReportDocument } from "./ReportDocument"
-import { asReportSnapshot, asTemplateSnapshot } from "./reportTypes"
+import { ReportDocument, type ReportDocumentHandle } from "./ReportDocument"
+import { ReportRenderSettingsSheet } from "./ReportRenderSettingsSheet"
+import {
+  asReportSnapshot,
+  asTemplateSnapshot,
+  defaultReportRenderConfig,
+  normalizeReportRenderConfig,
+  type ReportRenderConfig,
+} from "./reportTypes"
 
 export function ReportViewer({ orderId }: { orderId: string }) {
   const queryClient = useQueryClient()
@@ -44,30 +52,22 @@ export function ReportViewer({ orderId }: { orderId: string }) {
     null,
   )
   const [recipient, setRecipient] = useState("")
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [reportReady, setReportReady] = useState(false)
+  const reportDocumentRef = useRef<ReportDocumentHandle>(null)
+  const [draftRenderConfig, setDraftRenderConfig] =
+    useState<ReportRenderConfig>(() => defaultReportRenderConfig())
 
   useEffect(() => {
-    const startReportPrint = () => {
-      document.body.dataset.printTarget = "report"
-    }
-    const finishReportPrint = () => {
-      if (document.body.dataset.printTarget === "report") {
-        delete document.body.dataset.printTarget
-      }
-    }
+    if (!orderId) return
+    setDraftRenderConfig(defaultReportRenderConfig())
+    setSelectedReport(null)
+    setReportReady(false)
+  }, [orderId])
 
-    window.addEventListener("beforeprint", startReportPrint)
-    window.addEventListener("afterprint", finishReportPrint)
-    return () => {
-      window.removeEventListener("beforeprint", startReportPrint)
-      window.removeEventListener("afterprint", finishReportPrint)
-      finishReportPrint()
-    }
+  const printReport = useCallback(() => {
+    reportDocumentRef.current?.print()
   }, [])
-
-  const printReport = () => {
-    document.body.dataset.printTarget = "report"
-    window.print()
-  }
 
   const previewQuery = useQuery({
     queryKey: ["report-preview", orderId],
@@ -81,7 +81,7 @@ export function ReportViewer({ orderId }: { orderId: string }) {
     mutationFn: () =>
       ReportsService.releaseOrderReport({
         orderId,
-        requestBody: { channel: "print" },
+        requestBody: { channel: "print", render_config: draftRenderConfig },
       }),
     onSuccess: (report) => {
       setSelectedReport(report)
@@ -95,6 +95,7 @@ export function ReportViewer({ orderId }: { orderId: string }) {
       const requestBody = {
         channel: deliveryChannel!,
         recipient: recipient.trim(),
+        ...(!selectedReport ? { render_config: draftRenderConfig } : {}),
       }
       return selectedReport
         ? ReportsService.deliverReport({
@@ -115,7 +116,9 @@ export function ReportViewer({ orderId }: { orderId: string }) {
           ? selectedReport
             ? "Rapport envoyé par e-mail"
             : "Rapport publié et envoyé par e-mail"
-          : "Demande d’envoi WhatsApp enregistrée",
+          : selectedReport
+            ? "Rapport envoyé par WhatsApp"
+            : "Rapport publié et envoyé par WhatsApp",
       )
       queryClient.invalidateQueries({ queryKey: ["order-reports", orderId] })
     },
@@ -133,9 +136,20 @@ export function ReportViewer({ orderId }: { orderId: string }) {
   const snapshot = activeReport?.snapshot ?? preview?.snapshot
   const templates =
     activeReport?.template_snapshot ?? preview?.template_snapshot
-  const accessionNumber = snapshot
-    ? asReportSnapshot(snapshot).order.accession_number
-    : ""
+  const reportSnapshot = useMemo(
+    () => (snapshot ? asReportSnapshot(snapshot) : null),
+    [snapshot],
+  )
+  const templateSnapshot = useMemo(
+    () => (templates ? asTemplateSnapshot(templates) : null),
+    [templates],
+  )
+  const renderConfig = activeReport
+    ? normalizeReportRenderConfig(
+        activeReport.render_config as Partial<ReportRenderConfig> | null,
+      )
+    : draftRenderConfig
+  const accessionNumber = reportSnapshot?.order.accession_number ?? ""
 
   if (previewQuery.isLoading) {
     return (
@@ -181,6 +195,21 @@ export function ReportViewer({ orderId }: { orderId: string }) {
                           : "E-mail en attente"}
                     </Badge>
                   )}
+                  {activeReport.channel === "whatsapp" && (
+                    <Badge
+                      variant={
+                        activeReport.delivery_status === "failed"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {activeReport.delivery_status === "sent"
+                        ? "WhatsApp envoyé"
+                        : activeReport.delivery_status === "failed"
+                          ? "Échec WhatsApp"
+                          : "WhatsApp en attente"}
+                    </Badge>
+                  )}
                 </>
               ) : (
                 <Badge variant="secondary">Aperçu</Badge>
@@ -207,10 +236,20 @@ export function ReportViewer({ orderId }: { orderId: string }) {
                 ))}
               </div>
             )}
-            <Button variant="outline" onClick={printReport}>
+            <Button
+              variant="outline"
+              disabled={!reportReady}
+              onClick={printReport}
+            >
               <Printer className="size-4" />
               Imprimer
             </Button>
+            {reportSnapshot && (
+              <Button variant="outline" onClick={() => setSettingsOpen(true)}>
+                <SlidersHorizontal className="size-4" />
+                Configurer le rendu
+              </Button>
+            )}
             {activeReport && !activeReport.is_voided && (
               <>
                 <Button
@@ -248,6 +287,14 @@ export function ReportViewer({ orderId }: { orderId: string }) {
                   <Mail className="size-4" />
                   Publier et envoyer
                 </Button>
+                <Button
+                  disabled={!preview?.can_release}
+                  variant="outline"
+                  onClick={() => setDeliveryChannel("whatsapp")}
+                >
+                  <MessageCircle className="size-4" />
+                  Publier via WhatsApp
+                </Button>
               </>
             )}
           </div>
@@ -267,11 +314,14 @@ export function ReportViewer({ orderId }: { orderId: string }) {
           </div>
         )}
 
-        {snapshot && templates ? (
+        {reportSnapshot && templateSnapshot ? (
           <ReportDocument
-            snapshot={asReportSnapshot(snapshot)}
-            templates={asTemplateSnapshot(templates)}
+            ref={reportDocumentRef}
+            snapshot={reportSnapshot}
+            templates={templateSnapshot}
+            renderConfig={renderConfig}
             voided={activeReport?.is_voided}
+            onReadyChange={setReportReady}
           />
         ) : (
           <p className="py-20 text-center text-muted-foreground">
@@ -279,6 +329,17 @@ export function ReportViewer({ orderId }: { orderId: string }) {
           </p>
         )}
       </div>
+
+      {reportSnapshot && (
+        <ReportRenderSettingsSheet
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          snapshot={reportSnapshot}
+          value={renderConfig}
+          onChange={setDraftRenderConfig}
+          readOnly={Boolean(activeReport)}
+        />
+      )}
 
       <Dialog
         open={Boolean(deliveryChannel)}
@@ -311,7 +372,7 @@ export function ReportViewer({ orderId }: { orderId: string }) {
             <p className="text-xs text-muted-foreground">
               {deliveryChannel === "email"
                 ? "Le compte rendu sera envoyé immédiatement par e-mail."
-                : "L’envoi WhatsApp restera en attente de configuration."}
+                : "Le compte rendu PDF sera envoyé immédiatement par WhatsApp si le service est configuré."}
             </p>
           </div>
           <DialogFooter>
