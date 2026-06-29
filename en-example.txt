@@ -1,0 +1,73 @@
+# Domain
+# This would be set to the production domain with an env var on deployment
+# used by Traefik to transmit traffic and acquire TLS certificates
+DOMAIN=localhost
+# To test the local Traefik config
+# DOMAIN=localhost.tiangolo.com
+
+# Used by the backend to generate links in emails to the frontend
+FRONTEND_HOST=http://localhost:5173
+# In staging and production, set this env var to the frontend host, e.g.
+# FRONTEND_HOST=https://dashboard.example.com
+
+# Environment: local, staging, production
+ENVIRONMENT=local
+
+PROJECT_NAME="KeneyaLab"
+STACK_NAME=full-stack-fastapi-project
+
+# Backend
+API_V1_STR=/api/v1
+ACCESS_TOKEN_EXPIRE_MINUTES=11520
+BACKEND_CORS_ORIGINS="http://localhost,http://localhost:5173,https://localhost,https://localhost:5173,http://localhost.tiangolo.com,http://localhost:5174"
+TRUSTED_PROXY_IPS=
+SECRET_KEY=changethis
+FIRST_SUPERUSER=admin@example.com
+FIRST_SUPERUSER_PASSWORD=testpass123
+
+# Emails
+SMTP_HOST=
+SMTP_USER=
+SMTP_PASSWORD=
+EMAILS_FROM_EMAIL=info@example.com
+SMTP_TLS=True
+SMTP_SSL=False
+SMTP_PORT=587
+EMAILS_FROM_NAME="KeneyaLab"
+EMAIL_RESET_TOKEN_EXPIRE_HOURS=48
+EMAIL_TEST_USER=test@example.com
+
+# whatsapp cloud api
+WHATSAPP_API_VERSION=v21.0
+WHATSAPP_PHONE_NUMBER_ID=your_meta_phone_number_id
+WHATSAPP_ACCESS_TOKEN=your_access_token
+
+# Postgres
+POSTGRES_SERVER=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=app
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+
+# MinIO
+MINIO_ENDPOINT=minio:9000
+MINIO_PUBLIC_ENDPOINT=localhost:9000
+MINIO_ACCESS_KEY=keneyalab
+MINIO_SECRET_KEY=keneyalab-secret
+MINIO_BUCKET=keneyalab-results
+MINIO_REGION=us-east-1
+MINIO_SECURE=False
+RESULT_IMAGE_MAX_BYTES=10485760
+RESULT_IMAGE_URL_EXPIRE_SECONDS=900
+
+# WhatsApp Cloud API
+# Create these in Meta for Developers > WhatsApp > API setup.
+WHATSAPP_API_VERSION=v21.0
+WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_ACCESS_TOKEN=
+
+SENTRY_DSN=
+
+# Configure these with your own Docker registry images
+DOCKER_IMAGE_BACKEND=backend
+DOCKER_IMAGE_FRONTEND=frontend
