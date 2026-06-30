@@ -1878,6 +1878,10 @@ export type ResultEntryValue = {
     instrument_id?: (string | null);
 };
 
+export type ResultInterpretationUpdate = {
+    interpretation_html?: (string | null);
+};
+
 export type ResultQueueItemPublic = {
     order_id: string;
     accession_number: string;
@@ -1960,6 +1964,9 @@ export type ResultWorkspacePublic = {
     patient_context_name?: (string | null);
     doctor_name?: (string | null);
     order_status: OrderStatus;
+    interpretation_html?: (string | null);
+    interpretation_updated_by_name?: (string | null);
+    interpretation_updated_at?: (string | null);
     tests?: Array<ResultTestWorkspacePublic>;
     total_count?: number;
     resulted_count?: number;
@@ -3737,6 +3744,13 @@ export type ResultsReadResultWorkspaceData = {
 };
 
 export type ResultsReadResultWorkspaceResponse = (ResultWorkspacePublic);
+
+export type ResultsUpdateResultInterpretationData = {
+    orderId: string;
+    requestBody: ResultInterpretationUpdate;
+};
+
+export type ResultsUpdateResultInterpretationResponse = (ResultWorkspacePublic);
 
 export type ResultsEnterResultsData = {
     orderId: string;

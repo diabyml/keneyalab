@@ -10930,6 +10930,25 @@ export const ResultEntryValueSchema = {
     title: 'ResultEntryValue'
 } as const;
 
+export const ResultInterpretationUpdateSchema = {
+    properties: {
+        interpretation_html: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50000
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Interpretation Html'
+        }
+    },
+    type: 'object',
+    title: 'ResultInterpretationUpdate'
+} as const;
+
 export const ResultQueueItemPublicSchema = {
     properties: {
         order_id: {
@@ -11313,6 +11332,40 @@ export const ResultWorkspacePublicSchema = {
         },
         order_status: {
             '$ref': '#/components/schemas/OrderStatus'
+        },
+        interpretation_html: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Interpretation Html'
+        },
+        interpretation_updated_by_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Interpretation Updated By Name'
+        },
+        interpretation_updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Interpretation Updated At'
         },
         tests: {
             items: {

@@ -125,7 +125,7 @@ export function EntryDetailSheet({
                   />
                 </Card>
 
-                <div className="grid divide-y rounded-md border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                <div className="divide-y rounded-md border">
                   <Metric
                     label="Commission calculée"
                     value={entry.commission_amount}

@@ -186,15 +186,26 @@ def _apply_render_config(
     return rendered_snapshot, normalized_config
 
 ALLOWED_TAGS = {
+    "a",
+    "blockquote",
     "div",
+    "h2",
+    "h3",
     "span",
     "p",
     "strong",
+    "b",
     "em",
+    "i",
+    "u",
+    "s",
     "small",
     "section",
     "header",
     "footer",
+    "ul",
+    "ol",
+    "li",
     "table",
     "thead",
     "tbody",
@@ -206,11 +217,74 @@ ALLOWED_TAGS = {
     "hr",
 }
 VOID_TAGS = {"img", "br", "hr"}
-ALLOWED_ATTRS = {"class", "alt", "src", "width", "height", "colspan", "rowspan"}
+ALLOWED_ATTRS = {
+    "class",
+    "alt",
+    "src",
+    "width",
+    "height",
+    "colspan",
+    "rowspan",
+    "href",
+    "target",
+    "rel",
+    "style",
+    "data-variable-kind",
+    "data-variable-id",
+    "data-variable-field",
+}
+ALLOWED_TEXT_ALIGN = {"left", "center", "right", "justify"}
 FORBIDDEN_JS = re.compile(
     r"\b(import|export|require|fetch|XMLHttpRequest|WebSocket|EventSource|"
     r"localStorage|sessionStorage|document\.cookie|window\.parent|window\.top)\b"
 )
+
+
+def _safe_attr(name: str, value: str) -> tuple[str, str] | None:
+    if name not in ALLOWED_ATTRS:
+        return None
+    if name == "src" and not (
+        value.startswith("https://")
+        or value.startswith("data:image/")
+        or value.startswith("{{")
+    ):
+        return None
+    if name == "href" and not (
+        value.startswith("https://")
+        or value.startswith("http://")
+        or value.startswith("mailto:")
+        or value.startswith("tel:")
+    ):
+        return None
+    if name == "target" and value != "_blank":
+        return None
+    if name == "rel":
+        return name, "noopener noreferrer"
+    if name == "style":
+        match = re.fullmatch(r"\s*text-align\s*:\s*([a-z]+)\s*;?\s*", value, re.I)
+        if not match:
+            return None
+        align = match.group(1).lower()
+        if align not in ALLOWED_TEXT_ALIGN:
+            return None
+        return name, f"text-align: {align}"
+    if name.startswith("data-variable-"):
+        cleaned = re.sub(r"[^a-zA-Z0-9_.:-]", "", value)
+        return name, cleaned
+    return name, value
+
+
+def _attrs_html(attrs: list[tuple[str, str | None]]) -> str:
+    safe_attrs = []
+    for name, value in attrs:
+        if value is None:
+            continue
+        safe = _safe_attr(name.lower(), value)
+        if safe is None:
+            continue
+        safe_name, safe_value = safe
+        safe_attrs.append(f'{safe_name}="{escape(safe_value, quote=True)}"')
+    return f" {' '.join(safe_attrs)}" if safe_attrs else ""
 
 
 class _SafeHTMLParser(HTMLParser):
@@ -229,19 +303,7 @@ class _SafeHTMLParser(HTMLParser):
             return
         if tag not in ALLOWED_TAGS:
             return
-        safe_attrs = []
-        for name, value in attrs:
-            if name not in ALLOWED_ATTRS or value is None:
-                continue
-            if name == "src" and not (
-                value.startswith("https://")
-                or value.startswith("data:image/")
-                or value.startswith("{{")
-            ):
-                continue
-            safe_attrs.append(f'{name}="{escape(value, quote=True)}"')
-        suffix = f" {' '.join(safe_attrs)}" if safe_attrs else ""
-        self.parts.append(f"<{tag}{suffix}>")
+        self.parts.append(f"<{tag}{_attrs_html(attrs)}>")
 
     def handle_endtag(self, tag: str) -> None:
         if tag in {"script", "style", "iframe", "object"} and self.blocked_depth:
@@ -261,6 +323,123 @@ def sanitize_html(value: str) -> str:
     parser = _SafeHTMLParser()
     parser.feed(value)
     return "".join(parser.parts)
+
+
+class _PlainTextHTMLParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in {"br", "p", "div", "section", "h2", "h3", "li", "tr"}:
+            self.parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        cleaned = data.strip()
+        if cleaned:
+            self.parts.append(cleaned)
+
+
+def html_to_plain_text(value: str | None) -> str:
+    if not value:
+        return ""
+    parser = _PlainTextHTMLParser()
+    parser.feed(value)
+    return re.sub(r"\n{3,}", "\n\n", " ".join(parser.parts).replace(" \n ", "\n")).strip()
+
+
+def _iter_tests(snapshot: dict[str, Any]):
+    for category in snapshot.get("categories") or []:
+        for test in category.get("tests") or []:
+            yield category, test
+
+
+def _iter_analytes(snapshot: dict[str, Any]):
+    for category, test in _iter_tests(snapshot):
+        for analyte in test.get("analytes") or []:
+            yield category, test, analyte
+
+
+def _variable_value(
+    snapshot: dict[str, Any],
+    *,
+    kind: str,
+    item_id: str,
+    field: str,
+) -> str:
+    if kind in {"order", "patient", "doctor", "totals"}:
+        source = snapshot.get(kind) or {}
+        return str(source.get(field) or "")
+    if kind == "test":
+        for category, test in _iter_tests(snapshot):
+            if item_id in {
+                str(test.get("order_item_id") or ""),
+                str(test.get("catalog_id") or ""),
+            }:
+                if field == "category_name":
+                    return str(category.get("name") or "")
+                return str(test.get(field) or "")
+    if kind == "analyte":
+        for _category, _test, analyte in _iter_analytes(snapshot):
+            if item_id == str(analyte.get("analyte_id") or ""):
+                if field == "result_value" and not analyte.get("result_value"):
+                    return "Image jointe au résultat" if analyte.get("image_url") else ""
+                return str(analyte.get(field) or "")
+    return ""
+
+
+class _InterpretationRenderer(HTMLParser):
+    def __init__(self, snapshot: dict[str, Any]) -> None:
+        super().__init__(convert_charrefs=True)
+        self.snapshot = snapshot
+        self.parts: list[str] = []
+        self.variable_depth = 0
+
+    def handle_starttag(
+        self, tag: str, attrs: list[tuple[str, str | None]]
+    ) -> None:
+        if self.variable_depth:
+            self.variable_depth += 1
+            return
+        attr_map = {name: value or "" for name, value in attrs}
+        if tag == "span" and attr_map.get("data-variable-kind"):
+            self.parts.append(
+                escape(
+                    _variable_value(
+                        self.snapshot,
+                        kind=attr_map.get("data-variable-kind", ""),
+                        item_id=attr_map.get("data-variable-id", ""),
+                        field=attr_map.get("data-variable-field", ""),
+                    )
+                )
+            )
+            self.variable_depth = 1
+            return
+        if tag in ALLOWED_TAGS:
+            self.parts.append(f"<{tag}{_attrs_html(attrs)}>")
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.variable_depth:
+            self.variable_depth -= 1
+            return
+        if tag in ALLOWED_TAGS and tag not in VOID_TAGS:
+            self.parts.append(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        if not self.variable_depth:
+            self.parts.append(escape(data))
+
+
+def render_interpretation_html(
+    html: str | None, snapshot: dict[str, Any]
+) -> tuple[str | None, str | None]:
+    sanitized = sanitize_html(html or "")
+    if not html_to_plain_text(sanitized) and "data-variable-kind" not in sanitized:
+        return None, None
+    parser = _InterpretationRenderer(snapshot)
+    parser.feed(sanitized)
+    rendered = "".join(parser.parts)
+    return rendered, html_to_plain_text(rendered)
 
 
 def validate_css(value: str) -> str:
@@ -872,6 +1051,20 @@ def _build_snapshot(
             "verified": workspace.verified_count,
         },
     }
+    interpretation_html, interpretation_text = render_interpretation_html(
+        workspace.interpretation_html,
+        snapshot,
+    )
+    snapshot["interpretation"] = {
+        "html": interpretation_html,
+        "plain_text": interpretation_text,
+        "updated_at": (
+            workspace.interpretation_updated_at.isoformat()
+            if workspace.interpretation_updated_at
+            else None
+        ),
+        "updated_by_name": workspace.interpretation_updated_by_name,
+    }
     template_snapshot = {
         "header": _published_component_snapshot(
             session=session, component_id=settings.default_header_id, label="d'en-tête"
@@ -974,6 +1167,15 @@ def get_sample_preview(*, session: Session) -> ReportPreviewPublic:
                 ],
             }
         ],
+        "interpretation": {
+            "html": (
+                "<section><h2>Interprétation</h2>"
+                "<p>Anémie légère à confronter au contexte clinique.</p></section>"
+            ),
+            "plain_text": "Interprétation\nAnémie légère à confronter au contexte clinique.",
+            "updated_at": "2026-06-18T10:45:00Z",
+            "updated_by_name": "Dr Fatou Keita",
+        },
         "totals": {"results": 1, "verified": 1},
     }
     templates = {
@@ -1084,6 +1286,16 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
             f"<h2>{escape(str(category.get('name') or 'Résultats'))}</h2>"
             f"{''.join(test_sections)}</section>"
         )
+    interpretation = dict(snapshot.get("interpretation") or {})
+    interpretation_html = str(interpretation.get("html") or "")
+    interpretation_section = (
+        '<section class="interpretation-section">'
+        "<h2>Interprétation</h2>"
+        f'<div class="interpretation-content">{interpretation_html}</div>'
+        "</section>"
+        if interpretation_html
+        else ""
+    )
 
     note_html = (
         '<div style="margin:16px 0;padding:12px;background:#f8fafc;'
@@ -1110,6 +1322,11 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
     td {{ font-size:13px; }}
     .meta {{ margin:22px 0; padding:16px; background:#f8fafc; }}
     .muted {{ color:#64748b; font-size:12px; }}
+    .interpretation-section {{ margin-top:24px; }}
+    .interpretation-content {{ font-size:13px; line-height:1.5; }}
+    .interpretation-content table {{ border-collapse:collapse; width:100%; }}
+    .interpretation-content ul,
+    .interpretation-content ol {{ padding-left:20px; }}
   </style>
 </head>
 <body>
@@ -1124,6 +1341,7 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
     </div>
     {note_html}
     {''.join(category_sections)}
+    {interpretation_section}
     <p class="muted">
       Ce message contient des données médicales confidentielles. S'il ne vous est
       pas destiné, veuillez le supprimer et prévenir l'expéditeur.
@@ -1285,84 +1503,17 @@ def _report_pdf_lines(report: Report) -> list[tuple[str, int]]:
 
 
 def _render_report_pdf(report: Report) -> bytes:
-    lines = _report_pdf_lines(report)
-    pages: list[list[tuple[str, int]]] = []
-    current: list[tuple[str, int]] = []
-    y = 790
-    for text, size in lines:
-        if text == "\f":
-            if current:
-                pages.append(current)
-                current = []
-            y = 790
-            continue
-        line_height = max(size + 5, 12)
-        if y - line_height < 48 and current:
-            pages.append(current)
-            current = []
-            y = 790
-        current.append((text, size))
-        y -= line_height
-    if current:
-        pages.append(current)
+    from weasyprint import CSS, HTML
 
-    objects: dict[int, bytes] = {}
-    page_count = len(pages)
-    font_obj_id = 3
-    page_obj_ids = [4 + index * 2 for index in range(page_count)]
-    content_obj_ids = [5 + index * 2 for index in range(page_count)]
-    kids = b" ".join(f"{obj_id} 0 R".encode() for obj_id in page_obj_ids)
-    objects[1] = b"<< /Type /Catalog /Pages 2 0 R >>"
-    objects[2] = (
-        b"<< /Type /Pages /Kids [" + kids + b"] /Count " + str(page_count).encode() + b" >>"
+    pdf_css = """
+      @page { size: A4 portrait; margin: 14mm; }
+      body { background: #fff !important; }
+      .page { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+      table, tr, img { break-inside: avoid; page-break-inside: avoid; }
+    """
+    return HTML(string=_report_email_html(report)).write_pdf(
+        stylesheets=[CSS(string=pdf_css)]
     )
-    objects[font_obj_id] = b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
-
-    for index, page_lines in enumerate(pages):
-        page_id = page_obj_ids[index]
-        content_id = content_obj_ids[index]
-        stream = b"BT\n50 790 Td\n"
-        previous_size = 9
-        for text, size in page_lines:
-            stream += _pdf_stream_line(text, font_size=size)
-            line_height = max(size + 5, 12)
-            stream += f"0 -{line_height} Td\n".encode()
-            previous_size = size
-        if previous_size:
-            stream += b"ET\n"
-        objects[content_id] = (
-            b"<< /Length "
-            + str(len(stream)).encode()
-            + b" >>\nstream\n"
-            + stream
-            + b"endstream"
-        )
-        objects[page_id] = (
-            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
-            b"/Resources << /Font << /F1 "
-            + str(font_obj_id).encode()
-            + b" 0 R >> >> /Contents "
-            + str(content_id).encode()
-            + b" 0 R >>"
-        )
-
-    output = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
-    offsets = {0: 0}
-    for obj_id in sorted(objects):
-        offsets[obj_id] = len(output)
-        output.extend(f"{obj_id} 0 obj\n".encode())
-        output.extend(objects[obj_id])
-        output.extend(b"\nendobj\n")
-    xref_offset = len(output)
-    output.extend(f"xref\n0 {max(objects) + 1}\n".encode())
-    output.extend(b"0000000000 65535 f \n")
-    for obj_id in range(1, max(objects) + 1):
-        output.extend(f"{offsets[obj_id]:010d} 00000 n \n".encode())
-    output.extend(
-        f"trailer\n<< /Size {max(objects) + 1} /Root 1 0 R >>\n"
-        f"startxref\n{xref_offset}\n%%EOF\n".encode()
-    )
-    return bytes(output)
 
 
 def _report_whatsapp_caption(report: Report, recipient_note: str | None = None) -> str:

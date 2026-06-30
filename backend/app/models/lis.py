@@ -1660,6 +1660,13 @@ class Order(OrderBase, table=True):
         sa_column=Column(pg_enum(OrderStatus, "order_status"), nullable=False),
     )
     revision_number: int = Field(default=1, ge=1)
+    interpretation_html: str | None = Field(default=None, sa_column=Column(Text))
+    interpretation_updated_by_id: uuid.UUID | None = Field(
+        default=None, foreign_key="user.id"
+    )
+    interpretation_updated_at: datetime | None = Field(
+        default=None, sa_type=TIMESTAMPTZ
+    )
     created_by: uuid.UUID = Field(foreign_key="user.id")
     created_at: datetime = Field(
         default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
@@ -2204,6 +2211,9 @@ class ResultWorkspacePublic(SQLModel):
     patient_context_name: str | None = None
     doctor_name: str | None = None
     order_status: OrderStatus
+    interpretation_html: str | None = None
+    interpretation_updated_by_name: str | None = None
+    interpretation_updated_at: datetime | None = None
     tests: list[ResultTestWorkspacePublic] = Field(default_factory=list)
     total_count: int = 0
     resulted_count: int = 0
@@ -2222,6 +2232,10 @@ class ResultSubmissionPublic(SQLModel):
         default_factory=list
     )
     reflex_outcomes: list[ResultReflexOutcomePublic] = Field(default_factory=list)
+
+
+class ResultInterpretationUpdate(SQLModel):
+    interpretation_html: str | None = Field(default=None, max_length=50_000)
 
 
 class ResultVerificationSkipPublic(SQLModel):

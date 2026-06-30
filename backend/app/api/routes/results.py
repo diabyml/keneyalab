@@ -16,6 +16,7 @@ from app.models import (
     ResultCommentDetailPublic,
     ResultCommentRequest,
     ResultCorrectionRequest,
+    ResultInterpretationUpdate,
     ResultQueuePublic,
     ResultSubmissionPublic,
     ResultWorkspacePublic,
@@ -75,6 +76,26 @@ def read_result_workspace(
             resource="audit",
             action="view",
         ),
+    )
+
+
+@router.put(
+    "/orders/{order_id}/interpretation",
+    dependencies=[Depends(require_permission("results", "edit"))],
+    response_model=ResultWorkspacePublic,
+)
+def update_result_interpretation(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    order_id: uuid.UUID,
+    request_in: ResultInterpretationUpdate,
+) -> Any:
+    return result_service.update_interpretation(
+        session=session,
+        order_id=order_id,
+        request=request_in,
+        user_id=current_user.id,
     )
 
 

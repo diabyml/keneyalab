@@ -21,6 +21,7 @@ from app.models.lis import (
     CriticalNotificationCreate,
     GenderType,
     Invoice,
+    Order,
     OrderCatalogItemAnalyte,
     OrderCreate,
     OrderItem,
@@ -33,6 +34,7 @@ from app.models.lis import (
     ResultCommentRequest,
     ResultCorrectionRequest,
     ResultEntryValue,
+    ResultInterpretationUpdate,
     ResultStatus,
     SpecimenType,
 )
@@ -44,6 +46,7 @@ from app.services.result import (
     enter_results,
     get_queue,
     get_workspace,
+    update_interpretation,
     upload_image_result,
     verify_order,
 )
@@ -264,6 +267,69 @@ def test_result_entry_requires_collection_and_completes_after_verification(
     verified_item = db.get(OrderItem, item.id)
     assert result is not None and result.status == ResultStatus.verified
     assert verified_item is not None and verified_item.order_id == order.id
+
+
+def test_result_entry_remains_available_for_completed_orders(
+    db: Session,
+) -> None:
+    order, user, item, specimen, analyte = _result_order(db)
+    collect_all(session=db, order_id=order.id, collected_by_id=user.id)
+    db_order = db.get(Order, order.id)
+    assert db_order is not None
+    db_order.status = OrderStatus.completed
+    db.add(db_order)
+    db.commit()
+
+    submission = enter_results(
+        session=db,
+        order_id=order.id,
+        request=ResultBulkEntryRequest(
+            order_item_id=item.id,
+            values=[
+                ResultEntryValue(
+                    analyte_id=analyte.id,
+                    specimen_id=specimen.id,
+                    result_value="12.5",
+                )
+            ],
+        ),
+        user_id=user.id,
+    )
+
+    assert submission.saved_result_ids
+    assert submission.workspace.order_status == OrderStatus.in_progress
+    result = db.get(AnalyteResult, submission.saved_result_ids[0])
+    assert result is not None
+    assert result.result_value == "12.5"
+    assert result.status == ResultStatus.resulted
+
+
+def test_update_result_interpretation_sanitizes_and_audits(db: Session) -> None:
+    order, user, _item, _specimen, _analyte = _result_order(db)
+    updated = update_interpretation(
+        session=db,
+        order_id=order.id,
+        request=ResultInterpretationUpdate(
+            interpretation_html=(
+                '<p onclick="alert(1)">Conclusion '
+                '<span data-variable-kind="patient" data-variable-field="name">'
+                "patient</span></p><script>alert(1)</script>"
+            )
+        ),
+        user_id=user.id,
+    )
+
+    assert "script" not in (updated.interpretation_html or "")
+    assert "onclick" not in (updated.interpretation_html or "")
+    assert 'data-variable-kind="patient"' in (updated.interpretation_html or "")
+    assert updated.interpretation_updated_by_name == (user.full_name or user.email)
+    audit = db.exec(
+        select(AuditLog).where(
+            AuditLog.table_name == "orders",
+            AuditLog.record_id == order.id,
+        )
+    ).all()[-1]
+    assert audit.new_values["interpretation_html"] == updated.interpretation_html
 
 
 def test_image_result_upload_updates_workspace(db: Session, monkeypatch) -> None:

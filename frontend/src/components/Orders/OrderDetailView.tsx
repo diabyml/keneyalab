@@ -239,9 +239,12 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
             )}
             {canEnterResults &&
               !isCancelled &&
-              ["collected", "in_progress", "partial_results"].includes(
-                order.status,
-              ) && (
+              [
+                "collected",
+                "in_progress",
+                "partial_results",
+                "completed",
+              ].includes(order.status) && (
                 <Button asChild>
                   <Link to="/results/$orderId" params={{ orderId }}>
                     <Microscope className="size-4" />

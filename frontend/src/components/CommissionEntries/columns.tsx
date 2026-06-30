@@ -53,13 +53,13 @@ export function getCommissionEntryColumns(
     helper.accessor("commission_amount", {
       header: "Commission",
       cell: ({ getValue }) => (
-        <span className="tabular-nums">{formatMoney(getValue())}</span>
+        <span className="text-xs tabular-nums">{formatMoney(getValue())}</span>
       ),
     }),
     helper.accessor("total_adjustments", {
       header: "Ajustements",
       cell: ({ row }) => (
-        <div className="text-right tabular-nums">
+        <div className="text-right text-xs tabular-nums">
           <div>{formatMoney(row.original.total_adjustments)}</div>
           <div className="text-xs text-muted-foreground">
             {row.original.adjustment_count} écriture
@@ -71,7 +71,7 @@ export function getCommissionEntryColumns(
     helper.accessor("outstanding_amount", {
       header: "Solde ouvert",
       cell: ({ getValue }) => (
-        <span className="font-medium tabular-nums">
+        <span className="text-xs font-medium tabular-nums">
           {formatMoney(getValue())}
         </span>
       ),

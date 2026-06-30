@@ -55,6 +55,12 @@ export type ReportSnapshot = {
   }
   lab: Record<string, unknown>
   categories: ReportCategory[]
+  interpretation?: {
+    html?: string | null
+    plain_text?: string | null
+    updated_at?: string | null
+    updated_by_name?: string | null
+  } | null
   totals: { results: number; verified: number }
 }
 

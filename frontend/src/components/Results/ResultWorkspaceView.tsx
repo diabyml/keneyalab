@@ -21,8 +21,14 @@ import type {
   ResultAnalyteWorkspacePublic,
   ResultTestWorkspacePublic,
   ResultVerificationSkipPublic,
+  ResultWorkspacePublic,
 } from "@/client"
 import { OrdersService, ResultsService } from "@/client"
+import {
+  RichTextEditor,
+  type RichTextVariable,
+  type RichTextVariableGroup,
+} from "@/components/Common/RichTextEditor"
 import {
   AddAnalyteControl,
   TestAnalyteActionsMenu,
@@ -78,6 +84,8 @@ export function ResultWorkspaceView({ orderId }: { orderId: string }) {
   const canViewReports = usePermission("reports", "view")
   const [values, setValues] = useState<Record<string, string>>({})
   const [dirty, setDirty] = useState<Set<string>>(new Set())
+  const [interpretationHtml, setInterpretationHtml] = useState("")
+  const [interpretationDirty, setInterpretationDirty] = useState(false)
   const [criticalResultId, setCriticalResultId] = useState<string | null>(null)
   const [commentResultId, setCommentResultId] = useState<string | null>(null)
   const [comment, setComment] = useState("")
@@ -109,16 +117,18 @@ export function ResultWorkspaceView({ orderId }: { orderId: string }) {
     }
     setValues(initial)
     setDirty(new Set())
+    setInterpretationHtml(query.data.interpretation_html ?? "")
+    setInterpretationDirty(false)
   }, [query.data])
 
   useEffect(() => {
     const protect = (event: BeforeUnloadEvent) => {
-      if (!dirty.size) return
+      if (!dirty.size && !interpretationDirty) return
       event.preventDefault()
     }
     window.addEventListener("beforeunload", protect)
     return () => window.removeEventListener("beforeunload", protect)
-  }, [dirty.size])
+  }, [dirty.size, interpretationDirty])
 
   const saveMutation = useMutation({
     mutationFn: (test: ResultTestWorkspacePublic) =>
@@ -224,6 +234,23 @@ export function ResultWorkspaceView({ orderId }: { orderId: string }) {
     },
     onError: handleError.bind(showErrorToast),
   })
+  const interpretationMutation = useMutation({
+    mutationFn: () =>
+      ResultsService.updateResultInterpretation({
+        orderId,
+        requestBody: {
+          interpretation_html: interpretationHtml,
+        },
+      }),
+    onSuccess: (workspace) => {
+      showSuccessToast("Interprétation enregistrée")
+      setInterpretationHtml(workspace.interpretation_html ?? "")
+      setInterpretationDirty(false)
+      queryClient.setQueryData(["result-workspace", orderId], workspace)
+      queryClient.invalidateQueries({ queryKey: ["report-preview", orderId] })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
   const customizationMutation = useMutation({
     mutationFn: ({
       test,
@@ -297,6 +324,10 @@ export function ResultWorkspaceView({ orderId }: { orderId: string }) {
     ({ test, analyte }) =>
       analyte.status !== "verified" &&
       (Boolean(analyte.result_id) || dirty.has(analyteKey(test, analyte))),
+  )
+  const interpretationVariables = useMemo(
+    () => (workspace ? buildInterpretationVariableGroups(workspace) : []),
+    [workspace],
   )
   const moveToNextResultEditor = (currentEditor: HTMLElement) => {
     const editors = Array.from(
@@ -669,6 +700,45 @@ export function ResultWorkspaceView({ orderId }: { orderId: string }) {
             </section>
           )
         })}
+        <section className="overflow-hidden rounded-md border">
+          <div className="flex min-h-11 flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-3 py-2">
+            <div>
+              <h2 className="text-sm font-semibold">Interprétation</h2>
+              {workspace.interpretation_updated_by_name && (
+                <p className="text-xs text-muted-foreground">
+                  Dernière mise à jour par{" "}
+                  {workspace.interpretation_updated_by_name}
+                </p>
+              )}
+            </div>
+            {canEdit && (
+              <LoadingButton
+                size="sm"
+                loading={interpretationMutation.isPending}
+                disabled={
+                  !interpretationDirty || interpretationMutation.isPending
+                }
+                onClick={() => interpretationMutation.mutate()}
+              >
+                <Save className="size-4" />
+                Enregistrer l'interprétation
+              </LoadingButton>
+            )}
+          </div>
+          <RichTextEditor
+            value={interpretationHtml}
+            onChange={(value) => {
+              setInterpretationHtml(value)
+              setInterpretationDirty(
+                value !== (workspace.interpretation_html ?? ""),
+              )
+            }}
+            placeholder="Rédiger l'interprétation globale du compte rendu…"
+            minHeightClassName="min-h-56"
+            variables={interpretationVariables}
+            disabled={!canEdit}
+          />
+        </section>
       </div>
       <CriticalEscalationDialog
         resultId={criticalResultId}
@@ -1129,6 +1199,188 @@ function analyteKey(
   analyte: ResultAnalyteWorkspacePublic,
 ) {
   return `${test.order_item_id}:${analyte.analyte_id}:${analyte.specimen_id}`
+}
+
+function variable(
+  label: string,
+  kind: string,
+  field: string,
+  id?: string | null,
+  value?: RichTextVariable["value"],
+  description?: string,
+): RichTextVariable {
+  return { label, kind, field, id, value, description }
+}
+
+function buildInterpretationVariableGroups(
+  workspace: ResultWorkspacePublic,
+): RichTextVariableGroup[] {
+  const totalCount = workspace.total_count ?? 0
+  const verifiedCount = workspace.verified_count ?? 0
+  const groups: RichTextVariableGroup[] = [
+    {
+      label: "Demande",
+      items: [
+        variable(
+          "N° demande",
+          "order",
+          "accession_number",
+          null,
+          workspace.accession_number,
+        ),
+        variable("Statut", "order", "status", null, workspace.order_status),
+        variable(
+          "Révision",
+          "order",
+          "revision_number",
+          null,
+          workspace.revision_number,
+        ),
+        variable("Total résultats", "totals", "results", null, totalCount),
+        variable(
+          "Résultats vérifiés",
+          "totals",
+          "verified",
+          null,
+          verifiedCount,
+        ),
+      ],
+    },
+    {
+      label: "Patient",
+      items: [
+        variable(
+          "Nom du patient",
+          "patient",
+          "name",
+          null,
+          workspace.patient_name,
+        ),
+        variable(
+          "Identifiant patient",
+          "patient",
+          "identifier",
+          null,
+          workspace.patient_identifier,
+        ),
+        variable(
+          "Âge",
+          "patient",
+          "age",
+          null,
+          formatPatientAge(workspace.patient_date_of_birth),
+        ),
+        variable(
+          "Sexe",
+          "patient",
+          "gender_label",
+          null,
+          workspace.patient_gender,
+        ),
+        variable(
+          "Contexte",
+          "patient",
+          "context",
+          null,
+          workspace.patient_context_name,
+        ),
+      ],
+    },
+    {
+      label: "Prescripteur",
+      items: [
+        variable(
+          "Nom du prescripteur",
+          "doctor",
+          "name",
+          null,
+          workspace.doctor_name,
+        ),
+        variable("Titre", "doctor", "title"),
+        variable("Provenance", "doctor", "provenance"),
+      ],
+    },
+  ]
+
+  const tests = workspace.tests ?? []
+  if (tests.length) {
+    groups.push({
+      label: "Tests",
+      items: tests.flatMap((test) => [
+        variable(
+          `${test.catalog_name} - nom`,
+          "test",
+          "catalog_name",
+          test.order_item_id,
+          test.catalog_name,
+        ),
+        variable(
+          `${test.catalog_name} - code`,
+          "test",
+          "catalog_code",
+          test.order_item_id,
+          test.catalog_code,
+        ),
+        variable(
+          `${test.catalog_name} - catégorie`,
+          "test",
+          "category_name",
+          test.order_item_id,
+          test.category_name,
+        ),
+      ]),
+    })
+    groups.push({
+      label: "Résultats",
+      items: tests.flatMap((test) =>
+        (test.analytes ?? []).flatMap((analyte) => [
+          variable(
+            `${analyte.analyte_name} - résultat`,
+            "analyte",
+            "result_value",
+            analyte.analyte_id,
+            analyte.result_value,
+            test.catalog_name,
+          ),
+          variable(
+            `${analyte.analyte_name} - unité`,
+            "analyte",
+            "unit_name",
+            analyte.analyte_id,
+            analyte.unit_name,
+            test.catalog_name,
+          ),
+          variable(
+            `${analyte.analyte_name} - référence`,
+            "analyte",
+            "reference_text",
+            analyte.analyte_id,
+            analyte.reference_text,
+            test.catalog_name,
+          ),
+        ]),
+      ),
+    })
+  }
+
+  return groups
+}
+
+function formatPatientAge(dateOfBirth: string | null | undefined) {
+  if (!dateOfBirth) return null
+  const birthDate = new Date(`${dateOfBirth}T00:00:00`)
+  if (Number.isNaN(birthDate.getTime())) return null
+
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const birthdayThisYear = new Date(
+    today.getFullYear(),
+    birthDate.getMonth(),
+    birthDate.getDate(),
+  )
+  if (today < birthdayThisYear) age -= 1
+
+  return age >= 0 ? `${age} ans` : null
 }
 
 function imageUploadDisabledReason(

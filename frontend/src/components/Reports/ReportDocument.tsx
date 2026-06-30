@@ -7,20 +7,19 @@ import {
   useRef,
   useState,
 } from "react"
-
-import { compileReportRenderer } from "./SandboxRenderer"
 import type {
+  RendererTemplate,
   ReportCategory,
   ReportRenderConfig,
   ReportSnapshot,
   ReportTemplateSnapshot,
-  RendererTemplate,
 } from "./reportTypes"
 import {
   applyReportRenderConfig,
   normalizeReportRenderConfig,
   reportCategoryKey,
 } from "./reportTypes"
+import { compileReportRenderer } from "./SandboxRenderer"
 
 type ReportDocumentProps = {
   snapshot: ReportSnapshot
@@ -81,7 +80,7 @@ const REPORT_DOCUMENT_BASE_STYLES = `
     width: 210mm;
     min-height: 297mm;
     margin: 0 auto 24px;
-    padding: 0 14mm 14mm;
+    padding: 14mm 14mm 14mm;
     background: #fff;
     box-shadow: 0 1px 8px rgb(15 23 42 / 0.16);
     color: #000;
@@ -89,6 +88,40 @@ const REPORT_DOCUMENT_BASE_STYLES = `
 
   .report-main {
     min-height: 190mm;
+  }
+
+  .report-interpretation {
+    margin-top: 10px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-interpretation h2 {
+    margin: 10px 0 6px;
+    border-bottom: 1px solid #cbd5e1;
+    color: #0f172a;
+    font-size: 12px;
+  }
+
+  .report-interpretation-content {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .report-interpretation-content table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .report-interpretation-content td,
+  .report-interpretation-content th {
+    border: 1px solid #374151;
+    padding: 3px 5px;
+  }
+
+  .report-interpretation-content ul,
+  .report-interpretation-content ol {
+    padding-left: 18px;
   }
 
   .report-category-section {
@@ -257,6 +290,7 @@ function buildReportDocumentHtml({
   details,
   footer,
   componentCss,
+  interpretationHtml,
   voided,
 }: {
   entries: CategoryRenderEntry[]
@@ -265,6 +299,7 @@ function buildReportDocumentHtml({
   details: string
   footer: string
   componentCss: string
+  interpretationHtml: string
   voided: boolean
 }) {
   const categories = entries.map((entry) => ({
@@ -424,9 +459,20 @@ function buildReportDocumentHtml({
       return section;
     }
 
+    function renderInterpretation() {
+      const html = ${safeJson(interpretationHtml)};
+      if (!html) return null;
+      const section = document.createElement("section");
+      section.className = "report-interpretation";
+      section.innerHTML = '<h2>Interprétation</h2><div class="report-interpretation-content">' + html + '</div>';
+      return section;
+    }
+
     try {
       const main = document.getElementById("report-main");
       categories.forEach((entry) => main.append(renderCategory(entry)));
+      const interpretation = renderInterpretation();
+      if (interpretation) main.append(interpretation);
       if ("ResizeObserver" in window) {
         const observer = new ResizeObserver(scheduleHeightReports);
         observer.observe(document.documentElement);
@@ -497,7 +543,8 @@ export const ReportDocument = forwardRef<
         return {
           key,
           category,
-          renderer: templates.renderers[key] ?? templates.renderers.uncategorized,
+          renderer:
+            templates.renderers[key] ?? templates.renderers.uncategorized,
           pageBreak:
             normalizedRenderConfig.category_page_breaks[key] === true &&
             index > 0,
@@ -530,6 +577,7 @@ export const ReportDocument = forwardRef<
       templates.footer.css_source,
     ],
   )
+  const interpretationHtml = renderedSnapshot.interpretation?.html ?? ""
 
   useImperativeHandle(
     ref,
@@ -551,8 +599,11 @@ export const ReportDocument = forwardRef<
     onReadyChange?.(false)
 
     const rendererJobs = entries
-      .filter((entry): entry is CategoryRenderEntry & { renderer: RendererTemplate } =>
-        Boolean(entry.renderer),
+      .filter(
+        (
+          entry,
+        ): entry is CategoryRenderEntry & { renderer: RendererTemplate } =>
+          Boolean(entry.renderer),
       )
       .map(async (entry) => ({
         key: entry.key,
@@ -605,6 +656,7 @@ export const ReportDocument = forwardRef<
             details,
             footer,
             componentCss,
+            interpretationHtml,
             voided,
           }),
     [
@@ -615,6 +667,7 @@ export const ReportDocument = forwardRef<
       details,
       footer,
       componentCss,
+      interpretationHtml,
       voided,
     ],
   )

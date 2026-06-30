@@ -47,6 +47,7 @@ from app.models.lis import (
     ResultCorrectionHistoryPublic,
     ResultCorrectionRequest,
     ResultEntryValue,
+    ResultInterpretationUpdate,
     ResultQueueItemPublic,
     ResultQueuePublic,
     ResultReflexOutcomePublic,
@@ -71,6 +72,7 @@ ELIGIBLE_ORDER_STATUSES = {
     OrderStatus.collected,
     OrderStatus.in_progress,
     OrderStatus.partial_results,
+    OrderStatus.completed,
 }
 
 
@@ -304,6 +306,11 @@ def get_workspace(
     if header is None:
         raise NotFoundError("Demande non trouvée")
     order, patient, context, doctor = header
+    interpretation_user = (
+        session.get(User, order.interpretation_updated_by_id)
+        if order.interpretation_updated_by_id
+        else None
+    )
     rows = result_repo.get_workspace_rows(session=session, order_id=order_id)
     result_ids = [row[8].id for row in rows if row[8] is not None]
     comments_by_result: dict[uuid.UUID, list[ResultCommentDetailPublic]] = defaultdict(list)
@@ -511,6 +518,13 @@ def get_workspace(
             f"{doctor.first_name} {doctor.last_name}" if doctor else None
         ),
         order_status=order.status,
+        interpretation_html=order.interpretation_html,
+        interpretation_updated_by_name=(
+            _display_name(interpretation_user.full_name, interpretation_user.email)
+            if interpretation_user
+            else None
+        ),
+        interpretation_updated_at=order.interpretation_updated_at,
         tests=list(tests.values()),
     )
     workspace.total_count = sum(len(test.analytes) for test in workspace.tests)
@@ -558,6 +572,70 @@ def get_workspace(
             analyte.verification_eligible = blocker is None
             analyte.verification_blocker = blocker
     return workspace
+
+
+def update_interpretation(
+    *,
+    session: Session,
+    order_id: uuid.UUID,
+    request: ResultInterpretationUpdate,
+    user_id: uuid.UUID,
+) -> ResultWorkspacePublic:
+    order = result_repo.get_order_for_update(session=session, order_id=order_id)
+    if order is None:
+        raise NotFoundError("Demande non trouvée")
+    if order.status == OrderStatus.cancelled:
+        raise ConflictError("Une demande annulée ne peut pas être modifiée")
+    from app.services import report as report_service
+
+    raw_html = request.interpretation_html or ""
+    sanitized_html = report_service.sanitize_html(raw_html)
+    if not report_service.html_to_plain_text(sanitized_html) and (
+        "data-variable-kind" not in sanitized_html
+    ):
+        sanitized_html = ""
+    old_values = {
+        "interpretation_html": order.interpretation_html,
+        "interpretation_updated_by_id": (
+            str(order.interpretation_updated_by_id)
+            if order.interpretation_updated_by_id
+            else None
+        ),
+        "interpretation_updated_at": (
+            order.interpretation_updated_at.isoformat()
+            if order.interpretation_updated_at
+            else None
+        ),
+    }
+    now = datetime.now(timezone.utc)
+    order.interpretation_html = sanitized_html or None
+    order.interpretation_updated_by_id = user_id if sanitized_html else None
+    order.interpretation_updated_at = now if sanitized_html else None
+    session.add(order)
+    session.add(
+        AuditLog(
+            table_name="orders",
+            record_id=order.id,
+            action=AuditAction.update,
+            old_values=old_values,
+            new_values={
+                "interpretation_html": order.interpretation_html,
+                "interpretation_updated_by_id": (
+                    str(order.interpretation_updated_by_id)
+                    if order.interpretation_updated_by_id
+                    else None
+                ),
+                "interpretation_updated_at": (
+                    order.interpretation_updated_at.isoformat()
+                    if order.interpretation_updated_at
+                    else None
+                ),
+            },
+            performed_by_id=user_id,
+        )
+    )
+    session.commit()
+    return get_workspace(session=session, order_id=order.id)
 
 
 def enter_results(
