@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Keneya Lab - Catalogue des fonctionnalités</title>
+    <meta
+      name="description"
+      content="Document complet en français présentant les fonctionnalités du système d'information de laboratoire Keneya Lab."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ink: "#172033",
+              muted: "#5f6d7e",
+              teal: "#087f7a",
+              mint: "#d7f3ec",
+              clay: "#b86b43",
+              amber: "#f7b733",
+              paper: "#fbfaf7",
+              night: "#101827",
+            },
+            fontFamily: {
+              sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+            },
+            boxShadow: {
+              sheet: "0 24px 80px rgba(23, 32, 51, 0.12)",
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background:
+          radial-gradient(circle at top left, rgba(8, 127, 122, 0.12), transparent 34rem),
+          linear-gradient(180deg, #f4f7f4 0%, #fbfaf7 34rem);
+      }
+
+      .feature-table th,
+      .feature-table td {
+        vertical-align: top;
+      }
+
+      .screenshot-img {
+        aspect-ratio: 16 / 10;
+      }
+
+      .screenshot-placeholder {
+        aspect-ratio: 16 / 10;
+        background:
+          linear-gradient(135deg, rgba(8, 127, 122, 0.11), rgba(247, 183, 51, 0.14)),
+          repeating-linear-gradient(
+            -45deg,
+            rgba(23, 32, 51, 0.06) 0,
+            rgba(23, 32, 51, 0.06) 1px,
+            transparent 1px,
+            transparent 14px
+          );
+      }
+
+      .print-break-inside {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      @media print {
+        @page {
+          size: A4;
+          margin: 12mm;
+        }
+
+        html,
+        body {
+          background: #ffffff !important;
+          color: #111827 !important;
+        }
+
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .no-print {
+          display: none !important;
+        }
+
+        .print-sheet {
+          box-shadow: none !important;
+          border: 0 !important;
+          max-width: none !important;
+          padding: 0 !important;
+        }
+
+        .print-section,
+        .print-break-inside {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        a {
+          color: inherit !important;
+          text-decoration: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="font-sans text-ink antialiased">
+    <main class="mx-auto my-8 max-w-6xl px-4 sm:px-6 lg:px-8 print:my-0 print:px-0">
+      <article class="print-sheet overflow-hidden rounded-[18px] border border-black/10 bg-paper shadow-sheet">
+        <section class="relative overflow-hidden bg-night px-6 py-10 text-white sm:px-10 lg:px-14 lg:py-14">
+          <div class="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-teal via-amber to-clay"></div>
+          <div class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div>
+              <p class="mb-4 inline-flex rounded-full border border-white/18 bg-white/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-mint">
+                Catalogue fonctionnel
+              </p>
+              <h1 class="max-w-4xl text-4xl font-black leading-[1.03] sm:text-5xl lg:text-6xl">
+                Toutes les fonctionnalités de Keneya Lab, expliquées pour un laboratoire moderne.
+              </h1>
+              <p class="mt-6 max-w-3xl text-lg leading-8 text-white/78">
+                Keneya Lab est un système d'information de laboratoire en français qui couvre le parcours complet:
+                patient, examens, prélèvement, résultats, validation, rapport, facturation, assurance, commissions et pilotage.
+              </p>
+              <div class="mt-8 flex flex-wrap gap-3">
+                <a
+                  href="#workflow"
+                  class="no-print rounded-full bg-teal px-5 py-3 text-sm font-bold text-white shadow-lg shadow-teal/20 transition-transform duration-150 ease-out active:scale-[0.98]"
+                >
+                  Parcours complet
+                </a>
+                <a
+                  href="#modules"
+                  class="no-print rounded-full border border-white/20 px-5 py-3 text-sm font-bold text-white/90 transition-transform duration-150 ease-out active:scale-[0.98]"
+                >
+                  Modules
+                </a>
+              </div>
+            </div>
+
+            <div class="print-break-inside rounded-2xl border border-white/12 bg-white/8 p-4">
+              <div class="rounded-xl bg-white p-5 text-ink">
+                <p class="text-sm font-black uppercase tracking-[0.16em] text-teal">Résumé exécutif</p>
+                <div class="mt-5 grid gap-3">
+                  <div class="rounded-lg bg-slate-50 p-4">
+                    <p class="text-2xl font-black">1 système</p>
+                    <p class="mt-1 text-sm leading-6 text-muted">Pour connecter accueil, technique, validation, rapports, finance et direction.</p>
+                  </div>
+                  <div class="rounded-lg bg-slate-50 p-4">
+                    <p class="text-2xl font-black">10 rôles</p>
+                    <p class="mt-1 text-sm leading-6 text-muted">Droits adaptés aux responsabilités de chaque équipe du laboratoire.</p>
+                  </div>
+                  <div class="rounded-lg bg-slate-50 p-4">
+                    <p class="text-2xl font-black">Workflow complet</p>
+                    <p class="mt-1 text-sm leading-6 text-muted">Chaque examen est suivi depuis l'enregistrement jusqu'au paiement.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="workflow" class="print-section px-6 py-10 sm:px-10 lg:px-14">
+          <div class="mx-auto max-w-3xl text-center">
+            <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal">Parcours laboratoire</p>
+            <h2 class="mt-3 text-3xl font-black leading-tight">Un flux unique du patient jusqu'au compte rendu et au paiement.</h2>
+            <p class="mt-4 leading-7 text-muted">
+              Le système réduit les ruptures entre les services. Chaque étape alimente la suivante, avec des statuts visibles et une trace claire.
+            </p>
+          </div>
+          <div class="mt-9 grid gap-3 md:grid-cols-4">
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="text-3xl font-black text-teal">01</p>
+              <p class="mt-3 font-bold">Accueil</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Recherche ou création patient, médecin prescripteur, assurance et examens.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="text-3xl font-black text-teal">02</p>
+              <p class="mt-3 font-bold">Prelevement</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Tubes requis, étiquettes, collecte, rejet si nécessaire et suivi des spécimens.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="text-3xl font-black text-teal">03</p>
+              <p class="mt-3 font-bold">Technique</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Saisie des résultats, alertes, commentaires, valeurs calculées et contrôles.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="text-3xl font-black text-teal">04</p>
+              <p class="mt-3 font-bold">Sortie</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Validation, rapport PDF, WhatsApp, facture, paiement et commission médecin.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="modules" class="print-section bg-white px-6 py-10 sm:px-10 lg:px-14">
+          <div class="mb-7">
+            <p class="text-sm font-bold uppercase tracking-[0.18em] text-clay">Modules opérationnels</p>
+            <h2 class="mt-3 text-3xl font-black leading-tight">Les outils du quotidien pour faire tourner le laboratoire.</h2>
+          </div>
+          <div class="overflow-hidden rounded-xl border border-slate-200">
+            <table class="feature-table w-full border-collapse text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-[0.12em] text-muted">
+                <tr>
+                  <th class="border-b border-slate-200 p-4">Fonctionnalite</th>
+              <th class="border-b border-slate-200 p-4">Ce que ça permet</th>
+                  <th class="border-b border-slate-200 p-4">Bénéfice laboratoire</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 bg-white">
+                <tr>
+                  <td class="p-4 font-bold">Tableau de bord</td>
+                  <td class="p-4 text-muted">Voir l'activité, les examens, les résultats et les indicateurs importants.</td>
+                  <td class="p-4">La direction pilote avec des données visibles au lieu d'attendre des rapports manuels.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Patients</td>
+                  <td class="p-4 text-muted">Créer, rechercher et mettre à jour les dossiers patients avec contexte clinique et assurance.</td>
+                  <td class="p-4">Moins de doublons, dossier plus propre, historique plus facile à retrouver.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Medecins prescripteurs</td>
+                  <td class="p-4 text-muted">Gérer les médecins, leurs patients, leurs informations et leurs configurations.</td>
+                  <td class="p-4">Meilleure relation avec les prescripteurs et suivi plus transparent des apports.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Examens</td>
+                  <td class="p-4 text-muted">Créer des examens, ajouter examens et panels, suivre les statuts et révisions.</td>
+                  <td class="p-4">Le laboratoire sait exactement ce qui est demandé, en cours, terminé ou annulé.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Prelevements</td>
+                  <td class="p-4 text-muted">Déterminer les spécimens requis, enregistrer la collecte, imprimer ou afficher les étiquettes.</td>
+                  <td class="p-4">Moins d'oublis de tubes, meilleure traçabilité et gestion claire des rejets.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Resultats</td>
+                  <td class="p-4 text-muted">Saisir, corriger, commenter, vérifier ou rejeter les résultats selon les droits.</td>
+                  <td class="p-4">Le flux technique devient structuré, contrôlé et exploitable par la validation.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Rapports</td>
+                  <td class="p-4 text-muted">Générer des comptes rendus PDF, les versionner, les imprimer ou les envoyer.</td>
+                  <td class="p-4">Image professionnelle, livraison plus rapide et correction mieux maîtrisée.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="print-section px-6 py-10 sm:px-10 lg:px-14">
+          <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div>
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal">Catalogue et référentiels</p>
+              <h2 class="mt-3 text-3xl font-black leading-tight">La base de connaissance du laboratoire.</h2>
+              <p class="mt-4 leading-7 text-muted">
+                Le catalogue évite que les examens soient reconstruits à la main. Les examens, panels, analytes, prix,
+                spécimens et unités sont gérés de façon cohérente.
+              </p>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Catalogue examens et panels</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Examens simples, panels, catégories, prix, ordre d'affichage et statut actif.</p>
+              </div>
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Analytes et unites</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Parametres biologiques, unites, methodes, ordre, type de valeur et commentaires.</p>
+              </div>
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Specimens requis</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Association entre examens et types de prélèvements nécessaires.</p>
+              </div>
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Referentiels</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Titres, unités, contextes patients, motifs de rejet, types de prélèvement et assureurs.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="print-section bg-night px-6 py-10 text-white sm:px-10 lg:px-14">
+          <div class="mb-7">
+            <p class="text-sm font-bold uppercase tracking-[0.18em] text-mint">Qualité biologique</p>
+            <h2 class="mt-3 text-3xl font-black leading-tight">Des contrôles intégrés pour protéger le résultat final.</h2>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div class="print-break-inside rounded-xl border border-white/12 bg-white/8 p-5">
+              <p class="font-bold">Regles de validation</p>
+              <p class="mt-2 text-sm leading-6 text-white/68">Bornes de reference par age, sexe, contexte patient, valeurs absurdes et alertes.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-white/12 bg-white/8 p-5">
+              <p class="font-bold">Regles de coherence</p>
+              <p class="mt-2 text-sm leading-6 text-white/68">Vérification entre analytes pour détecter des résultats biologiquement incohérents.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-white/12 bg-white/8 p-5">
+              <p class="font-bold">Regles reflexes</p>
+              <p class="mt-2 text-sm leading-6 text-white/68">Ajout ou proposition d'examens complémentaires selon certains résultats.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-white/12 bg-white/8 p-5">
+              <p class="font-bold">Alertes critiques</p>
+              <p class="mt-2 text-sm leading-6 text-white/68">Signalement des résultats critiques et suivi de l'accusé de prise en charge.</p>
+            </div>
+          </div>
+          <div class="mt-5 rounded-xl border border-white/12 bg-white/8 p-5">
+            <p class="font-bold">Vérification et correction contrôlées</p>
+            <p class="mt-2 text-sm leading-6 text-white/68">
+              Les résultats peuvent passer par une vérification avant publication. Les corrections après publication peuvent entraîner
+              une nouvelle version du rapport, ce qui évite d'écraser l'historique clinique.
+            </p>
+          </div>
+        </section>
+
+        <section class="print-section px-6 py-10 sm:px-10 lg:px-14">
+          <div class="mb-7">
+            <p class="text-sm font-bold uppercase tracking-[0.18em] text-clay">Rapports et communication</p>
+            <h2 class="mt-3 text-3xl font-black leading-tight">Des comptes rendus professionnels, personnalises et partageables.</h2>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="font-bold">Modeles de rapport</p>
+              <p class="mt-2 text-sm leading-6 text-muted">En-têtes, pieds de page, détails patient, sections par catégorie et rendu personnalisé.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="font-bold">Rapport PDF et impression</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Compte rendu propre, imprimable, versionné et adapté à l'identité du laboratoire.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="font-bold">Envoi WhatsApp</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Envoi du compte rendu PDF par WhatsApp lorsque la configuration Meta est active.</p>
+            </div>
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+              <p class="font-bold">Identite documentaire</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Logo, nom du laboratoire, adresse, contacts, directeur, licence et pied de document.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="print-section bg-white px-6 py-10 sm:px-10 lg:px-14">
+          <div class="mb-7">
+            <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal">Finance et partenaires</p>
+            <h2 class="mt-3 text-3xl font-black leading-tight">Suivre l'argent avec la même rigueur que les résultats.</h2>
+          </div>
+          <div class="overflow-hidden rounded-xl border border-slate-200">
+            <table class="feature-table w-full border-collapse text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-[0.12em] text-muted">
+                <tr>
+                  <th class="border-b border-slate-200 p-4">Fonctionnalite</th>
+                  <th class="border-b border-slate-200 p-4">Ce que ça permet</th>
+                  <th class="border-b border-slate-200 p-4">Bénéfice laboratoire</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 bg-white">
+                <tr>
+                  <td class="p-4 font-bold">Factures</td>
+                  <td class="p-4 text-muted">Créer, consulter, corriger, annuler ou réémettre une facture liée aux examens.</td>
+                  <td class="p-4">Moins de pertes de recettes et une meilleure preuve de paiement.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Paiements et remboursements</td>
+                  <td class="p-4 text-muted">Enregistrer les paiements, soldes, remboursements et reçus.</td>
+                  <td class="p-4">La caisse devient traçable et plus facile à contrôler en fin de journée.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Assurances</td>
+                  <td class="p-4 text-muted">Gerer les assureurs, les polices patient et les tarifs assures par examen.</td>
+                  <td class="p-4">La prise en charge est mieux structuree, avec moins de confusion a la facturation.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Commissions médecins</td>
+                  <td class="p-4 text-muted">Configurer les taux, générer les entrées, ajuster et payer les lots de commissions.</td>
+                  <td class="p-4">Relation prescripteur plus transparente et paiements mieux justifies.</td>
+                </tr>
+                <tr>
+                  <td class="p-4 font-bold">Parametres finance</td>
+                  <td class="p-4 text-muted">Définir les règles utiles à la caisse, aux documents et aux opérations financières.</td>
+                  <td class="p-4">Le système s'adapte à la politique du laboratoire.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="print-section px-6 py-10 sm:px-10 lg:px-14">
+          <div class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+            <div>
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-clay">Administration et sécurité</p>
+              <h2 class="mt-3 text-3xl font-black leading-tight">Chaque utilisateur voit seulement ce qui correspond à son rôle.</h2>
+              <p class="mt-4 leading-7 text-muted">
+                Keneya Lab intègre une gestion fine des utilisateurs, rôles et permissions. Les actions sensibles sont réservées aux profils autorisés.
+              </p>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Utilisateurs</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Comptes, activation, informations utilisateur, changement de mot de passe.</p>
+              </div>
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Roles et permissions</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Permissions par ressource et action: voir, créer, modifier, valider, payer, administrer.</p>
+              </div>
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Journal d'audit</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Historique des actions, utilisateurs, dates, anciennes et nouvelles valeurs.</p>
+              </div>
+              <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-5">
+                <p class="font-bold">Paramètres laboratoire</p>
+                <p class="mt-2 text-sm leading-6 text-muted">Identité du laboratoire, contacts, licence, documents et configuration générale.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="print-section bg-mint/55 px-6 py-10 sm:px-10 lg:px-14">
+          <div class="mb-7">
+            <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal">Fonctionnalités par rôle</p>
+            <h2 class="mt-3 text-3xl font-black leading-tight">Une interface adaptée à chaque équipe.</h2>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Direction</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Dashboard, activité, audit, finances, catalogue, utilisateurs et performance globale.</p>
+            </div>
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Accueil</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Patients, examens, factures, paiements, assurance et suivi des dossiers.</p>
+            </div>
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Preleveur</p>
+              <p class="mt-2 text-sm leading-6 text-muted">File de prélèvement, collecte, rejet, étiquettes et instructions de spécimen.</p>
+            </div>
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Technicien</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Worklist, saisie des résultats, commentaires, alertes et corrections avant vérification.</p>
+            </div>
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Biologiste</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Vérification, validation, résultats critiques, rapports, publications et corrections.</p>
+            </div>
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Finance</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Factures, paiements, remboursements, assurances, commissions et reçus.</p>
+            </div>
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Administrateur</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Utilisateurs, rôles, permissions, référentiels, paramètres et contrôle d'accès.</p>
+            </div>
+            <div class="print-break-inside rounded-xl bg-white p-5">
+              <p class="font-black">Medecin</p>
+              <p class="mt-2 text-sm leading-6 text-muted">Consultation des patients, résultats et rapports autorisés selon les droits.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="print-section px-6 py-10 sm:px-10 lg:px-14">
+          <div class="grid gap-8 lg:grid-cols-[1fr_1fr]">
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-6">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-clay">Modules complémentaires</p>
+              <h2 class="mt-3 text-2xl font-black leading-tight">Ce qui renforce le fonctionnement quotidien.</h2>
+              <ul class="mt-5 space-y-3 text-sm leading-6 text-muted">
+                <li><strong class="text-ink">Réactifs:</strong> suivi des réactifs et ressources utiles à l'activité technique.</li>
+                <li><strong class="text-ink">Formules:</strong> moteur de calcul pour analytes calculés et résultats dérivés.</li>
+                <li><strong class="text-ink">Recherche serveur:</strong> listes et filtres capables de grandir avec le volume du laboratoire.</li>
+                <li><strong class="text-ink">Exports:</strong> tableaux exploitables pour sélection et extraction des données visibles.</li>
+              </ul>
+            </div>
+            <div class="print-break-inside rounded-xl border border-slate-200 bg-white p-6">
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal">Adaptation locale</p>
+              <h2 class="mt-3 text-2xl font-black leading-tight">Conçu pour être utile dans un laboratoire malien.</h2>
+              <ul class="mt-5 space-y-3 text-sm leading-6 text-muted">
+                <li><strong class="text-ink">Interface française:</strong> libellés et messages adaptés aux équipes francophones.</li>
+                <li><strong class="text-ink">WhatsApp:</strong> canal pratique pour partager les rapports PDF aux patients ou prescripteurs.</li>
+                <li><strong class="text-ink">Caisse et assurance:</strong> prise en compte des realites de paiement, prise en charge et suivi financier.</li>
+                <li><strong class="text-ink">Deploiement progressif:</strong> demarrer par les flux essentiels puis etendre les modules.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="captures" class="print-section bg-white px-6 py-10 sm:px-10 lg:px-14">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal">Captures recommandées</p>
+              <h2 class="mt-3 text-3xl font-black leading-tight">Ajoutez des images reelles pour transformer ce document en support de demonstration.</h2>
+            </div>
+            <p class="max-w-sm text-sm leading-6 text-muted">
+              Placez les images dans <strong>docs/features-assets/</strong>. Les placeholders disparaitront automatiquement.
+            </p>
+          </div>
+
+          <div class="mt-8 grid gap-5 md:grid-cols-2">
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/dashboard.png" alt="Tableau de bord Keneya Lab" data-title="Tableau de bord" data-path="docs/features-assets/dashboard.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Tableau de bord</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/patients.png" alt="Gestion patients Keneya Lab" data-title="Patients" data-path="docs/features-assets/patients.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Patients et assurances</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/orders.png" alt="Examens Keneya Lab" data-title="Examens" data-path="docs/features-assets/orders.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Examens</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/specimens.png" alt="Prélèvements Keneya Lab" data-title="Prélèvements" data-path="docs/features-assets/specimens.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Prelevements et etiquettes</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/results.png" alt="Resultats Keneya Lab" data-title="Resultats" data-path="docs/features-assets/results.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Resultats et validation</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/reports.png" alt="Rapports Keneya Lab" data-title="Rapports" data-path="docs/features-assets/reports.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Rapports PDF</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/billing.png" alt="Facturation Keneya Lab" data-title="Facturation" data-path="docs/features-assets/billing.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Facturation et paiements</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/commissions.png" alt="Commissions Keneya Lab" data-title="Commissions" data-path="docs/features-assets/commissions.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Commissions médecins</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/admin.png" alt="Administration Keneya Lab" data-title="Administration" data-path="docs/features-assets/admin.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Roles, permissions et audit</figcaption>
+            </figure>
+            <figure class="print-break-inside overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <img class="screenshot-img w-full rounded-lg object-cover" src="features-assets/settings.png" alt="Parametres Keneya Lab" data-title="Parametres" data-path="docs/features-assets/settings.png" />
+              <figcaption class="px-1 pt-3 text-sm font-semibold">Paramètres laboratoire</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section class="print-section px-6 py-10 sm:px-10 lg:px-14">
+          <div class="rounded-2xl bg-night p-7 text-white sm:p-9">
+            <div class="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <p class="text-sm font-bold uppercase tracking-[0.18em] text-mint">Conclusion</p>
+                <h2 class="mt-3 text-3xl font-black leading-tight">Keneya Lab centralise les opérations cliniques, administratives et financières du laboratoire.</h2>
+                <p class="mt-4 max-w-3xl leading-7 text-white/72">
+                  Le système aide le laboratoire à mieux servir les patients, sécuriser les résultats,
+                  professionnaliser les rapports, suivre les recettes et contrôler les droits d'accès.
+                </p>
+              </div>
+              <div class="rounded-xl border border-white/12 bg-white/8 p-5 text-sm leading-7 text-white/78">
+                <p class="font-bold text-white">Document utile pour</p>
+                <p>Demonstration commerciale</p>
+                <p>Formation des équipes</p>
+                <p>Presentation aux partenaires</p>
+                <p>Cadrage d'un pilote</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="print-section bg-white px-6 py-8 sm:px-10 lg:px-14">
+          <div class="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div>
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-teal">Auteur du document</p>
+              <h2 class="mt-2 text-2xl font-black leading-tight">Adama Diaby</h2>
+              <p class="mt-2 max-w-3xl leading-7 text-muted">
+                Biologiste medical et developpeur fullstack au Mali. Cette double expertise permet de concevoir Keneya Lab
+                avec une compréhension directe des besoins cliniques, opérationnels et techniques d'un laboratoire.
+              </p>
+            </div>
+            <a
+              class="inline-flex rounded-full bg-teal px-5 py-3 text-sm font-bold text-white transition-transform duration-150 ease-out active:scale-[0.98]"
+              href="https://diabyml.github.io/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              diabyml.github.io
+            </a>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <script>
+      document.querySelectorAll("img[data-path]").forEach((image) => {
+        image.addEventListener(
+          "error",
+          () => {
+            const placeholder = document.createElement("div")
+            placeholder.className =
+              "screenshot-placeholder flex flex-col items-center justify-center rounded-lg p-6 text-center"
+            placeholder.setAttribute("role", "img")
+            placeholder.setAttribute(
+              "aria-label",
+              `Capture manquante: ${image.dataset.path || image.getAttribute("src")}`,
+            )
+            placeholder.innerHTML = `
+              <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/80 text-2xl font-black text-teal shadow-sm">+</div>
+              <p class="text-lg font-black text-ink">${image.dataset.title || "Capture"}</p>
+              <p class="mt-2 max-w-sm text-sm leading-6 text-muted">Ajoutez la capture dans ce fichier pour qu'elle apparaisse automatiquement:</p>
+              <code class="mt-3 rounded-md bg-white/85 px-3 py-2 text-xs font-bold text-clay shadow-sm">${image.dataset.path}</code>
+            `
+            image.replaceWith(placeholder)
+          },
+          { once: true },
+        )
+      })
+    </script>
+  </body>
+</html>

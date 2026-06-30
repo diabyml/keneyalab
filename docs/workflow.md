@@ -12,16 +12,6 @@ docker compose up
 ## Clear db except rbac system
 docker compose exec backend python scripts/clear_data.py
 
-## Persistent Docker volumes
-
-Application data is stored in Docker named volumes:
-
-- `app-db-data` stores PostgreSQL data.
-- `app-minio-data` stores uploaded lab logos and result images in MinIO.
-
-Do not run `docker compose down -v` on a local deployment unless you intentionally
-want to delete the database and uploaded files.
-
 ## To access adminer: http://adminer.localhost/
 
 ## Mailcatcher  http://localhost:1080
@@ -50,6 +40,7 @@ docker compose exec backend python -c "from app.core.db import init_db; from app
 
 ## seed catalog demo
 docker compose exec backend python -m app.seed_catalog_demo  --confirm-delete
+docker compose exec backend python -m app.seed_demo_order_results
 
 ## seed all-in-one demo order with normal, abnormal, and critical results
 docker compose exec backend python -m app.seed_demo_order_results
