@@ -10013,6 +10013,13 @@ export const ReportReleaseRequestSchema = {
 
 export const ReportRenderConfigSchema = {
     properties: {
+        section_order: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Section Order'
+        },
         category_order: {
             items: {
                 type: 'string'
@@ -10026,6 +10033,16 @@ export const ReportRenderConfigSchema = {
             },
             type: 'object',
             title: 'Category Page Breaks'
+        },
+        interpretation_page_break: {
+            type: 'boolean',
+            title: 'Interpretation Page Break',
+            default: false
+        },
+        footer_spacing_mm: {
+            type: 'integer',
+            title: 'Footer Spacing Mm',
+            default: 4
         },
         hidden_analyte_ids: {
             items: {

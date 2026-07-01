@@ -65,8 +65,11 @@ export type ReportSnapshot = {
 }
 
 export type ReportRenderConfig = {
+  section_order: string[]
   category_order: string[]
   category_page_breaks: Record<string, boolean>
+  interpretation_page_break: boolean
+  footer_spacing_mm: number
   hidden_analyte_ids: string[]
 }
 
@@ -109,8 +112,11 @@ export function reportCategoryKey(category: ReportCategory) {
 
 export function defaultReportRenderConfig(): ReportRenderConfig {
   return {
+    section_order: [],
     category_order: [],
     category_page_breaks: {},
+    interpretation_page_break: false,
+    footer_spacing_mm: 4,
     hidden_analyte_ids: [],
   }
 }
@@ -119,8 +125,15 @@ export function normalizeReportRenderConfig(
   value: Partial<ReportRenderConfig> | null | undefined,
 ): ReportRenderConfig {
   return {
+    section_order: [...(value?.section_order ?? [])].filter(
+      (key) => key !== "footer",
+    ),
     category_order: [...(value?.category_order ?? [])],
     category_page_breaks: { ...(value?.category_page_breaks ?? {}) },
+    interpretation_page_break: value?.interpretation_page_break === true,
+    footer_spacing_mm: Number.isFinite(value?.footer_spacing_mm)
+      ? Math.min(40, Math.max(0, Number(value?.footer_spacing_mm)))
+      : 4,
     hidden_analyte_ids: [...(value?.hidden_analyte_ids ?? [])],
   }
 }

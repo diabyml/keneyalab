@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
@@ -20,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import type {
@@ -47,6 +49,21 @@ function categoryAnalyteIds(category: ReportCategory) {
   )
 }
 
+const INTERPRETATION_SECTION_KEY = "interpretation"
+
+type ReportSection =
+  | {
+      kind: "category"
+      key: string
+      name: string
+      category: ReportCategory
+    }
+  | {
+      kind: "interpretation"
+      key: typeof INTERPRETATION_SECTION_KEY
+      name: string
+    }
+
 function orderedCategories(
   snapshot: ReportSnapshot,
   config: ReportRenderConfig,
@@ -66,6 +83,54 @@ function orderedCategories(
   return keys
     .map((key) => byKey.get(key))
     .filter((category): category is ReportCategory => Boolean(category))
+}
+
+function hasInterpretation(snapshot: ReportSnapshot) {
+  return Boolean(snapshot.interpretation?.html)
+}
+
+function orderedSections(
+  snapshot: ReportSnapshot,
+  config: ReportRenderConfig,
+): ReportSection[] {
+  const categories = orderedCategories(snapshot, config)
+  const sectionsByKey = new Map<string, ReportSection>(
+    categories.map((category) => {
+      const key = reportCategoryKey(category)
+      return [
+        key,
+        {
+          kind: "category",
+          key,
+          name: category.name,
+          category,
+        },
+      ]
+    }),
+  )
+  if (hasInterpretation(snapshot)) {
+    sectionsByKey.set(INTERPRETATION_SECTION_KEY, {
+      kind: "interpretation",
+      key: INTERPRETATION_SECTION_KEY,
+      name: "Interprétation",
+    })
+  }
+  const orderedKeys = [
+    ...config.section_order.filter(
+      (key) => key !== "footer" && sectionsByKey.has(key),
+    ),
+    ...categories
+      .map(reportCategoryKey)
+      .filter((key) => !config.section_order.includes(key)),
+    ...(hasInterpretation(snapshot) &&
+    !config.section_order.includes(INTERPRETATION_SECTION_KEY)
+      ? [INTERPRETATION_SECTION_KEY]
+      : []),
+  ]
+
+  return orderedKeys
+    .map((key) => sectionsByKey.get(key))
+    .filter((section): section is ReportSection => Boolean(section))
 }
 
 export function ReportRenderSettingsSheet({
@@ -88,6 +153,10 @@ export function ReportRenderSettingsSheet({
     () => orderedCategories(snapshot, config),
     [snapshot, config],
   )
+  const sections = useMemo(
+    () => orderedSections(snapshot, config),
+    [snapshot, config],
+  )
   const [draggedKey, setDraggedKey] = useState<string | null>(null)
 
   useEffect(() => {
@@ -98,27 +167,31 @@ export function ReportRenderSettingsSheet({
     if (!readOnly) onChange(next)
   }
 
-  const setCategoryOrder = (categoriesInOrder: ReportCategory[]) => {
+  const setSectionOrder = (sectionsInOrder: ReportSection[]) => {
     update({
       ...config,
-      category_order: categoriesInOrder.map(reportCategoryKey),
+      section_order: sectionsInOrder
+        .map((section) => section.key)
+        .filter((key) => key !== "footer"),
+      category_order: sectionsInOrder
+        .filter(
+          (section): section is Extract<ReportSection, { kind: "category" }> =>
+            section.kind === "category",
+        )
+        .map((section) => section.key),
     })
   }
 
-  const moveCategory = (from: number, to: number) => {
-    setCategoryOrder(moveItem(categories, from, to))
+  const moveSection = (from: number, to: number) => {
+    setSectionOrder(moveItem(sections, from, to))
   }
 
-  const handleDrop = (targetKey: string) => {
+  const handleSectionDrop = (targetKey: string) => {
     if (!draggedKey || draggedKey === targetKey || readOnly) return
-    const from = categories.findIndex(
-      (category) => reportCategoryKey(category) === draggedKey,
-    )
-    const to = categories.findIndex(
-      (category) => reportCategoryKey(category) === targetKey,
-    )
+    const from = sections.findIndex((section) => section.key === draggedKey)
+    const to = sections.findIndex((section) => section.key === targetKey)
     if (from === -1 || to === -1) return
-    setCategoryOrder(moveItem(categories, from, to))
+    setSectionOrder(moveItem(sections, from, to))
     setDraggedKey(null)
   }
 
@@ -150,6 +223,20 @@ export function ReportRenderSettingsSheet({
     })
   }
 
+  const toggleInterpretationPageBreak = (enabled: boolean) => {
+    update({
+      ...config,
+      interpretation_page_break: enabled,
+    })
+  }
+
+  const setFooterSpacing = (value: number) => {
+    update({
+      ...config,
+      footer_spacing_mm: Math.min(40, Math.max(0, value)),
+    })
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-[calc(100vw-1rem)] overflow-hidden p-0 sm:max-w-xl">
@@ -167,22 +254,22 @@ export function ReportRenderSettingsSheet({
             <section className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-medium">Ordre des catégories</h3>
+                  <h3 className="text-sm font-medium">Ordre du rapport</h3>
                   <p className="text-xs text-muted-foreground">
-                    Glissez les lignes ou utilisez les flèches.
+                    Déplacez les catégories et l'interprétation.
                   </p>
                 </div>
               </div>
               <ul className="divide-y rounded-md border bg-background">
-                {categories.map((category, index) => {
-                  const key = reportCategoryKey(category)
+                {sections.map((section, index) => {
+                  const key = section.key
                   return (
                     <li
                       key={key}
                       draggable={!readOnly}
                       onDragStart={() => setDraggedKey(key)}
                       onDragOver={(event) => event.preventDefault()}
-                      onDrop={() => handleDrop(key)}
+                      onDrop={() => handleSectionDrop(key)}
                       onDragEnd={() => setDraggedKey(null)}
                       className={cn(
                         "grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2",
@@ -197,7 +284,12 @@ export function ReportRenderSettingsSheet({
                         </span>
                       </div>
                       <span className="min-w-0 truncate font-medium">
-                        {category.name}
+                        {section.name}
+                        {section.kind === "interpretation" && (
+                          <span className="ml-2 text-xs font-normal text-muted-foreground">
+                            Section
+                          </span>
+                        )}
                       </span>
                       <div className="flex items-center gap-1">
                         <Button
@@ -205,8 +297,8 @@ export function ReportRenderSettingsSheet({
                           variant="ghost"
                           size="icon-sm"
                           disabled={readOnly || index === 0}
-                          onClick={() => moveCategory(index, index - 1)}
-                          aria-label={`Monter ${category.name}`}
+                          onClick={() => moveSection(index, index - 1)}
+                          aria-label={`Monter ${section.name}`}
                         >
                           <ArrowUp className="size-4" />
                         </Button>
@@ -214,9 +306,9 @@ export function ReportRenderSettingsSheet({
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          disabled={readOnly || index === categories.length - 1}
-                          onClick={() => moveCategory(index, index + 1)}
-                          aria-label={`Descendre ${category.name}`}
+                          disabled={readOnly || index === sections.length - 1}
+                          onClick={() => moveSection(index, index + 1)}
+                          aria-label={`Descendre ${section.name}`}
                         >
                           <ArrowDown className="size-4" />
                         </Button>
@@ -229,6 +321,61 @@ export function ReportRenderSettingsSheet({
 
             <section className="space-y-3">
               <h3 className="text-sm font-medium">Visibilité et impression</h3>
+              <div className="rounded-md border bg-background p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">
+                      Espace avant le pied de page
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Ajuste le vide entre la fin du rapport et le pied de page.
+                    </p>
+                  </div>
+                  <div className="flex w-24 items-center gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={40}
+                      step={1}
+                      value={config.footer_spacing_mm}
+                      disabled={readOnly}
+                      onChange={(event) =>
+                        setFooterSpacing(Number(event.currentTarget.value) || 0)
+                      }
+                      className="text-right"
+                    />
+                    <span className="text-xs text-muted-foreground">mm</span>
+                  </div>
+                </div>
+                <Slider
+                  min={0}
+                  max={40}
+                  step={1}
+                  value={[config.footer_spacing_mm]}
+                  disabled={readOnly}
+                  onValueChange={([value]) => setFooterSpacing(value ?? 0)}
+                />
+              </div>
+              {hasInterpretation(snapshot) && (
+                <div className="rounded-md border bg-background p-3">
+                  <label
+                    htmlFor="report-render-break-interpretation"
+                    className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <FileSymlink className="size-4" />
+                      Nouvelle page avant l'interprétation
+                    </span>
+                    <Switch
+                      id="report-render-break-interpretation"
+                      size="sm"
+                      checked={config.interpretation_page_break}
+                      disabled={readOnly}
+                      onCheckedChange={toggleInterpretationPageBreak}
+                    />
+                  </label>
+                </div>
+              )}
               {categories.map((category) => {
                 const key = reportCategoryKey(category)
                 const ids = categoryAnalyteIds(category)

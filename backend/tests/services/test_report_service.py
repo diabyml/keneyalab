@@ -1,5 +1,8 @@
 import uuid
 from datetime import date
+from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -16,12 +19,23 @@ from app.services.report import (
 )
 
 
+def _load_migration(name: str) -> ModuleType:
+    path = Path(__file__).resolve().parents[2] / "app" / "alembic" / "versions" / name
+    spec = spec_from_file_location(path.stem, path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _render_config_snapshot() -> dict:
     return {
         "order": {"accession_number": "KL-001"},
         "patient": {"name": "Aminata"},
         "doctor": {"name": "Dr Diallo"},
         "lab": {"display_name": "Keneya Lab"},
+        "interpretation": {"html": "<p>Conclusion clinique.</p>"},
         "categories": [
             {
                 "id": "cat-a",
@@ -106,6 +120,41 @@ def test_validate_jsx_accepts_renderer_contract() -> None:
     assert validate_jsx(source) == source
 
 
+@pytest.mark.parametrize(
+    "migration_name",
+    [
+        "d1e2f3a4b5c6_add_antibiogramme_report_renderer.py",
+        "e2f3a4b5c6d7_remove_antibiogramme_comments_column.py",
+    ],
+)
+def test_builtin_antibiogramme_renderer_sources_are_valid(
+    migration_name: str,
+) -> None:
+    migration = _load_migration(migration_name)
+
+    assert (
+        validate_jsx(migration.ANTIBIOGRAMME_RENDERER_JSX)
+        == migration.ANTIBIOGRAMME_RENDERER_JSX
+    )
+    assert (
+        validate_css(migration.ANTIBIOGRAMME_RENDERER_CSS)
+        == migration.ANTIBIOGRAMME_RENDERER_CSS
+    )
+    assert "Commentaires" not in migration.ANTIBIOGRAMME_RENDERER_JSX
+    assert "antibio-comment" not in migration.ANTIBIOGRAMME_RENDERER_CSS
+
+
+def test_builtin_clinical_renderer_columns_are_fixed() -> None:
+    migration = _load_migration("f3a4b5c6d7e8_align_clinical_renderer_columns.py")
+
+    assert (
+        validate_css(migration.CLINICAL_RENDERER_CSS) == migration.CLINICAL_RENDERER_CSS
+    )
+    assert "table-layout:fixed" in migration.CLINICAL_RENDERER_CSS
+    assert "th:nth-child(1)" in migration.CLINICAL_RENDERER_CSS
+    assert "td:nth-child(4)" in migration.CLINICAL_RENDERER_CSS
+
+
 def test_report_email_uses_immutable_snapshot_and_escapes_values() -> None:
     report = Report(
         order_id=uuid.uuid4(),
@@ -153,15 +202,21 @@ def test_apply_render_config_orders_filters_and_keeps_page_breaks() -> None:
     snapshot, config = _apply_render_config(
         _render_config_snapshot(),
         {
+            "section_order": ["cat-b", "interpretation", "footer"],
             "category_order": ["cat-b"],
             "category_page_breaks": {"cat-b": True, "cat-a": False},
+            "interpretation_page_break": True,
+            "footer_spacing_mm": 12,
             "hidden_analyte_ids": ["inr", "uree"],
         },
     )
 
     assert config == {
+        "section_order": ["cat-b", "interpretation", "cat-a"],
         "category_order": ["cat-b", "cat-a"],
         "category_page_breaks": {"cat-b": True},
+        "interpretation_page_break": True,
+        "footer_spacing_mm": 12,
         "hidden_analyte_ids": ["inr", "uree"],
     }
     assert [category["id"] for category in snapshot["categories"]] == [
@@ -208,7 +263,19 @@ def test_apply_render_config_accepts_missing_config() -> None:
         "cat-a",
         "cat-b",
     ]
+    assert config["section_order"] == ["cat-a", "cat-b", "interpretation"]
+    assert config["interpretation_page_break"] is False
+    assert config["footer_spacing_mm"] == 4
     assert config["hidden_analyte_ids"] == []
+
+
+def test_apply_render_config_accepts_zero_footer_spacing() -> None:
+    _, config = _apply_render_config(
+        _render_config_snapshot(),
+        {"footer_spacing_mm": 0},
+    )
+
+    assert config["footer_spacing_mm"] == 0
 
 
 def test_validate_email_recipient_rejects_invalid_address() -> None:
@@ -225,7 +292,5 @@ def test_validate_email_recipient_rejects_invalid_address() -> None:
         (date(2000, 2, 29), date(2026, 3, 1), 26),
     ],
 )
-def test_patient_age(
-    date_of_birth: date, as_of: date, expected: int
-) -> None:
+def test_patient_age(date_of_birth: date, as_of: date, expected: int) -> None:
     assert _patient_age(date_of_birth, as_of) == expected

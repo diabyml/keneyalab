@@ -1719,10 +1719,13 @@ export type ReportReleaseRequest = {
 };
 
 export type ReportRenderConfig = {
+    section_order?: Array<(string)>;
     category_order?: Array<(string)>;
     category_page_breaks?: {
         [key: string]: (boolean);
     };
+    interpretation_page_break?: boolean;
+    footer_spacing_mm?: number;
     hidden_analyte_ids?: Array<(string)>;
 };
 

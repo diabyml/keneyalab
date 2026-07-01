@@ -61,8 +61,11 @@ UNCATEGORIZED_REPORT_KEY = "uncategorized"
 
 def _default_render_config() -> dict[str, Any]:
     return {
+        "section_order": [],
         "category_order": [],
         "category_page_breaks": {},
+        "interpretation_page_break": False,
+        "footer_spacing_mm": 4,
         "hidden_analyte_ids": [],
     }
 
@@ -80,17 +83,26 @@ def _normalize_render_config(
         value = render_config.model_dump(mode="json")
     else:
         value = dict(render_config)
+    try:
+        footer_spacing_mm = int(value.get("footer_spacing_mm", 4))
+    except (TypeError, ValueError):
+        footer_spacing_mm = 4
     return {
-        "category_order": [
+        "section_order": [
             str(item)
-            for item in value.get("category_order", [])
-            if str(item).strip()
+            for item in value.get("section_order", [])
+            if str(item).strip() and str(item) != "footer"
+        ],
+        "category_order": [
+            str(item) for item in value.get("category_order", []) if str(item).strip()
         ],
         "category_page_breaks": {
             str(key): bool(enabled)
             for key, enabled in dict(value.get("category_page_breaks") or {}).items()
             if str(key).strip()
         },
+        "interpretation_page_break": bool(value.get("interpretation_page_break")),
+        "footer_spacing_mm": min(40, max(0, footer_spacing_mm)),
         "hidden_analyte_ids": [
             str(item)
             for item in value.get("hidden_analyte_ids", [])
@@ -118,16 +130,22 @@ def _apply_render_config(
     categories = [dict(category) for category in snapshot.get("categories") or []]
     category_keys = [_category_key(category) for category in categories]
     known_categories = set(category_keys)
+    has_interpretation = bool((dict(snapshot.get("interpretation") or {})).get("html"))
+    known_sections = set(category_keys)
+    if has_interpretation:
+        known_sections.add("interpretation")
 
     requested_order = _unique(config["category_order"])
+    requested_section_order = _unique(config["section_order"])
     unknown_order = [key for key in requested_order if key not in known_categories]
+    unknown_sections = [
+        key for key in requested_section_order if key not in known_sections
+    ]
     unknown_breaks = [
         key for key in config["category_page_breaks"] if key not in known_categories
     ]
-    if unknown_order or unknown_breaks:
-        raise BusinessRuleError(
-            "Configuration de rendu invalide : catégorie inconnue"
-        )
+    if unknown_order or unknown_breaks or unknown_sections:
+        raise BusinessRuleError("Configuration de rendu invalide : catégorie inconnue")
 
     known_analytes: set[str] = set()
     for category in categories:
@@ -146,6 +164,11 @@ def _apply_render_config(
     final_order = requested_order + [
         key for key in category_keys if key not in requested_order
     ]
+    final_section_order = requested_section_order + [
+        key for key in final_order if key not in requested_section_order
+    ]
+    if has_interpretation and "interpretation" not in final_section_order:
+        final_section_order.append("interpretation")
     by_key = {_category_key(category): category for category in categories}
     hidden_set = set(hidden_analytes)
     rendered_categories: list[dict[str, Any]] = []
@@ -175,15 +198,19 @@ def _apply_render_config(
     rendered_snapshot = dict(snapshot)
     rendered_snapshot["categories"] = rendered_categories
     normalized_config = {
+        "section_order": final_section_order,
         "category_order": final_order,
         "category_page_breaks": {
             key: True
             for key, enabled in config["category_page_breaks"].items()
             if enabled
         },
+        "interpretation_page_break": bool(config["interpretation_page_break"]),
+        "footer_spacing_mm": int(config["footer_spacing_mm"]),
         "hidden_analyte_ids": hidden_analytes,
     }
     return rendered_snapshot, normalized_config
+
 
 ALLOWED_TAGS = {
     "a",
@@ -293,9 +320,7 @@ class _SafeHTMLParser(HTMLParser):
         self.parts: list[str] = []
         self.blocked_depth = 0
 
-    def handle_starttag(
-        self, tag: str, attrs: list[tuple[str, str | None]]
-    ) -> None:
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag in {"script", "style", "iframe", "object"}:
             self.blocked_depth += 1
             return
@@ -345,7 +370,9 @@ def html_to_plain_text(value: str | None) -> str:
         return ""
     parser = _PlainTextHTMLParser()
     parser.feed(value)
-    return re.sub(r"\n{3,}", "\n\n", " ".join(parser.parts).replace(" \n ", "\n")).strip()
+    return re.sub(
+        r"\n{3,}", "\n\n", " ".join(parser.parts).replace(" \n ", "\n")
+    ).strip()
 
 
 def _iter_tests(snapshot: dict[str, Any]):
@@ -383,7 +410,9 @@ def _variable_value(
         for _category, _test, analyte in _iter_analytes(snapshot):
             if item_id == str(analyte.get("analyte_id") or ""):
                 if field == "result_value" and not analyte.get("result_value"):
-                    return "Image jointe au résultat" if analyte.get("image_url") else ""
+                    return (
+                        "Image jointe au résultat" if analyte.get("image_url") else ""
+                    )
                 return str(analyte.get(field) or "")
     return ""
 
@@ -395,9 +424,7 @@ class _InterpretationRenderer(HTMLParser):
         self.parts: list[str] = []
         self.variable_depth = 0
 
-    def handle_starttag(
-        self, tag: str, attrs: list[tuple[str, str | None]]
-    ) -> None:
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if self.variable_depth:
             self.variable_depth += 1
             return
@@ -461,9 +488,7 @@ def validate_jsx(value: str) -> str:
             "Les imports, accès réseau et accès au contexte de l'application sont interdits"
         )
     if "function Renderer" not in source and "const Renderer" not in source:
-        raise BusinessRuleError(
-            "Le code doit déclarer un composant nommé Renderer"
-        )
+        raise BusinessRuleError("Le code doit déclarer un composant nommé Renderer")
     return source
 
 
@@ -512,9 +537,7 @@ def _component_public(
 def list_components(
     *, session: Session, component_type: ReportComponentType | None = None
 ) -> ReportComponentsPublic:
-    rows = report_repo.list_components(
-        session=session, component_type=component_type
-    )
+    rows = report_repo.list_components(session=session, component_type=component_type)
     return ReportComponentsPublic(
         data=[_component_public(session=session, component=row) for row in rows],
         count=len(rows),
@@ -524,9 +547,7 @@ def list_components(
 def get_component(
     *, session: Session, component_id: uuid.UUID
 ) -> ReportComponentPublic:
-    component = report_repo.get_component(
-        session=session, component_id=component_id
-    )
+    component = report_repo.get_component(session=session, component_id=component_id)
     if component is None:
         raise NotFoundError("Composant de rapport non trouvé")
     return _component_public(session=session, component=component)
@@ -567,9 +588,7 @@ def update_component(
     component_in: ReportComponentUpdate,
     user_id: uuid.UUID,
 ) -> ReportComponentPublic:
-    component = report_repo.get_component(
-        session=session, component_id=component_id
-    )
+    component = report_repo.get_component(session=session, component_id=component_id)
     if component is None:
         raise NotFoundError("Composant de rapport non trouvé")
     updates = component_in.model_dump(
@@ -612,9 +631,7 @@ def update_component(
 def publish_component(
     *, session: Session, component_id: uuid.UUID, user_id: uuid.UUID
 ) -> ReportComponentPublic:
-    component = report_repo.get_component(
-        session=session, component_id=component_id
-    )
+    component = report_repo.get_component(session=session, component_id=component_id)
     if component is None:
         raise NotFoundError("Composant de rapport non trouvé")
     draft = report_repo.get_component_version(
@@ -643,9 +660,7 @@ def publish_component(
 def archive_component(
     *, session: Session, component_id: uuid.UUID
 ) -> ReportComponentPublic:
-    component = report_repo.get_component(
-        session=session, component_id=component_id
-    )
+    component = report_repo.get_component(session=session, component_id=component_id)
     if component is None:
         raise NotFoundError("Composant de rapport non trouvé")
     settings = _settings(session=session)
@@ -681,9 +696,7 @@ def _renderer_public(
             ReportRendererVersionPublic.model_validate(draft) if draft else None
         ),
         published_version=(
-            ReportRendererVersionPublic.model_validate(published)
-            if published
-            else None
+            ReportRendererVersionPublic.model_validate(published) if published else None
         ),
         is_default=renderer.id == settings.default_renderer_id,
     )
@@ -697,9 +710,7 @@ def list_renderers(*, session: Session) -> ReportRenderersPublic:
     )
 
 
-def get_renderer(
-    *, session: Session, renderer_id: uuid.UUID
-) -> ReportRendererPublic:
+def get_renderer(*, session: Session, renderer_id: uuid.UUID) -> ReportRendererPublic:
     renderer = report_repo.get_renderer(session=session, renderer_id=renderer_id)
     if renderer is None:
         raise NotFoundError("Rendu de rapport non trouvé")
@@ -877,11 +888,14 @@ def set_default_renderer(
     )
     if renderer is None or renderer.is_archived:
         raise BusinessRuleError("Rendu introuvable ou archivé")
-    if report_repo.get_renderer_version(
-        session=session,
-        renderer_id=renderer.id,
-        status=ReportTemplateVersionStatus.published,
-    ) is None:
+    if (
+        report_repo.get_renderer_version(
+            session=session,
+            renderer_id=renderer.id,
+            status=ReportTemplateVersionStatus.published,
+        )
+        is None
+    ):
         raise BusinessRuleError("Le rendu doit être publié")
     settings = _settings(session=session)
     settings.default_renderer_id = renderer.id
@@ -907,11 +921,14 @@ def assign_category_renderer(
         )
         if renderer is None or renderer.is_archived:
             raise BusinessRuleError("Rendu introuvable ou archivé")
-        if report_repo.get_renderer_version(
-            session=session,
-            renderer_id=renderer.id,
-            status=ReportTemplateVersionStatus.published,
-        ) is None:
+        if (
+            report_repo.get_renderer_version(
+                session=session,
+                renderer_id=renderer.id,
+                status=ReportTemplateVersionStatus.published,
+            )
+            is None
+        ):
             raise BusinessRuleError("Le rendu doit être publié")
     category.report_renderer_id = request.report_renderer_id
     session.add(category)
@@ -925,9 +942,7 @@ def _published_component_snapshot(
 ) -> dict[str, Any]:
     if component_id is None:
         raise BusinessRuleError(f"Aucun composant {label} par défaut")
-    component = report_repo.get_component(
-        session=session, component_id=component_id
-    )
+    component = report_repo.get_component(session=session, component_id=component_id)
     version = report_repo.get_component_version(
         session=session,
         component_id=component_id,
@@ -947,9 +962,13 @@ def _published_component_snapshot(
 
 def _patient_age(date_of_birth: date, as_of: date | None = None) -> int:
     reference_date = as_of or datetime.now(timezone.utc).date()
-    return reference_date.year - date_of_birth.year - (
-        (reference_date.month, reference_date.day)
-        < (date_of_birth.month, date_of_birth.day)
+    return (
+        reference_date.year
+        - date_of_birth.year
+        - (
+            (reference_date.month, reference_date.day)
+            < (date_of_birth.month, date_of_birth.day)
+        )
     )
 
 
@@ -996,9 +1015,7 @@ def _build_snapshot(
         ) or settings.default_renderer_id
         if renderer_id is None:
             raise BusinessRuleError("Aucun rendu de rapport par défaut")
-        renderer = report_repo.get_renderer(
-            session=session, renderer_id=renderer_id
-        )
+        renderer = report_repo.get_renderer(session=session, renderer_id=renderer_id)
         version = report_repo.get_renderer_version(
             session=session,
             renderer_id=renderer_id,
@@ -1075,7 +1092,9 @@ def _build_snapshot(
             label="de détails",
         ),
         "footer": _published_component_snapshot(
-            session=session, component_id=settings.default_footer_id, label="de pied de page"
+            session=session,
+            component_id=settings.default_footer_id,
+            label="de pied de page",
         ),
         "renderers": renderer_snapshots,
     }
@@ -1083,9 +1102,7 @@ def _build_snapshot(
 
 
 def get_preview(*, session: Session, order_id: uuid.UUID) -> ReportPreviewPublic:
-    snapshot, templates, blockers = _build_snapshot(
-        session=session, order_id=order_id
-    )
+    snapshot, templates, blockers = _build_snapshot(session=session, order_id=order_id)
     return ReportPreviewPublic(
         order_id=order_id,
         can_release=not blockers,
@@ -1183,10 +1200,14 @@ def get_sample_preview(*, session: Session) -> ReportPreviewPublic:
             session=session, component_id=settings.default_header_id, label="d'en-tête"
         ),
         "details": _published_component_snapshot(
-            session=session, component_id=settings.default_details_id, label="de détails"
+            session=session,
+            component_id=settings.default_details_id,
+            label="de détails",
         ),
         "footer": _published_component_snapshot(
-            session=session, component_id=settings.default_footer_id, label="de pied de page"
+            session=session,
+            component_id=settings.default_footer_id,
+            label="de pied de page",
         ),
         "renderers": {
             "uncategorized": {
@@ -1247,9 +1268,7 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
             rows: list[str] = []
             for analyte in test.get("analytes") or []:
                 value = analyte.get("result_value") or (
-                    "Image jointe au résultat"
-                    if analyte.get("image_url")
-                    else "—"
+                    "Image jointe au résultat" if analyte.get("image_url") else "—"
                 )
                 flags = []
                 if analyte.get("is_critical"):
@@ -1288,8 +1307,13 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
         )
     interpretation = dict(snapshot.get("interpretation") or {})
     interpretation_html = str(interpretation.get("html") or "")
+    interpretation_style = (
+        ' style="break-before:page;page-break-before:always"'
+        if render_config["interpretation_page_break"]
+        else ""
+    )
     interpretation_section = (
-        '<section class="interpretation-section">'
+        f'<section class="interpretation-section"{interpretation_style}>'
         "<h2>Interprétation</h2>"
         f'<div class="interpretation-content">{interpretation_html}</div>'
         "</section>"
@@ -1307,6 +1331,7 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
     lab_name = escape(str(lab.get("display_name") or "Keneya Lab"))
     accession = escape(str(order.get("accession_number") or ""))
     patient_name = escape(str(patient.get("name") or ""))
+    footer_margin = int(render_config["footer_spacing_mm"])
     return f"""<!doctype html>
 <html lang="fr">
 <head>
@@ -1340,9 +1365,9 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
       <strong>Prescripteur :</strong> {escape(str(doctor.get("name") or "—"))}
     </div>
     {note_html}
-    {''.join(category_sections)}
+    {"".join(category_sections)}
     {interpretation_section}
-    <p class="muted">
+    <p class="muted" style="margin-top:{footer_margin}mm">
       Ce message contient des données médicales confidentielles. S'il ne vous est
       pas destiné, veuillez le supprimer et prévenir l'expéditeur.
     </p>
@@ -1535,7 +1560,9 @@ def _report_whatsapp_caption(report: Report, recipient_note: str | None = None) 
 def _report_pdf_filename(report: Report) -> str:
     snapshot = dict(report.snapshot or {})
     order = dict(snapshot.get("order") or {})
-    accession = re.sub(r"[^A-Za-z0-9_-]+", "-", str(order.get("accession_number") or "rapport"))
+    accession = re.sub(
+        r"[^A-Za-z0-9_-]+", "-", str(order.get("accession_number") or "rapport")
+    )
     return f"compte-rendu-{accession}-v{report.version}.pdf"
 
 
@@ -1621,7 +1648,10 @@ def release_report(
         recipient = _validate_email_recipient(request.recipient)
     elif request.channel == ReportChannel.whatsapp and request.recipient:
         recipient = _validate_whatsapp_recipient(request.recipient)
-    if request.channel in {ReportChannel.email, ReportChannel.whatsapp} and recipient is None:
+    if (
+        request.channel in {ReportChannel.email, ReportChannel.whatsapp}
+        and recipient is None
+    ):
         raise BusinessRuleError(
             "Le destinataire est obligatoire pour publier et envoyer"
         )
@@ -1632,9 +1662,7 @@ def release_report(
         ReportChannel.whatsapp,
     }:
         raise BusinessRuleError("Canal de publication invalide")
-    snapshot, templates, blockers = _build_snapshot(
-        session=session, order_id=order_id
-    )
+    snapshot, templates, blockers = _build_snapshot(session=session, order_id=order_id)
     if blockers:
         raise BusinessRuleError(
             "Tous les résultats doivent être vérifiés avant publication"
@@ -1642,17 +1670,13 @@ def release_report(
     snapshot, normalized_render_config = _apply_render_config(
         snapshot, request.render_config
     )
-    for previous in report_repo.list_order_reports(
-        session=session, order_id=order_id
-    ):
+    for previous in report_repo.list_order_reports(session=session, order_id=order_id):
         if not previous.is_voided:
             previous.is_voided = True
             session.add(previous)
     report = Report(
         order_id=order_id,
-        version=report_repo.next_report_version(
-            session=session, order_id=order_id
-        ),
+        version=report_repo.next_report_version(session=session, order_id=order_id),
         released_by_id=user_id,
         channel=request.channel,
         recipient_note=request.recipient_note,
@@ -1693,9 +1717,7 @@ def get_report(*, session: Session, report_id: uuid.UUID) -> ReportPublic:
     return ReportPublic.model_validate(report)
 
 
-def list_order_reports(
-    *, session: Session, order_id: uuid.UUID
-) -> ReportsPublic:
+def list_order_reports(*, session: Session, order_id: uuid.UUID) -> ReportsPublic:
     reports = report_repo.list_order_reports(session=session, order_id=order_id)
     return ReportsPublic(
         data=[ReportPublic.model_validate(report) for report in reports],

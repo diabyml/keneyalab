@@ -38,7 +38,7 @@ export class AnalytesService {
             }
         });
     }
-
+    
     /**
      * Create Analyte
      * Create a new analyte.
@@ -58,7 +58,7 @@ export class AnalytesService {
             }
         });
     }
-
+    
     /**
      * Read Analyte
      * Get an analyte by ID.
@@ -79,7 +79,7 @@ export class AnalytesService {
             }
         });
     }
-
+    
     /**
      * Update Analyte
      * Update an analyte.
@@ -103,7 +103,7 @@ export class AnalytesService {
             }
         });
     }
-
+    
     /**
      * Delete Analyte
      * Soft-delete an analyte.
@@ -124,7 +124,7 @@ export class AnalytesService {
             }
         });
     }
-
+    
     /**
      * Restore Analyte
      * Restore a soft-deleted analyte.
@@ -195,7 +195,7 @@ export class AuditLogsService {
             }
         });
     }
-
+    
     /**
      * Read Audit Summary
      * @param data The data for the request.
@@ -235,7 +235,7 @@ export class AuditLogsService {
             }
         });
     }
-
+    
     /**
      * Read Audit Actors
      * @param data The data for the request.
@@ -257,7 +257,7 @@ export class AuditLogsService {
             }
         });
     }
-
+    
     /**
      * Export Audit Logs
      * @param data The data for the request.
@@ -297,7 +297,7 @@ export class AuditLogsService {
             }
         });
     }
-
+    
     /**
      * Read Audit Log
      * @param data The data for the request.
@@ -355,7 +355,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Create Consistency Rule
      * @param data The data for the request.
@@ -374,7 +374,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Preview Consistency Rule
      * @param data The data for the request.
@@ -393,7 +393,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Read Consistency Rule
      * @param data The data for the request.
@@ -413,7 +413,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Update Consistency Rule
      * @param data The data for the request.
@@ -436,7 +436,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Delete Consistency Rule
      * @param data The data for the request.
@@ -456,7 +456,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Restore Consistency Rule
      * @param data The data for the request.
@@ -476,7 +476,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Read Reflex Rules
      * @param data The data for the request.
@@ -514,7 +514,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Create Reflex Rule
      * @param data The data for the request.
@@ -533,7 +533,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Preview Reflex Rule
      * @param data The data for the request.
@@ -552,7 +552,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Read Reflex Rule
      * @param data The data for the request.
@@ -572,7 +572,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Update Reflex Rule
      * @param data The data for the request.
@@ -595,7 +595,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Delete Reflex Rule
      * @param data The data for the request.
@@ -615,7 +615,7 @@ export class AutomatedRulesService {
             }
         });
     }
-
+    
     /**
      * Restore Reflex Rule
      * @param data The data for the request.
@@ -676,7 +676,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Create Catalog
      * Create a test or panel catalog entry.
@@ -696,7 +696,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Read Catalog Entry
      * Get a catalog entry with analytes, specimen requirements, and panel items.
@@ -717,7 +717,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Update Catalog
      * Update catalog metadata.
@@ -741,7 +741,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Delete Catalog
      * Soft-delete a catalog entry.
@@ -762,7 +762,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Restore Catalog
      * Restore a soft-deleted catalog entry.
@@ -783,7 +783,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Add Catalog Analyte
      * Attach an analyte to a catalog test.
@@ -807,7 +807,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Reorder Catalog Analytes
      * Persist analyte attachment order for a catalog test.
@@ -831,7 +831,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Remove Catalog Analyte
      * Remove an analyte attachment from a catalog test.
@@ -854,7 +854,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Upsert Catalog Specimen Requirement
      * Create or update a specimen requirement for a catalog test.
@@ -880,7 +880,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Remove Catalog Specimen Requirement
      * Remove a specimen requirement from a catalog test.
@@ -903,7 +903,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Add Catalog Panel Item
      * Attach a test to a catalog panel.
@@ -927,7 +927,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Reorder Catalog Panel Items
      * Persist test order for a catalog panel.
@@ -951,7 +951,7 @@ export class CatalogService {
             }
         });
     }
-
+    
     /**
      * Remove Catalog Panel Item
      * Remove a test from a catalog panel.
@@ -1003,7 +1003,7 @@ export class CategoriesService {
             }
         });
     }
-
+    
     /**
      * Create Category
      * Create a new category.
@@ -1023,7 +1023,7 @@ export class CategoriesService {
             }
         });
     }
-
+    
     /**
      * Reorder Categories
      * Persist category sort order in bulk.
@@ -1043,7 +1043,7 @@ export class CategoriesService {
             }
         });
     }
-
+    
     /**
      * Read Category
      * Get a category by ID.
@@ -1064,7 +1064,7 @@ export class CategoriesService {
             }
         });
     }
-
+    
     /**
      * Update Category
      * Update a category.
@@ -1088,7 +1088,7 @@ export class CategoriesService {
             }
         });
     }
-
+    
     /**
      * Delete Category
      * Soft-delete a category.
@@ -1109,7 +1109,7 @@ export class CategoriesService {
             }
         });
     }
-
+    
     /**
      * Restore Category
      * Restore a soft-deleted category.
@@ -1158,7 +1158,7 @@ export class CriticalNotificationsService {
             }
         });
     }
-
+    
     /**
      * Read Unacknowledged Count
      * @returns CriticalNotificationCountPublic Successful Response
@@ -1170,7 +1170,7 @@ export class CriticalNotificationsService {
             url: '/api/v1/critical-notifications/unacknowledged-count'
         });
     }
-
+    
     /**
      * Read Critical Recipients
      * @param data The data for the request.
@@ -1194,7 +1194,7 @@ export class CriticalNotificationsService {
             }
         });
     }
-
+    
     /**
      * Create Critical Notification
      * @param data The data for the request.
@@ -1217,7 +1217,7 @@ export class CriticalNotificationsService {
             }
         });
     }
-
+    
     /**
      * Read Critical Notification
      * @param data The data for the request.
@@ -1237,7 +1237,7 @@ export class CriticalNotificationsService {
             }
         });
     }
-
+    
     /**
      * Acknowledge Critical Notification
      * @param data The data for the request.
@@ -1347,7 +1347,7 @@ export class DoctorCommissionEntriesService {
             }
         });
     }
-
+    
     /**
      * Read Entry
      * @param data The data for the request.
@@ -1367,7 +1367,7 @@ export class DoctorCommissionEntriesService {
             }
         });
     }
-
+    
     /**
      * Create Adjustment
      * @param data The data for the request.
@@ -1428,7 +1428,7 @@ export class DoctorCommissionPaymentsService {
             }
         });
     }
-
+    
     /**
      * Create Payment
      * @param data The data for the request.
@@ -1447,7 +1447,7 @@ export class DoctorCommissionPaymentsService {
             }
         });
     }
-
+    
     /**
      * Read Doctor Options
      * @param data The data for the request.
@@ -1471,7 +1471,7 @@ export class DoctorCommissionPaymentsService {
             }
         });
     }
-
+    
     /**
      * Read Payment Method Options
      * @param data The data for the request.
@@ -1495,7 +1495,7 @@ export class DoctorCommissionPaymentsService {
             }
         });
     }
-
+    
     /**
      * Read Payable Lines
      * @param data The data for the request.
@@ -1525,7 +1525,7 @@ export class DoctorCommissionPaymentsService {
             }
         });
     }
-
+    
     /**
      * Preview Payment
      * @param data The data for the request.
@@ -1544,7 +1544,7 @@ export class DoctorCommissionPaymentsService {
             }
         });
     }
-
+    
     /**
      * Read Payment
      * @param data The data for the request.
@@ -1600,7 +1600,7 @@ export class DoctorsService {
             }
         });
     }
-
+    
     /**
      * Create Doctor
      * @param data The data for the request.
@@ -1619,7 +1619,7 @@ export class DoctorsService {
             }
         });
     }
-
+    
     /**
      * Read Doctor
      * @param data The data for the request.
@@ -1639,7 +1639,7 @@ export class DoctorsService {
             }
         });
     }
-
+    
     /**
      * Update Doctor
      * @param data The data for the request.
@@ -1662,7 +1662,7 @@ export class DoctorsService {
             }
         });
     }
-
+    
     /**
      * Delete Doctor
      * @param data The data for the request.
@@ -1682,7 +1682,7 @@ export class DoctorsService {
             }
         });
     }
-
+    
     /**
      * Restore Doctor
      * @param data The data for the request.
@@ -1702,7 +1702,7 @@ export class DoctorsService {
             }
         });
     }
-
+    
     /**
      * Read Doctor Commission Configs
      * @param data The data for the request.
@@ -1732,7 +1732,7 @@ export class DoctorsService {
             }
         });
     }
-
+    
     /**
      * Create Doctor Commission Config
      * @param data The data for the request.
@@ -1769,7 +1769,7 @@ export class FinanceSettingsService {
             url: '/api/v1/finance-settings/'
         });
     }
-
+    
     /**
      * Update Finance Settings
      * @param data The data for the request.
@@ -1848,7 +1848,7 @@ export class InsurancePricingsService {
             }
         });
     }
-
+    
     /**
      * Create Insurance Pricing
      * @param data The data for the request.
@@ -1867,7 +1867,7 @@ export class InsurancePricingsService {
             }
         });
     }
-
+    
     /**
      * Update Insurance Pricing
      * @param data The data for the request.
@@ -1890,7 +1890,7 @@ export class InsurancePricingsService {
             }
         });
     }
-
+    
     /**
      * Delete Insurance Pricing
      * @param data The data for the request.
@@ -1944,7 +1944,7 @@ export class InsuranceProvidersService {
             }
         });
     }
-
+    
     /**
      * Create Insurance Provider
      * @param data The data for the request.
@@ -1963,7 +1963,7 @@ export class InsuranceProvidersService {
             }
         });
     }
-
+    
     /**
      * Read Insurance Provider
      * @param data The data for the request.
@@ -1983,7 +1983,7 @@ export class InsuranceProvidersService {
             }
         });
     }
-
+    
     /**
      * Update Insurance Provider
      * @param data The data for the request.
@@ -2006,7 +2006,7 @@ export class InsuranceProvidersService {
             }
         });
     }
-
+    
     /**
      * Delete Insurance Provider
      * @param data The data for the request.
@@ -2026,7 +2026,7 @@ export class InsuranceProvidersService {
             }
         });
     }
-
+    
     /**
      * Restore Insurance Provider
      * @param data The data for the request.
@@ -2092,7 +2092,7 @@ export class InvoicesService {
             }
         });
     }
-
+    
     /**
      * Read Invoice Summary
      * @param data The data for the request.
@@ -2128,7 +2128,7 @@ export class InvoicesService {
             }
         });
     }
-
+    
     /**
      * Read Invoice Payment Method Options
      * @param data The data for the request.
@@ -2152,7 +2152,7 @@ export class InvoicesService {
             }
         });
     }
-
+    
     /**
      * Read Invoice Insurance Provider Options
      * @param data The data for the request.
@@ -2176,7 +2176,7 @@ export class InvoicesService {
             }
         });
     }
-
+    
     /**
      * Read Invoice
      * @param data The data for the request.
@@ -2196,7 +2196,7 @@ export class InvoicesService {
             }
         });
     }
-
+    
     /**
      * Collect Invoice Payment
      * @param data The data for the request.
@@ -2219,7 +2219,7 @@ export class InvoicesService {
             }
         });
     }
-
+    
     /**
      * Refund Invoice Payment
      * @param data The data for the request.
@@ -2244,7 +2244,7 @@ export class InvoicesService {
             }
         });
     }
-
+    
     /**
      * Reissue Invoice
      * @param data The data for the request.
@@ -2292,7 +2292,7 @@ export class ItemsService {
             }
         });
     }
-
+    
     /**
      * Create Item
      * Create new item.
@@ -2312,7 +2312,7 @@ export class ItemsService {
             }
         });
     }
-
+    
     /**
      * Read Item
      * Get item by ID.
@@ -2333,7 +2333,7 @@ export class ItemsService {
             }
         });
     }
-
+    
     /**
      * Update Item
      * Update an item.
@@ -2357,7 +2357,7 @@ export class ItemsService {
             }
         });
     }
-
+    
     /**
      * Delete Item
      * Delete an item.
@@ -2392,7 +2392,7 @@ export class LabSettingsService {
             url: '/api/v1/lab-settings/'
         });
     }
-
+    
     /**
      * Update Lab Settings
      * @param data The data for the request.
@@ -2411,7 +2411,7 @@ export class LabSettingsService {
             }
         });
     }
-
+    
     /**
      * Upload Lab Logo
      * @param data The data for the request.
@@ -2430,7 +2430,7 @@ export class LabSettingsService {
             }
         });
     }
-
+    
     /**
      * Delete Lab Logo
      * @returns LabSettingsPublic Successful Response
@@ -2464,7 +2464,7 @@ export class LoginService {
             }
         });
     }
-
+    
     /**
      * Test Token
      * Test access token.
@@ -2477,7 +2477,7 @@ export class LoginService {
             url: '/api/v1/login/test-token'
         });
     }
-
+    
     /**
      * Recover Password
      * Password Recovery — always returns success to prevent email enumeration.
@@ -2498,7 +2498,7 @@ export class LoginService {
             }
         });
     }
-
+    
     /**
      * Reset Password
      * Reset password.
@@ -2518,7 +2518,7 @@ export class LoginService {
             }
         });
     }
-
+    
     /**
      * Recover Password Html Content
      * HTML Content for Password Recovery (admin only).
@@ -2579,7 +2579,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Create Order
      * @param data The data for the request.
@@ -2598,7 +2598,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Read Order Catalog Options
      * @param data The data for the request.
@@ -2626,7 +2626,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Read Payment Method Options
      * @returns PaymentMethodsPublic Successful Response
@@ -2638,7 +2638,7 @@ export class OrdersService {
             url: '/api/v1/orders/payment-method-options'
         });
     }
-
+    
     /**
      * Read Order Catalog Option
      * @param data The data for the request.
@@ -2658,7 +2658,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Suggested Patient Identifier
      * @returns SuggestedIdentifierPublic Successful Response
@@ -2670,7 +2670,7 @@ export class OrdersService {
             url: '/api/v1/orders/suggested-patient-identifier'
         });
     }
-
+    
     /**
      * Preview Order
      * @param data The data for the request.
@@ -2689,7 +2689,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Read Order
      * @param data The data for the request.
@@ -2709,7 +2709,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Update Order
      * @param data The data for the request.
@@ -2732,7 +2732,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Preview Order Update
      * @param data The data for the request.
@@ -2755,7 +2755,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Cancel Order
      * @param data The data for the request.
@@ -2778,7 +2778,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Customize Order Item Analytes
      * @param data The data for the request.
@@ -2803,7 +2803,7 @@ export class OrdersService {
             }
         });
     }
-
+    
     /**
      * Read Order Revisions
      * @param data The data for the request.
@@ -2851,7 +2851,7 @@ export class PatientContextsService {
             }
         });
     }
-
+    
     /**
      * Create Patient Context
      * @param data The data for the request.
@@ -2870,7 +2870,7 @@ export class PatientContextsService {
             }
         });
     }
-
+    
     /**
      * Read Patient Context
      * @param data The data for the request.
@@ -2890,7 +2890,7 @@ export class PatientContextsService {
             }
         });
     }
-
+    
     /**
      * Update Patient Context
      * @param data The data for the request.
@@ -2913,7 +2913,7 @@ export class PatientContextsService {
             }
         });
     }
-
+    
     /**
      * Delete Patient Context
      * @param data The data for the request.
@@ -2933,7 +2933,7 @@ export class PatientContextsService {
             }
         });
     }
-
+    
     /**
      * Restore Patient Context
      * @param data The data for the request.
@@ -2991,7 +2991,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Create Patient
      * @param data The data for the request.
@@ -3010,7 +3010,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Read Patient
      * @param data The data for the request.
@@ -3030,7 +3030,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Update Patient
      * @param data The data for the request.
@@ -3053,7 +3053,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Delete Patient
      * @param data The data for the request.
@@ -3073,7 +3073,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Restore Patient
      * @param data The data for the request.
@@ -3093,7 +3093,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Read Patient Insurances
      * @param data The data for the request.
@@ -3127,7 +3127,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Create Patient Insurance
      * @param data The data for the request.
@@ -3150,7 +3150,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Update Patient Insurance
      * @param data The data for the request.
@@ -3175,7 +3175,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Delete Patient Insurance
      * @param data The data for the request.
@@ -3197,7 +3197,7 @@ export class PatientsService {
             }
         });
     }
-
+    
     /**
      * Restore Patient Insurance
      * @param data The data for the request.
@@ -3245,7 +3245,7 @@ export class PaymentMethodsService {
             }
         });
     }
-
+    
     /**
      * Create Payment Method
      * @param data The data for the request.
@@ -3264,7 +3264,7 @@ export class PaymentMethodsService {
             }
         });
     }
-
+    
     /**
      * Read Payment Method
      * @param data The data for the request.
@@ -3284,7 +3284,7 @@ export class PaymentMethodsService {
             }
         });
     }
-
+    
     /**
      * Update Payment Method
      * @param data The data for the request.
@@ -3307,7 +3307,7 @@ export class PaymentMethodsService {
             }
         });
     }
-
+    
     /**
      * Delete Payment Method
      * @param data The data for the request.
@@ -3327,7 +3327,7 @@ export class PaymentMethodsService {
             }
         });
     }
-
+    
     /**
      * Restore Payment Method
      * @param data The data for the request.
@@ -3394,7 +3394,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Create Permission
      * Create a new permission.
@@ -3414,7 +3414,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Delete Permission
      * Delete a permission.
@@ -3435,7 +3435,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * List Roles
      * List all roles (soft-deleted excluded).
@@ -3458,7 +3458,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Create Role
      * Create a new role.
@@ -3478,7 +3478,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Get Role
      * Get a role with its permissions.
@@ -3499,7 +3499,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Update Role
      * Update a role.
@@ -3523,7 +3523,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Delete Role
      * Soft-delete a role.
@@ -3544,7 +3544,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Add Permission To Role
      * Assign a permission to a role.
@@ -3568,7 +3568,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Remove Permission From Role
      * Remove a permission from a role.
@@ -3591,7 +3591,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * List User Roles
      * List all role assignments for a user.
@@ -3612,7 +3612,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Assign Role To User
      * Assign a role to a user.
@@ -3636,7 +3636,7 @@ export class RbacService {
             }
         });
     }
-
+    
     /**
      * Remove Role From User
      * Remove a role from a user.
@@ -3693,7 +3693,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Create Reagent
      * @param data The data for the request.
@@ -3712,7 +3712,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Read Reagent Alert Summary
      * @returns ReagentAlertSummaryPublic Successful Response
@@ -3724,7 +3724,7 @@ export class ReagentsService {
             url: '/api/v1/reagents/alerts/summary'
         });
     }
-
+    
     /**
      * Read Reagent Settings
      * @returns ReagentSettingsPublic Successful Response
@@ -3736,7 +3736,7 @@ export class ReagentsService {
             url: '/api/v1/reagents/settings'
         });
     }
-
+    
     /**
      * Update Reagent Settings
      * @param data The data for the request.
@@ -3755,7 +3755,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Read Reagent Lots
      * @param data The data for the request.
@@ -3785,7 +3785,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Create Reagent Lot
      * @param data The data for the request.
@@ -3804,7 +3804,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Update Reagent Lot
      * @param data The data for the request.
@@ -3827,7 +3827,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Read Reagent Movements
      * @param data The data for the request.
@@ -3853,7 +3853,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Create Reagent Movement
      * @param data The data for the request.
@@ -3872,7 +3872,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Read Reagent
      * @param data The data for the request.
@@ -3892,7 +3892,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Update Reagent
      * @param data The data for the request.
@@ -3915,7 +3915,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Delete Reagent
      * @param data The data for the request.
@@ -3935,7 +3935,7 @@ export class ReagentsService {
             }
         });
     }
-
+    
     /**
      * Restore Reagent
      * @param data The data for the request.
@@ -3981,7 +3981,7 @@ export class RejectionReasonsService {
             }
         });
     }
-
+    
     /**
      * Create Rejection Reason
      * @param data The data for the request.
@@ -4000,7 +4000,7 @@ export class RejectionReasonsService {
             }
         });
     }
-
+    
     /**
      * Read Rejection Reason
      * @param data The data for the request.
@@ -4020,7 +4020,7 @@ export class RejectionReasonsService {
             }
         });
     }
-
+    
     /**
      * Update Rejection Reason
      * @param data The data for the request.
@@ -4043,7 +4043,7 @@ export class RejectionReasonsService {
             }
         });
     }
-
+    
     /**
      * Delete Rejection Reason
      * @param data The data for the request.
@@ -4063,7 +4063,7 @@ export class RejectionReasonsService {
             }
         });
     }
-
+    
     /**
      * Restore Rejection Reason
      * @param data The data for the request.
@@ -4105,7 +4105,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Create Report Component
      * @param data The data for the request.
@@ -4124,7 +4124,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Read Report Component
      * @param data The data for the request.
@@ -4144,7 +4144,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Update Report Component
      * @param data The data for the request.
@@ -4167,7 +4167,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Publish Report Component
      * @param data The data for the request.
@@ -4187,7 +4187,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Archive Report Component
      * @param data The data for the request.
@@ -4207,7 +4207,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Read Report Renderers
      * @returns ReportRenderersPublic Successful Response
@@ -4219,7 +4219,7 @@ export class ReportsService {
             url: '/api/v1/reports/renderers'
         });
     }
-
+    
     /**
      * Create Report Renderer
      * @param data The data for the request.
@@ -4238,7 +4238,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Read Report Renderer
      * @param data The data for the request.
@@ -4258,7 +4258,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Update Report Renderer
      * @param data The data for the request.
@@ -4281,7 +4281,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Publish Report Renderer
      * @param data The data for the request.
@@ -4301,7 +4301,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Archive Report Renderer
      * @param data The data for the request.
@@ -4321,7 +4321,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Read Report Settings
      * @returns ReportSettingsPublic Successful Response
@@ -4333,7 +4333,7 @@ export class ReportsService {
             url: '/api/v1/reports/settings'
         });
     }
-
+    
     /**
      * Set Default Report Component
      * @param data The data for the request.
@@ -4356,7 +4356,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Set Default Report Renderer
      * @param data The data for the request.
@@ -4375,7 +4375,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Assign Category Report Renderer
      * @param data The data for the request.
@@ -4398,7 +4398,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Read Sample Report Preview
      * @returns ReportPreviewPublic Successful Response
@@ -4410,7 +4410,7 @@ export class ReportsService {
             url: '/api/v1/reports/sample-preview'
         });
     }
-
+    
     /**
      * Read Order Report Preview
      * @param data The data for the request.
@@ -4430,7 +4430,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Release Order Report
      * @param data The data for the request.
@@ -4453,7 +4453,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Read Order Reports
      * @param data The data for the request.
@@ -4473,7 +4473,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Read Report
      * @param data The data for the request.
@@ -4493,7 +4493,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Void Report
      * @param data The data for the request.
@@ -4513,7 +4513,7 @@ export class ReportsService {
             }
         });
     }
-
+    
     /**
      * Deliver Report
      * @param data The data for the request.
@@ -4574,7 +4574,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Read Result Workspace
      * @param data The data for the request.
@@ -4594,7 +4594,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Update Result Interpretation
      * @param data The data for the request.
@@ -4617,7 +4617,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Enter Results
      * @param data The data for the request.
@@ -4640,7 +4640,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Upload Result Image
      * @param data The data for the request.
@@ -4663,7 +4663,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Add Result Comment
      * @param data The data for the request.
@@ -4686,7 +4686,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Correct Verified Result
      * @param data The data for the request.
@@ -4709,7 +4709,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Correct Verified Image Result
      * @param data The data for the request.
@@ -4732,7 +4732,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Verify Result
      * @param data The data for the request.
@@ -4752,7 +4752,7 @@ export class ResultsService {
             }
         });
     }
-
+    
     /**
      * Verify Order
      * @param data The data for the request.
@@ -4798,7 +4798,7 @@ export class SpecimensService {
             }
         });
     }
-
+    
     /**
      * Read Collection Queue
      * @param data The data for the request.
@@ -4836,7 +4836,7 @@ export class SpecimensService {
             }
         });
     }
-
+    
     /**
      * Read Rejection Reason Options
      * @param data The data for the request.
@@ -4860,7 +4860,7 @@ export class SpecimensService {
             }
         });
     }
-
+    
     /**
      * Read Collection Workspace
      * @param data The data for the request.
@@ -4880,7 +4880,7 @@ export class SpecimensService {
             }
         });
     }
-
+    
     /**
      * Collect Specimens
      * @param data The data for the request.
@@ -4899,7 +4899,7 @@ export class SpecimensService {
             }
         });
     }
-
+    
     /**
      * Collect All Specimens
      * @param data The data for the request.
@@ -4919,7 +4919,7 @@ export class SpecimensService {
             }
         });
     }
-
+    
     /**
      * Reject Specimen
      * @param data The data for the request.
@@ -4970,7 +4970,7 @@ export class SpecimenTypesService {
             }
         });
     }
-
+    
     /**
      * Create Specimen Type
      * @param data The data for the request.
@@ -4989,7 +4989,7 @@ export class SpecimenTypesService {
             }
         });
     }
-
+    
     /**
      * Read Specimen Type
      * @param data The data for the request.
@@ -5009,7 +5009,7 @@ export class SpecimenTypesService {
             }
         });
     }
-
+    
     /**
      * Update Specimen Type
      * @param data The data for the request.
@@ -5032,7 +5032,7 @@ export class SpecimenTypesService {
             }
         });
     }
-
+    
     /**
      * Delete Specimen Type
      * @param data The data for the request.
@@ -5052,7 +5052,7 @@ export class SpecimenTypesService {
             }
         });
     }
-
+    
     /**
      * Restore Specimen Type
      * @param data The data for the request.
@@ -5101,7 +5101,7 @@ export class TitlesService {
             }
         });
     }
-
+    
     /**
      * Create Title
      * Create a new title.
@@ -5121,7 +5121,7 @@ export class TitlesService {
             }
         });
     }
-
+    
     /**
      * Read Title
      * Get a title by ID.
@@ -5142,7 +5142,7 @@ export class TitlesService {
             }
         });
     }
-
+    
     /**
      * Update Title
      * Update a title.
@@ -5166,7 +5166,7 @@ export class TitlesService {
             }
         });
     }
-
+    
     /**
      * Delete Title
      * Soft-delete a title.
@@ -5187,7 +5187,7 @@ export class TitlesService {
             }
         });
     }
-
+    
     /**
      * Restore Title
      * Restore a soft-deleted title.
@@ -5237,7 +5237,7 @@ export class UnitsService {
             }
         });
     }
-
+    
     /**
      * Create Unit
      * Create a new unit.
@@ -5257,7 +5257,7 @@ export class UnitsService {
             }
         });
     }
-
+    
     /**
      * Read Unit
      * Get a unit by ID.
@@ -5278,7 +5278,7 @@ export class UnitsService {
             }
         });
     }
-
+    
     /**
      * Update Unit
      * Update a unit.
@@ -5302,7 +5302,7 @@ export class UnitsService {
             }
         });
     }
-
+    
     /**
      * Delete Unit
      * Soft-delete a unit.
@@ -5323,7 +5323,7 @@ export class UnitsService {
             }
         });
     }
-
+    
     /**
      * Restore Unit
      * Restore a soft-deleted unit.
@@ -5369,7 +5369,7 @@ export class UsersService {
             }
         });
     }
-
+    
     /**
      * Create User
      * Create new user (admin only).
@@ -5389,7 +5389,7 @@ export class UsersService {
             }
         });
     }
-
+    
     /**
      * Read User Me
      * Get current user.
@@ -5402,7 +5402,7 @@ export class UsersService {
             url: '/api/v1/users/me'
         });
     }
-
+    
     /**
      * Update User Me
      * Update own user.
@@ -5422,7 +5422,7 @@ export class UsersService {
             }
         });
     }
-
+    
     /**
      * Update Password Me
      * Update own password.
@@ -5442,7 +5442,7 @@ export class UsersService {
             }
         });
     }
-
+    
     /**
      * Read User Me Permissions
      * Get current user's effective permissions.
@@ -5455,7 +5455,7 @@ export class UsersService {
             url: '/api/v1/users/me/permissions'
         });
     }
-
+    
     /**
      * Read User By Id
      * Get a specific user by ID.
@@ -5476,7 +5476,7 @@ export class UsersService {
             }
         });
     }
-
+    
     /**
      * Update User
      * Update a user (admin only).
@@ -5523,7 +5523,7 @@ export class UtilsService {
             }
         });
     }
-
+    
     /**
      * Health Check
      * @returns boolean Successful Response
@@ -5578,7 +5578,7 @@ export class ValidationRulesService {
             }
         });
     }
-
+    
     /**
      * Create Validation Rule
      * Create a validation rule.
@@ -5598,7 +5598,7 @@ export class ValidationRulesService {
             }
         });
     }
-
+    
     /**
      * Simulate Validation Rule
      * Simulate rule matching and result classification.
@@ -5618,7 +5618,7 @@ export class ValidationRulesService {
             }
         });
     }
-
+    
     /**
      * Update Validation Rule
      * Update a validation rule.
@@ -5642,7 +5642,7 @@ export class ValidationRulesService {
             }
         });
     }
-
+    
     /**
      * Read Validation Rule
      * Get a validation rule by ID.

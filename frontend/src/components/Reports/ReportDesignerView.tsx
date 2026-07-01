@@ -984,7 +984,7 @@ function PreviewPane({
   return (
     <section className="min-w-0 overflow-auto bg-slate-100 p-6 dark:bg-slate-950">
       {preview?.snapshot && templates ? (
-        <div className="origin-top scale-[0.78]">
+        <div className="mx-auto w-[210mm] origin-top scale-[0.78]">
           <ReportDocument
             snapshot={asReportSnapshot(preview.snapshot)}
             templates={templates}

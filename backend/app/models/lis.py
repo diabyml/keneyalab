@@ -2596,8 +2596,11 @@ class Report(ReportBase, table=True):
 
 
 class ReportRenderConfig(SQLModel):
+    section_order: list[str] = Field(default_factory=list)
     category_order: list[str] = Field(default_factory=list)
     category_page_breaks: dict[str, bool] = Field(default_factory=dict)
+    interpretation_page_break: bool = False
+    footer_spacing_mm: int = 4
     hidden_analyte_ids: list[str] = Field(default_factory=list)
 
 

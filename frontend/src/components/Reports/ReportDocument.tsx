@@ -34,11 +34,20 @@ export type ReportDocumentHandle = {
 }
 
 type CategoryRenderEntry = {
+  kind: "category"
   key: string
   category: ReportCategory
   renderer: RendererTemplate | null
   pageBreak: boolean
 }
+
+type InterpretationRenderEntry = {
+  kind: "interpretation"
+  key: "interpretation"
+  pageBreak: boolean
+}
+
+type SectionRenderEntry = CategoryRenderEntry | InterpretationRenderEntry
 
 type CompiledRenderer = {
   key: string
@@ -137,6 +146,11 @@ const REPORT_DOCUMENT_BASE_STYLES = `
     page-break-before: always;
   }
 
+  .report-interpretation-force-break {
+    break-before: page;
+    page-break-before: always;
+  }
+
   .report-missing-renderer,
   .report-renderer-error {
     border: 1px solid #fecaca;
@@ -181,6 +195,11 @@ const REPORT_DOCUMENT_BASE_STYLES = `
     }
 
     .report-category-force-break {
+      break-before: page;
+      page-break-before: always;
+    }
+
+    .report-interpretation-force-break {
       break-before: page;
       page-break-before: always;
     }
@@ -284,31 +303,42 @@ function rendererRegistrationScript(compiledRenderers: CompiledRenderer[]) {
 }
 
 function buildReportDocumentHtml({
-  entries,
+  sections,
   compiledRenderers,
   header,
   details,
   footer,
+  footerSpacingMm,
   componentCss,
   interpretationHtml,
   voided,
 }: {
-  entries: CategoryRenderEntry[]
+  sections: SectionRenderEntry[]
   compiledRenderers: CompiledRenderer[]
   header: string
   details: string
   footer: string
+  footerSpacingMm: number
   componentCss: string
   interpretationHtml: string
   voided: boolean
 }) {
-  const categories = entries.map((entry) => ({
-    key: entry.key,
-    name: entry.category.name,
-    category: entry.category,
-    pageBreak: entry.pageBreak,
-    rendererMissing: !entry.renderer,
-  }))
+  const reportSections = sections.map((entry) =>
+    entry.kind === "interpretation"
+      ? {
+          kind: "interpretation",
+          key: entry.key,
+          pageBreak: entry.pageBreak,
+        }
+      : {
+          kind: "category",
+          key: entry.key,
+          name: entry.category.name,
+          category: entry.category,
+          pageBreak: entry.pageBreak,
+          rendererMissing: !entry.renderer,
+        },
+  )
   const rendererCssByKey = Object.fromEntries(
     compiledRenderers.map((renderer) => [renderer.key, renderer.css]),
   )
@@ -318,7 +348,10 @@ function buildReportDocumentHtml({
     const renderers = {};
     const rendererErrors = {};
     const rendererCssByKey = ${safeJson(rendererCssByKey)};
-    const categories = ${safeJson(categories)};
+    const reportSections = ${safeJson(reportSections)};
+    const footerHtml = ${safeJson(footer)};
+    const footerSpacingMm = ${safeJson(footerSpacingMm)};
+    let footerRendered = false;
 
     function append(parent, child) {
       if (child == null || child === false || child === true) return;
@@ -468,11 +501,36 @@ function buildReportDocumentHtml({
       return section;
     }
 
+    function renderFooter() {
+      const footer = document.createElement("div");
+      footer.className = "report-component-content";
+      footer.style.marginTop = footerSpacingMm + "mm";
+      footer.innerHTML = footerHtml;
+      footerRendered = true;
+      return footer;
+    }
+
+    function renderSection(entry) {
+      if (entry.kind === "interpretation") {
+        const interpretation = renderInterpretation();
+        if (!interpretation) return null;
+        if (entry.pageBreak) {
+          interpretation.classList.add("report-interpretation-force-break");
+        }
+        const group = document.createDocumentFragment();
+        group.append(interpretation, renderFooter());
+        return group;
+      }
+      return renderCategory(entry);
+    }
+
     try {
       const main = document.getElementById("report-main");
-      categories.forEach((entry) => main.append(renderCategory(entry)));
-      const interpretation = renderInterpretation();
-      if (interpretation) main.append(interpretation);
+      reportSections.forEach((entry) => {
+        const section = renderSection(entry);
+        if (section) main.append(section);
+      });
+      if (!footerRendered) main.append(renderFooter());
       if ("ResizeObserver" in window) {
         const observer = new ResizeObserver(scheduleHeightReports);
         observer.observe(document.documentElement);
@@ -506,7 +564,6 @@ function buildReportDocumentHtml({
         <div class="report-component-content">${header}</div>
         <div class="report-component-content">${details}</div>
         <main id="report-main" class="report-main"></main>
-        <div class="report-component-content">${footer}</div>
       </article>
       <script>${safeScript(runtime)}</script>
     </body>
@@ -536,22 +593,54 @@ export const ReportDocument = forwardRef<
     () => applyReportRenderConfig(snapshot, normalizedRenderConfig),
     [snapshot, normalizedRenderConfig],
   )
-  const entries = useMemo<CategoryRenderEntry[]>(
-    () =>
-      renderedSnapshot.categories.map((category, index) => {
-        const key = reportCategoryKey(category)
-        return {
-          key,
-          category,
-          renderer:
-            templates.renderers[key] ?? templates.renderers.uncategorized,
-          pageBreak:
-            normalizedRenderConfig.category_page_breaks[key] === true &&
-            index > 0,
-        }
-      }),
-    [normalizedRenderConfig, renderedSnapshot.categories, templates.renderers],
-  )
+  const sections = useMemo<SectionRenderEntry[]>(() => {
+    const hasInterpretation = Boolean(renderedSnapshot.interpretation?.html)
+    const categoryEntries = renderedSnapshot.categories.map((category) => {
+      const key = reportCategoryKey(category)
+      return {
+        kind: "category" as const,
+        key,
+        category,
+        renderer: templates.renderers[key] ?? templates.renderers.uncategorized,
+        pageBreak: normalizedRenderConfig.category_page_breaks[key] === true,
+      }
+    })
+    const entriesByKey = new Map<string, SectionRenderEntry>(
+      categoryEntries.map((entry) => [entry.key, entry]),
+    )
+    if (hasInterpretation) {
+      entriesByKey.set("interpretation", {
+        kind: "interpretation",
+        key: "interpretation",
+        pageBreak: normalizedRenderConfig.interpretation_page_break,
+      })
+    }
+    const orderedKeys = [
+      ...normalizedRenderConfig.section_order.filter(
+        (key) => key !== "footer" && entriesByKey.has(key),
+      ),
+      ...categoryEntries
+        .map((entry) => entry.key)
+        .filter((key) => !normalizedRenderConfig.section_order.includes(key)),
+      ...(hasInterpretation &&
+      !normalizedRenderConfig.section_order.includes("interpretation")
+        ? ["interpretation"]
+        : []),
+    ]
+
+    return orderedKeys
+      .map((key) => entriesByKey.get(key))
+      .filter((entry): entry is SectionRenderEntry => Boolean(entry))
+      .map((entry, index) => ({
+        ...entry,
+        pageBreak: entry.pageBreak && index > 0,
+      }))
+  }, [
+    normalizedRenderConfig,
+    renderedSnapshot.categories,
+    renderedSnapshot.interpretation?.html,
+    templates.renderers,
+  ])
   const header = useMemo(
     () => interpolate(templates.header.html_source, snapshot),
     [snapshot, templates.header.html_source],
@@ -598,12 +687,12 @@ export const ReportDocument = forwardRef<
     setCompiledRenderers(null)
     onReadyChange?.(false)
 
-    const rendererJobs = entries
+    const rendererJobs = sections
       .filter(
         (
           entry,
         ): entry is CategoryRenderEntry & { renderer: RendererTemplate } =>
-          Boolean(entry.renderer),
+          entry.kind === "category" && Boolean(entry.renderer),
       )
       .map(async (entry) => ({
         key: entry.key,
@@ -624,7 +713,7 @@ export const ReportDocument = forwardRef<
     return () => {
       active = false
     }
-  }, [entries, onReadyChange])
+  }, [sections, onReadyChange])
 
   useEffect(() => {
     const receive = (event: MessageEvent) => {
@@ -650,22 +739,24 @@ export const ReportDocument = forwardRef<
       compileError || !compiledRenderers
         ? ""
         : buildReportDocumentHtml({
-            entries,
+            sections,
             compiledRenderers,
             header,
             details,
             footer,
+            footerSpacingMm: normalizedRenderConfig.footer_spacing_mm,
             componentCss,
             interpretationHtml,
             voided,
           }),
     [
       compileError,
-      entries,
+      sections,
       compiledRenderers,
       header,
       details,
       footer,
+      normalizedRenderConfig.footer_spacing_mm,
       componentCss,
       interpretationHtml,
       voided,
