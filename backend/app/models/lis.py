@@ -521,7 +521,9 @@ class NotificationFilters(CreatedAtFilter, SortFilter, PaginationFilter):
     sent_to: datetime | None = None
 
 
-class ReagentFilters(SearchFilter, SoftDeleteFilter, CreatedAtFilter, SortFilter, PaginationFilter):
+class ReagentFilters(
+    SearchFilter, SoftDeleteFilter, CreatedAtFilter, SortFilter, PaginationFilter
+):
     stock_status: str | None = None
     expiry_status: ReagentExpiryStatus | None = None
 
@@ -2702,8 +2704,12 @@ class ReagentSettings(ReagentSettingsBase, table=True):
 
     id: int = Field(default=1, primary_key=True)
     updated_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
-    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
-    updated_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
 
 
 class ReagentSettingsPublic(ReagentSettingsBase, TimestampPublic):
@@ -2747,8 +2753,12 @@ class Reagent(ReagentBase, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
     is_deleted: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
-    updated_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
 
 
 class ReagentPublic(ReagentBase, SoftDeletePublic):
@@ -2793,17 +2803,25 @@ class ReagentLotUpdate(SQLModel):
 class ReagentLot(ReagentLotBase, table=True):
     __tablename__ = "reagent_lots"
     __table_args__ = (
-        UniqueConstraint("reagent_id", "lot_number", name="uq_reagent_lots_reagent_lot"),
+        UniqueConstraint(
+            "reagent_id", "lot_number", name="uq_reagent_lots_reagent_lot"
+        ),
     )
 
     id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
     current_quantity: Decimal = Field(sa_column=Column(Numeric(12, 3), nullable=False))
     status: ReagentLotStatus = Field(
         default=ReagentLotStatus.active,
-        sa_column=Column(pg_enum(ReagentLotStatus, "reagent_lot_status"), nullable=False),
+        sa_column=Column(
+            pg_enum(ReagentLotStatus, "reagent_lot_status"), nullable=False
+        ),
     )
-    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
-    updated_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
 
 
 class ReagentLotPublic(ReagentLotBase, TimestampPublic):
@@ -2836,15 +2854,21 @@ class ReagentStockMovement(SQLModel, table=True):
     reagent_id: uuid.UUID = Field(foreign_key="reagents.id")
     lot_id: uuid.UUID = Field(foreign_key="reagent_lots.id")
     movement_type: ReagentMovementType = Field(
-        sa_column=Column(pg_enum(ReagentMovementType, "reagent_movement_type"), nullable=False)
+        sa_column=Column(
+            pg_enum(ReagentMovementType, "reagent_movement_type"), nullable=False
+        )
     )
     quantity: Decimal = Field(sa_column=Column(Numeric(12, 3), nullable=False))
     balance_after: Decimal = Field(sa_column=Column(Numeric(12, 3), nullable=False))
     reason: str = Field(max_length=255)
     notes: str | None = Field(default=None, sa_column=Column(Text))
     performed_by_id: uuid.UUID = Field(foreign_key="user.id")
-    performed_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
-    created_at: datetime = Field(default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ)
+    performed_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
+    created_at: datetime = Field(
+        default_factory=utc_timestamp_field, sa_type=TIMESTAMPTZ
+    )
 
 
 class ReagentStockMovementPublic(SQLModel):
@@ -3951,6 +3975,20 @@ class AuditActorPublic(SQLModel):
 
 class AuditActorsPublic(SQLModel):
     data: list[AuditActorPublic]
+
+
+class GlobalSearchResultPublic(SQLModel):
+    kind: str
+    title: str
+    subtitle: str | None = None
+    badge: str | None = None
+    href: str
+    resource: str
+    record_id: uuid.UUID | None = None
+
+
+class GlobalSearchResultsPublic(SQLModel):
+    data: list[GlobalSearchResultPublic]
 
 
 __all__ = [

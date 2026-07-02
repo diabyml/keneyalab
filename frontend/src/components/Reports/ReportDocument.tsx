@@ -244,13 +244,6 @@ const RENDERER_BASE_STYLES = `
     max-height: 100px;
   }
 
-  .result-comment {
-    display: block;
-    margin-top: 3px;
-    color: #000;
-    font-style: italic;
-  }
-
   .result-abnormal,
   .result-abnormal *,
   .result-critical,
@@ -398,8 +391,7 @@ function buildReportDocumentHtml({
                 h("td", { className: analyte.is_critical ? "result-critical" : analyte.is_abnormal ? "result-abnormal" : "" },
                   analyte.data_type === "image" && analyte.image_url
                     ? h("img", { src: analyte.image_url, alt: analyte.analyte_name, className: "report-result-image" })
-                    : analyte.result_value || "—",
-                  ...(analyte.comments || []).map((comment) => h("small", { className: "result-comment" }, comment.comment))
+                    : analyte.result_value || "—"
                 ),
                 h("td", null, analyte.unit_name || "—"),
                 h("td", null, analyte.reference_text || "—")
@@ -781,7 +773,7 @@ export const ReportDocument = forwardRef<
       title="Aperçu du compte rendu"
       sandbox="allow-scripts allow-modals"
       srcDoc={srcDoc}
-      className="mx-auto block w-full border-0 bg-transparent"
+      className="mx-auto block w-[210mm] min-w-[210mm] border-0 bg-transparent"
       scrolling="no"
       style={{ height }}
     />

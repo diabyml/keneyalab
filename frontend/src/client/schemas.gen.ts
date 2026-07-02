@@ -4111,6 +4111,79 @@ export const GenderTypeSchema = {
     title: 'GenderType'
 } as const;
 
+export const GlobalSearchResultPublicSchema = {
+    properties: {
+        kind: {
+            type: 'string',
+            title: 'Kind'
+        },
+        title: {
+            type: 'string',
+            title: 'Title'
+        },
+        subtitle: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Subtitle'
+        },
+        badge: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Badge'
+        },
+        href: {
+            type: 'string',
+            title: 'Href'
+        },
+        resource: {
+            type: 'string',
+            title: 'Resource'
+        },
+        record_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Record Id'
+        }
+    },
+    type: 'object',
+    required: ['kind', 'title', 'href', 'resource'],
+    title: 'GlobalSearchResultPublic'
+} as const;
+
+export const GlobalSearchResultsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/GlobalSearchResultPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        }
+    },
+    type: 'object',
+    required: ['data'],
+    title: 'GlobalSearchResultsPublic'
+} as const;
+
 export const HTTPValidationErrorSchema = {
     properties: {
         detail: {

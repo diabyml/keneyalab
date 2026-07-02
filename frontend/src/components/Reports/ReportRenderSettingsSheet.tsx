@@ -148,6 +148,40 @@ export function ReportRenderSettingsSheet({
   onChange: (value: ReportRenderConfig) => void
   readOnly?: boolean
 }) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-[calc(100vw-1rem)] overflow-hidden p-0 sm:max-w-xl">
+        <SheetHeader className="border-b pr-12">
+          <SheetTitle>Configurer le rendu</SheetTitle>
+          <SheetDescription>
+            {readOnly
+              ? "Configuration figée pour cette version publiée."
+              : "Ces réglages seront enregistrés avec la version publiée."}
+          </SheetDescription>
+        </SheetHeader>
+
+        <ReportRenderSettingsContent
+          snapshot={snapshot}
+          value={value}
+          onChange={onChange}
+          readOnly={readOnly}
+        />
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+export function ReportRenderSettingsContent({
+  snapshot,
+  value,
+  onChange,
+  readOnly = false,
+}: {
+  snapshot: ReportSnapshot
+  value: Partial<ReportRenderConfig> | null | undefined
+  onChange: (value: ReportRenderConfig) => void
+  readOnly?: boolean
+}) {
   const config = useMemo(() => normalizeReportRenderConfig(value), [value])
   const categories = useMemo(
     () => orderedCategories(snapshot, config),
@@ -238,277 +272,261 @@ export function ReportRenderSettingsSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[calc(100vw-1rem)] overflow-hidden p-0 sm:max-w-xl">
-        <SheetHeader className="border-b pr-12">
-          <SheetTitle>Configurer le rendu</SheetTitle>
-          <SheetDescription>
-            {readOnly
-              ? "Configuration figée pour cette version publiée."
-              : "Ces réglages seront enregistrés avec la version publiée."}
-          </SheetDescription>
-        </SheetHeader>
-
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="space-y-5 p-4">
-            <section className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-medium">Ordre du rapport</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Déplacez les catégories et l'interprétation.
-                  </p>
-                </div>
+    <>
+      <ScrollArea className="min-h-0 flex-1 overflow-hidden">
+        <div className="space-y-5 px-4 pb-8 pt-4">
+          <section className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-medium">Ordre du rapport</h3>
+                <p className="text-xs text-muted-foreground">
+                  Déplacez les catégories et l'interprétation.
+                </p>
               </div>
-              <ul className="divide-y rounded-md border bg-background">
-                {sections.map((section, index) => {
-                  const key = section.key
-                  return (
-                    <li
-                      key={key}
-                      draggable={!readOnly}
-                      onDragStart={() => setDraggedKey(key)}
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={() => handleSectionDrop(key)}
-                      onDragEnd={() => setDraggedKey(null)}
-                      className={cn(
-                        "grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2",
-                        draggedKey === key && "bg-accent/50",
-                        readOnly && "bg-muted/30",
-                      )}
-                    >
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <GripVertical className="size-4 cursor-grab" />
-                        <span className="w-6 text-right tabular-nums">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <span className="min-w-0 truncate font-medium">
-                        {section.name}
-                        {section.kind === "interpretation" && (
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">
-                            Section
-                          </span>
-                        )}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={readOnly || index === 0}
-                          onClick={() => moveSection(index, index - 1)}
-                          aria-label={`Monter ${section.name}`}
-                        >
-                          <ArrowUp className="size-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={readOnly || index === sections.length - 1}
-                          onClick={() => moveSection(index, index + 1)}
-                          aria-label={`Descendre ${section.name}`}
-                        >
-                          <ArrowDown className="size-4" />
-                        </Button>
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-
-            <section className="space-y-3">
-              <h3 className="text-sm font-medium">Visibilité et impression</h3>
-              <div className="rounded-md border bg-background p-3">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">
-                      Espace avant le pied de page
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Ajuste le vide entre la fin du rapport et le pied de page.
-                    </p>
-                  </div>
-                  <div className="flex w-24 items-center gap-2">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={40}
-                      step={1}
-                      value={config.footer_spacing_mm}
-                      disabled={readOnly}
-                      onChange={(event) =>
-                        setFooterSpacing(Number(event.currentTarget.value) || 0)
-                      }
-                      className="text-right"
-                    />
-                    <span className="text-xs text-muted-foreground">mm</span>
-                  </div>
-                </div>
-                <Slider
-                  min={0}
-                  max={40}
-                  step={1}
-                  value={[config.footer_spacing_mm]}
-                  disabled={readOnly}
-                  onValueChange={([value]) => setFooterSpacing(value ?? 0)}
-                />
-              </div>
-              {hasInterpretation(snapshot) && (
-                <div className="rounded-md border bg-background p-3">
-                  <label
-                    htmlFor="report-render-break-interpretation"
-                    className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <FileSymlink className="size-4" />
-                      Nouvelle page avant l'interprétation
-                    </span>
-                    <Switch
-                      id="report-render-break-interpretation"
-                      size="sm"
-                      checked={config.interpretation_page_break}
-                      disabled={readOnly}
-                      onCheckedChange={toggleInterpretationPageBreak}
-                    />
-                  </label>
-                </div>
-              )}
-              {categories.map((category) => {
-                const key = reportCategoryKey(category)
-                const ids = categoryAnalyteIds(category)
-                const visibleCount = ids.filter(
-                  (id) => !config.hidden_analyte_ids.includes(id),
-                ).length
-                const allVisible = visibleCount === ids.length
-                const allVisibleId = `report-render-all-${key}`
-                const pageBreakId = `report-render-break-${key}`
-
+            </div>
+            <ul className="divide-y rounded-md border bg-background">
+              {sections.map((section, index) => {
+                const key = section.key
                 return (
-                  <div key={key} className="rounded-md border bg-background">
-                    <div className="space-y-3 border-b p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {category.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {visibleCount}/{ids.length} lignes visibles
-                          </p>
-                        </div>
-                        {allVisible ? (
-                          <Eye className="size-4 text-primary" />
-                        ) : (
-                          <EyeOff className="size-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <label
-                          htmlFor={allVisibleId}
-                          className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
-                        >
-                          <span>Afficher tous les résultats</span>
-                          <Switch
-                            id={allVisibleId}
-                            size="sm"
-                            checked={allVisible}
-                            disabled={readOnly}
-                            onCheckedChange={(checked) =>
-                              toggleCategoryAnalytes(category, checked)
-                            }
-                          />
-                        </label>
-                        <label
-                          htmlFor={pageBreakId}
-                          className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <FileSymlink className="size-4" />
-                            Nouvelle page
-                          </span>
-                          <Switch
-                            id={pageBreakId}
-                            size="sm"
-                            checked={config.category_page_breaks[key] === true}
-                            disabled={readOnly}
-                            onCheckedChange={(checked) =>
-                              togglePageBreak(key, checked)
-                            }
-                          />
-                        </label>
-                      </div>
+                  <li
+                    key={key}
+                    draggable={!readOnly}
+                    onDragStart={() => setDraggedKey(key)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => handleSectionDrop(key)}
+                    onDragEnd={() => setDraggedKey(null)}
+                    className={cn(
+                      "grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2",
+                      draggedKey === key && "bg-accent/50",
+                      readOnly && "bg-muted/30",
+                    )}
+                  >
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <GripVertical className="size-4 cursor-grab" />
+                      <span className="w-6 text-right tabular-nums">
+                        {index + 1}
+                      </span>
                     </div>
-
-                    <div className="divide-y">
-                      {category.tests.map((test) => (
-                        <details
-                          key={test.order_item_id}
-                          className="group"
-                          open
-                        >
-                          <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted">
-                            {test.catalog_name}
-                          </summary>
-                          <div className="space-y-2 px-3 pb-3">
-                            {test.analytes.map((analyte) => {
-                              const visible =
-                                !config.hidden_analyte_ids.includes(
-                                  analyte.analyte_id,
-                                )
-                              const analyteControlId = `report-render-${test.order_item_id}-${analyte.analyte_id}`
-                              return (
-                                <div
-                                  key={analyte.analyte_id}
-                                  className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border px-3 py-2"
-                                >
-                                  <Checkbox
-                                    id={analyteControlId}
-                                    checked={visible}
-                                    disabled={readOnly}
-                                    onCheckedChange={(checked) =>
-                                      toggleAnalyte(
-                                        analyte.analyte_id,
-                                        checked === true,
-                                      )
-                                    }
-                                  />
-                                  <label
-                                    htmlFor={analyteControlId}
-                                    className="min-w-0 truncate"
-                                  >
-                                    {analyte.analyte_name}
-                                  </label>
-                                  <span className="text-muted-foreground">
-                                    {analyte.result_value || "—"}
-                                  </span>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </details>
-                      ))}
+                    <span className="min-w-0 truncate font-medium">
+                      {section.name}
+                      {section.kind === "interpretation" && (
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">
+                          Section
+                        </span>
+                      )}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={readOnly || index === 0}
+                        onClick={() => moveSection(index, index - 1)}
+                        aria-label={`Monter ${section.name}`}
+                      >
+                        <ArrowUp className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={readOnly || index === sections.length - 1}
+                        onClick={() => moveSection(index, index + 1)}
+                        aria-label={`Descendre ${section.name}`}
+                      >
+                        <ArrowDown className="size-4" />
+                      </Button>
                     </div>
-                  </div>
+                  </li>
                 )
               })}
-            </section>
-          </div>
-        </ScrollArea>
+            </ul>
+          </section>
 
-        <SheetFooter className="border-t">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={readOnly}
-            onClick={() => update(defaultReportRenderConfig())}
-          >
-            <RotateCcw className="size-4" />
-            Réinitialiser le rendu
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          <section className="space-y-3">
+            <h3 className="text-sm font-medium">Visibilité et impression</h3>
+            <div className="rounded-md border bg-background p-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">
+                    Espace avant le pied de page
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Ajuste le vide entre la fin du rapport et le pied de page.
+                  </p>
+                </div>
+                <div className="flex w-24 items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={40}
+                    step={1}
+                    value={config.footer_spacing_mm}
+                    disabled={readOnly}
+                    onChange={(event) =>
+                      setFooterSpacing(Number(event.currentTarget.value) || 0)
+                    }
+                    className="text-right"
+                  />
+                  <span className="text-xs text-muted-foreground">mm</span>
+                </div>
+              </div>
+              <Slider
+                min={0}
+                max={40}
+                step={1}
+                value={[config.footer_spacing_mm]}
+                disabled={readOnly}
+                onValueChange={([value]) => setFooterSpacing(value ?? 0)}
+              />
+            </div>
+            {hasInterpretation(snapshot) && (
+              <div className="rounded-md border bg-background p-3">
+                <label
+                  htmlFor="report-render-break-interpretation"
+                  className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <FileSymlink className="size-4" />
+                    Nouvelle page avant l'interprétation
+                  </span>
+                  <Switch
+                    id="report-render-break-interpretation"
+                    size="sm"
+                    checked={config.interpretation_page_break}
+                    disabled={readOnly}
+                    onCheckedChange={toggleInterpretationPageBreak}
+                  />
+                </label>
+              </div>
+            )}
+            {categories.map((category) => {
+              const key = reportCategoryKey(category)
+              const ids = categoryAnalyteIds(category)
+              const visibleCount = ids.filter(
+                (id) => !config.hidden_analyte_ids.includes(id),
+              ).length
+              const allVisible = visibleCount === ids.length
+              const allVisibleId = `report-render-all-${key}`
+              const pageBreakId = `report-render-break-${key}`
+
+              return (
+                <div key={key} className="rounded-md border bg-background">
+                  <div className="space-y-3 border-b p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {category.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {visibleCount}/{ids.length} lignes visibles
+                        </p>
+                      </div>
+                      {allVisible ? (
+                        <Eye className="size-4 text-primary" />
+                      ) : (
+                        <EyeOff className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label
+                        htmlFor={allVisibleId}
+                        className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                      >
+                        <span>Afficher tous les résultats</span>
+                        <Switch
+                          id={allVisibleId}
+                          size="sm"
+                          checked={allVisible}
+                          disabled={readOnly}
+                          onCheckedChange={(checked) =>
+                            toggleCategoryAnalytes(category, checked)
+                          }
+                        />
+                      </label>
+                      <label
+                        htmlFor={pageBreakId}
+                        className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <FileSymlink className="size-4" />
+                          Nouvelle page
+                        </span>
+                        <Switch
+                          id={pageBreakId}
+                          size="sm"
+                          checked={config.category_page_breaks[key] === true}
+                          disabled={readOnly}
+                          onCheckedChange={(checked) =>
+                            togglePageBreak(key, checked)
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="divide-y">
+                    {category.tests.map((test) => (
+                      <details key={test.order_item_id} className="group" open>
+                        <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted">
+                          {test.catalog_name}
+                        </summary>
+                        <div className="space-y-2 px-3 pb-3">
+                          {test.analytes.map((analyte) => {
+                            const visible = !config.hidden_analyte_ids.includes(
+                              analyte.analyte_id,
+                            )
+                            const analyteControlId = `report-render-${test.order_item_id}-${analyte.analyte_id}`
+                            return (
+                              <div
+                                key={analyte.analyte_id}
+                                className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border px-3 py-2"
+                              >
+                                <Checkbox
+                                  id={analyteControlId}
+                                  checked={visible}
+                                  disabled={readOnly}
+                                  onCheckedChange={(checked) =>
+                                    toggleAnalyte(
+                                      analyte.analyte_id,
+                                      checked === true,
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={analyteControlId}
+                                  className="min-w-0 truncate"
+                                >
+                                  {analyte.analyte_name}
+                                </label>
+                                <span className="text-muted-foreground">
+                                  {analyte.result_value || "—"}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </details>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </section>
+        </div>
+      </ScrollArea>
+
+      <SheetFooter className="shrink-0 border-t">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={readOnly}
+          onClick={() => update(defaultReportRenderConfig())}
+        >
+          <RotateCcw className="size-4" />
+          Réinitialiser le rendu
+        </Button>
+      </SheetFooter>
+    </>
   )
 }

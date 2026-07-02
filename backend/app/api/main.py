@@ -13,6 +13,7 @@ from app.api.routes import (
     doctors,
     finance_settings,
     formulas,
+    global_search,
     insurance_pricings,
     insurance_providers,
     invoices,
@@ -75,6 +76,7 @@ api_router.include_router(dashboard.router)
 api_router.include_router(validation_rules.router)
 api_router.include_router(automated_rules.router)
 api_router.include_router(formulas.router)
+api_router.include_router(global_search.router)
 
 
 if settings.ENVIRONMENT == "local":

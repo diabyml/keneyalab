@@ -10,6 +10,7 @@ import {
   Send,
   ShieldCheck,
   SlidersHorizontal,
+  X,
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -32,7 +33,10 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { usePermission } from "@/hooks/usePermission"
 import { handleError } from "@/utils"
 import { ReportDocument, type ReportDocumentHandle } from "./ReportDocument"
-import { ReportRenderSettingsSheet } from "./ReportRenderSettingsSheet"
+import {
+  ReportRenderSettingsContent,
+  ReportRenderSettingsSheet,
+} from "./ReportRenderSettingsSheet"
 import {
   asReportSnapshot,
   asTemplateSnapshot,
@@ -53,6 +57,7 @@ export function ReportViewer({ orderId }: { orderId: string }) {
   )
   const [recipient, setRecipient] = useState("")
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [canUseInlineSettings, setCanUseInlineSettings] = useState(false)
   const [reportReady, setReportReady] = useState(false)
   const reportDocumentRef = useRef<ReportDocumentHandle>(null)
   const [draftRenderConfig, setDraftRenderConfig] =
@@ -64,6 +69,14 @@ export function ReportViewer({ orderId }: { orderId: string }) {
     setSelectedReport(null)
     setReportReady(false)
   }, [orderId])
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)")
+    const update = () => setCanUseInlineSettings(query.matches)
+    update()
+    query.addEventListener("change", update)
+    return () => query.removeEventListener("change", update)
+  }, [])
 
   const printReport = useCallback(() => {
     reportDocumentRef.current?.print()
@@ -144,11 +157,15 @@ export function ReportViewer({ orderId }: { orderId: string }) {
     () => (templates ? asTemplateSnapshot(templates) : null),
     [templates],
   )
-  const renderConfig = activeReport
-    ? normalizeReportRenderConfig(
-        activeReport.render_config as Partial<ReportRenderConfig> | null,
-      )
-    : draftRenderConfig
+  const renderConfig = useMemo(
+    () =>
+      activeReport
+        ? normalizeReportRenderConfig(
+            activeReport.render_config as Partial<ReportRenderConfig> | null,
+          )
+        : draftRenderConfig,
+    [activeReport, draftRenderConfig],
+  )
   const accessionNumber = reportSnapshot?.order.accession_number ?? ""
 
   if (previewQuery.isLoading) {
@@ -245,7 +262,10 @@ export function ReportViewer({ orderId }: { orderId: string }) {
               Imprimer
             </Button>
             {reportSnapshot && (
-              <Button variant="outline" onClick={() => setSettingsOpen(true)}>
+              <Button
+                variant={settingsOpen ? "secondary" : "outline"}
+                onClick={() => setSettingsOpen((open) => !open)}
+              >
                 <SlidersHorizontal className="size-4" />
                 Configurer le rendu
               </Button>
@@ -315,14 +335,55 @@ export function ReportViewer({ orderId }: { orderId: string }) {
         )}
 
         {reportSnapshot && templateSnapshot ? (
-          <ReportDocument
-            ref={reportDocumentRef}
-            snapshot={reportSnapshot}
-            templates={templateSnapshot}
-            renderConfig={renderConfig}
-            voided={activeReport?.is_voided}
-            onReadyChange={setReportReady}
-          />
+          <div
+            className={
+              settingsOpen && canUseInlineSettings
+                ? "grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,25rem)]"
+                : "min-w-0"
+            }
+          >
+            <div className="min-w-0 overflow-x-auto pb-4">
+              <ReportDocument
+                ref={reportDocumentRef}
+                snapshot={reportSnapshot}
+                templates={templateSnapshot}
+                renderConfig={renderConfig}
+                voided={activeReport?.is_voided}
+                onReadyChange={setReportReady}
+              />
+            </div>
+            {settingsOpen && canUseInlineSettings && reportSnapshot && (
+              <aside className="sticky top-16 hidden h-[calc(100vh-5rem)] min-h-0 w-full justify-self-end overflow-hidden rounded-md border bg-popover text-xs/relaxed text-popover-foreground shadow-sm lg:flex lg:flex-col">
+                <div className="flex shrink-0 items-start justify-between gap-3 border-b p-4">
+                  <div>
+                    <h2 className="font-heading text-sm font-medium text-foreground">
+                      Configurer le rendu
+                    </h2>
+                    <p className="mt-1 text-xs/relaxed text-muted-foreground">
+                      {activeReport
+                        ? "Configuration figée pour cette version publiée."
+                        : "Ces réglages seront enregistrés avec la version publiée."}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Fermer la configuration"
+                    onClick={() => setSettingsOpen(false)}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+                <ReportRenderSettingsContent
+                  snapshot={reportSnapshot}
+                  value={renderConfig}
+                  onChange={setDraftRenderConfig}
+                  readOnly={Boolean(activeReport)}
+                />
+              </aside>
+            )}
+          </div>
         ) : (
           <p className="py-20 text-center text-muted-foreground">
             Aperçu indisponible.
@@ -330,7 +391,7 @@ export function ReportViewer({ orderId }: { orderId: string }) {
         )}
       </div>
 
-      {reportSnapshot && (
+      {reportSnapshot && !canUseInlineSettings && (
         <ReportRenderSettingsSheet
           open={settingsOpen}
           onOpenChange={setSettingsOpen}

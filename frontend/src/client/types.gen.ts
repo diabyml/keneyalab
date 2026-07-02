@@ -740,6 +740,20 @@ export type FormulaResultType = 'number' | 'boolean';
 
 export type GenderType = 'male' | 'female';
 
+export type GlobalSearchResultPublic = {
+    kind: string;
+    title: string;
+    subtitle?: (string | null);
+    badge?: (string | null);
+    href: string;
+    resource: string;
+    record_id?: (string | null);
+};
+
+export type GlobalSearchResultsPublic = {
+    data: Array<GlobalSearchResultPublic>;
+};
+
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
@@ -2894,6 +2908,13 @@ export type FormulasPreviewFormulaData = {
 };
 
 export type FormulasPreviewFormulaResponse = (FormulaPreviewResponse);
+
+export type GlobalSearchReadGlobalSearchData = {
+    limit?: number;
+    query: string;
+};
+
+export type GlobalSearchReadGlobalSearchResponse = (GlobalSearchResultsPublic);
 
 export type InsurancePricingsReadInsurancePricingsData = {
     catalogId?: (string | null);
