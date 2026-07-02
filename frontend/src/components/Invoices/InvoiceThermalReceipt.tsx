@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom"
+
 import type { InvoiceDetailPublic } from "@/client"
 import {
   LabDocumentFooter,
@@ -9,67 +11,81 @@ import { Separator } from "@/components/ui/separator"
 
 export function InvoiceThermalReceipt({
   invoice,
+  printOnly = true,
 }: {
   invoice: InvoiceDetailPublic
+  printOnly?: boolean
 }) {
-  return (
-    <article className="thermal-receipt print-only">
-      <LabDocumentHeader title="Facture / reçu" compact />
-      <Separator className="my-2" />
-      <div>Facture : {invoice.invoice_number}</div>
-      <div>Version : {invoice.version}</div>
-      <div>Demande : {invoice.accession_number}</div>
-      <div>Date : {formatDateTime(invoice.created_at)}</div>
-      <div>Patient : {invoice.patient_name}</div>
-      <div>ID : {invoice.patient_identifier}</div>
-      {invoice.doctor_name && <div>Médecin : {invoice.doctor_name}</div>}
-      {invoice.insurance_provider_name && (
-        <div className="mt-1 font-bold">
-          Assurance : {invoice.insurance_provider_name}
-          {invoice.insurance_policy_number
-            ? ` (${invoice.insurance_policy_number})`
-            : ""}
-        </div>
-      )}
-      <Separator className="my-2" />
-      <div className="space-y-1">
-        {(invoice.lines ?? []).map((line) => (
-          <div key={line.id}>
-            <div className="flex justify-between gap-2">
-              <span>
-                {line.catalog_code} {line.catalog_name}
-              </span>
-              <span className="shrink-0">{Number(line.amount).toFixed(2)}</span>
-            </div>
-            {line.is_covered_by_insurance && (
-              <div className="text-[9px]">
-                Tarif assurance :{" "}
-                {line.insurance_provider_name ??
-                  invoice.insurance_provider_name}
+  const receipt = (
+    <article className={`thermal-print-root ${printOnly ? "print-only" : ""}`}>
+      <div className="thermal-print-paper">
+        <LabDocumentHeader title="Facture / reçu" compact />
+        <Separator className="my-2" />
+        <div>Facture : {invoice.invoice_number}</div>
+        <div>Version : {invoice.version}</div>
+        <div>Demande : {invoice.accession_number}</div>
+        <div>Date : {formatDateTime(invoice.created_at)}</div>
+        <div>Patient : {invoice.patient_name}</div>
+        <div>ID : {invoice.patient_identifier}</div>
+        {invoice.doctor_name && <div>Médecin : {invoice.doctor_name}</div>}
+        {invoice.insurance_provider_name && (
+          <div className="mt-1 font-bold">
+            Assurance : {invoice.insurance_provider_name}
+            {invoice.insurance_policy_number
+              ? ` (${invoice.insurance_policy_number})`
+              : ""}
+          </div>
+        )}
+        <Separator className="my-2" />
+        <div className="space-y-1">
+          {(invoice.lines ?? []).map((line) => (
+            <div key={line.id}>
+              <div className="flex justify-between gap-2">
+                <span>
+                  {line.catalog_code} {line.catalog_name}
+                </span>
+                <span className="shrink-0">
+                  {Number(line.amount).toFixed(2)}
+                </span>
               </div>
-            )}
+              {line.is_covered_by_insurance && (
+                <div className="text-[9px]">
+                  Tarif assurance :{" "}
+                  {line.insurance_provider_name ??
+                    invoice.insurance_provider_name}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <Separator className="my-2" />
+        <ReceiptAmount label="Total" value={invoice.total_amount} />
+        <ReceiptAmount
+          label="Remise"
+          value={invoice.discount ?? "0"}
+          negative
+        />
+        <ReceiptAmount label="Net à payer" value={invoice.net_amount} strong />
+        <ReceiptAmount label="Payé" value={invoice.amount_paid ?? "0"} />
+        <ReceiptAmount label="Solde" value={invoice.balance_due} strong />
+        {(invoice.payments ?? []).map((payment) => (
+          <div key={payment.id} className="mt-1 text-[9px]">
+            {payment.payment_method_name} · {formatMoney(payment.amount)} ·{" "}
+            {formatDateTime(payment.created_at)} · Réf.{" "}
+            {payment.id.slice(0, 8).toUpperCase()}
           </div>
         ))}
-      </div>
-      <Separator className="my-2" />
-      <ReceiptAmount label="Total" value={invoice.total_amount} />
-      <ReceiptAmount label="Remise" value={invoice.discount ?? "0"} negative />
-      <ReceiptAmount label="Net à payer" value={invoice.net_amount} strong />
-      <ReceiptAmount label="Payé" value={invoice.amount_paid ?? "0"} />
-      <ReceiptAmount label="Solde" value={invoice.balance_due} strong />
-      {(invoice.payments ?? []).map((payment) => (
-        <div key={payment.id} className="mt-1 text-[9px]">
-          {payment.payment_method_name} · {formatMoney(payment.amount)} ·{" "}
-          {formatDateTime(payment.created_at)} · Réf.{" "}
-          {payment.id.slice(0, 8).toUpperCase()}
+        <div className="my-3">
+          <Code128Barcode value={invoice.invoice_number} />
         </div>
-      ))}
-      <div className="my-3">
-        <Code128Barcode value={invoice.invoice_number} />
+        <LabDocumentFooter compact />
       </div>
-      <LabDocumentFooter compact />
     </article>
   )
+
+  if (!printOnly || typeof document === "undefined") return receipt
+
+  return createPortal(receipt, document.body)
 }
 
 function ReceiptAmount({

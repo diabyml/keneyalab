@@ -248,52 +248,86 @@
   display: none;
 }
 
+.thermal-print-root {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  color: #000;
+  background: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.thermal-print-paper {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  padding: 3mm;
+  color: #000;
+  background: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.28;
+}
+
+.thermal-print-root.print-only,
+.specimen-labels.print-only {
+  display: none;
+}
+
 @media print {
-  @page {
-    size: 80mm auto;
-    margin: 0;
+  body[data-print-target="receipt"],
+  body[data-print-target="labels"] {
+    background: #fff;
+    background-image: none;
   }
 
   body[data-print-target] * {
     visibility: hidden;
   }
 
-  .thermal-receipt {
-    padding: 4mm;
-    font-size: 10px;
-    line-height: 1.35;
+  body[data-print-target="receipt"] #root,
+  body[data-print-target="labels"] #root {
+    display: none;
   }
 
-  .specimen-labels {
-    padding: 2mm;
-  }
-
-  body[data-print-target="receipt"] .thermal-receipt,
-  body[data-print-target="receipt"] .thermal-receipt *,
+  body[data-print-target="receipt"] .thermal-print-root,
+  body[data-print-target="receipt"] .thermal-print-root *,
   body[data-print-target="labels"] .specimen-labels,
   body[data-print-target="labels"] .specimen-labels * {
     visibility: visible;
   }
 
-  body[data-print-target="receipt"] .thermal-receipt,
+  body[data-print-target="receipt"] .thermal-print-root,
   body[data-print-target="labels"] .specimen-labels {
     display: block;
-    position: absolute;
-    inset: 0 auto auto 0;
-    width: 80mm;
+    box-sizing: border-box;
+    width: 100%;
     color: #000;
     background: #fff;
     font-family: Arial, sans-serif;
   }
 
+  body[data-print-target="receipt"] .thermal-print-root {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0;
+  }
+
+  body[data-print-target="labels"] .specimen-labels {
+    padding: 0;
+  }
+
   .specimen-label {
-    width: 76mm;
-    min-height: 35mm;
-    break-after: page;
+    box-sizing: border-box;
+    width: 100%;
     border: 1px solid #000;
     padding: 3mm;
     font-size: 10px;
     line-height: 1.25;
+  }
+
+  .specimen-label:not(:last-child) {
+    break-after: page;
   }
 }
 
@@ -350,12 +384,12 @@ a:active:not(:disabled) {
   display: none;
 }
 
-@media print {
-  @page {
-    size: A4;
-    margin: 14mm;
-  }
+@page commission-payment {
+  size: A4;
+  margin: 14mm;
+}
 
+@media print {
   body[data-print-target="commission-payment"] * {
     visibility: hidden;
   }
@@ -376,6 +410,7 @@ a:active:not(:disabled) {
     display: block;
     position: absolute;
     inset: 0;
+    page: commission-payment;
     width: 100%;
     overflow: visible;
     color: #000;

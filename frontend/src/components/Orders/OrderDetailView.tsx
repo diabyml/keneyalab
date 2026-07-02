@@ -14,6 +14,7 @@ import {
   XCircle,
 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 import type { OrderDetailPublic } from "@/client"
 import { InvoicesService, OrdersService, SpecimensService } from "@/client"
@@ -543,84 +544,90 @@ function OrderCancelDialog({
 function ThermalReceipt({ order }: { order: OrderDetailPublic }) {
   const balance =
     Number(order.invoice.net_amount) - Number(order.invoice.amount_paid)
-  return (
-    <article className="thermal-receipt print-only">
-      <LabDocumentHeader title="Facture / reçu" compact />
-      <Separator className="my-2" />
-      <div>Demande : {order.accession_number}</div>
-      <div>Date : {formatDateTime(order.created_at)}</div>
-      <div>Patient : {order.patient_name}</div>
-      <div>ID : {order.patient_identifier}</div>
-      {order.doctor_name && <div>Médecin : {order.doctor_name}</div>}
-      {order.insurance_provider_name && (
-        <div className="mt-1 font-bold">
-          Assurance : {order.insurance_provider_name}
-          {order.insurance_policy_number
-            ? ` (${order.insurance_policy_number})`
-            : ""}
-        </div>
-      )}
-      <Separator className="my-2" />
-      <div className="space-y-1">
-        {(order.items ?? []).map((item) => (
-          <div key={item.id}>
-            <div className="flex justify-between gap-2">
-              <span>
-                {item.catalog_code} {item.catalog_name}
-              </span>
-              <span className="shrink-0">
-                {Number(item.price_charged).toFixed(2)}
-              </span>
-            </div>
-            {item.is_covered_by_insurance && (
-              <div className="text-[9px]">
-                Tarif assurance : {item.insurance_provider_name}
-                {Number(item.catalog_price) !== Number(item.price_charged)
-                  ? ` · Standard ${Number(item.catalog_price).toFixed(2)}`
-                  : ""}
+  const receipt = (
+    <article className="thermal-print-root print-only">
+      <div className="thermal-print-paper">
+        <LabDocumentHeader title="Facture / reçu" compact />
+        <Separator className="my-2" />
+        <div>Demande : {order.accession_number}</div>
+        <div>Date : {formatDateTime(order.created_at)}</div>
+        <div>Patient : {order.patient_name}</div>
+        <div>ID : {order.patient_identifier}</div>
+        {order.doctor_name && <div>Médecin : {order.doctor_name}</div>}
+        {order.insurance_provider_name && (
+          <div className="mt-1 font-bold">
+            Assurance : {order.insurance_provider_name}
+            {order.insurance_policy_number
+              ? ` (${order.insurance_policy_number})`
+              : ""}
+          </div>
+        )}
+        <Separator className="my-2" />
+        <div className="space-y-1">
+          {(order.items ?? []).map((item) => (
+            <div key={item.id}>
+              <div className="flex justify-between gap-2">
+                <span>
+                  {item.catalog_code} {item.catalog_name}
+                </span>
+                <span className="shrink-0">
+                  {Number(item.price_charged).toFixed(2)}
+                </span>
               </div>
-            )}
+              {item.is_covered_by_insurance && (
+                <div className="text-[9px]">
+                  Tarif assurance : {item.insurance_provider_name}
+                  {Number(item.catalog_price) !== Number(item.price_charged)
+                    ? ` · Standard ${Number(item.catalog_price).toFixed(2)}`
+                    : ""}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <Separator className="my-2" />
+        <div className="flex justify-between">
+          <span>Total</span>
+          <span>{Number(order.invoice.total_amount).toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Remise</span>
+          <span>-{Number(order.invoice.discount).toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-sm font-bold">
+          <span>Net à payer</span>
+          <span>{Number(order.invoice.net_amount).toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Payé</span>
+          <span>{Number(order.invoice.amount_paid).toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between font-bold">
+          <span>Solde</span>
+          <span>{balance.toFixed(2)}</span>
+        </div>
+        {(order.payments ?? []).map((payment) => (
+          <div key={payment.id} className="mt-1 text-[9px]">
+            {payment.payment_method_name} · {Number(payment.amount).toFixed(2)}{" "}
+            · {formatDateTime(payment.created_at)} · Réf.{" "}
+            {payment.id.slice(0, 8).toUpperCase()}
           </div>
         ))}
-      </div>
-      <Separator className="my-2" />
-      <div className="flex justify-between">
-        <span>Total</span>
-        <span>{Number(order.invoice.total_amount).toFixed(2)}</span>
-      </div>
-      <div className="flex justify-between">
-        <span>Remise</span>
-        <span>-{Number(order.invoice.discount).toFixed(2)}</span>
-      </div>
-      <div className="flex justify-between text-sm font-bold">
-        <span>Net à payer</span>
-        <span>{Number(order.invoice.net_amount).toFixed(2)}</span>
-      </div>
-      <div className="flex justify-between">
-        <span>Payé</span>
-        <span>{Number(order.invoice.amount_paid).toFixed(2)}</span>
-      </div>
-      <div className="flex justify-between font-bold">
-        <span>Solde</span>
-        <span>{balance.toFixed(2)}</span>
-      </div>
-      {(order.payments ?? []).map((payment) => (
-        <div key={payment.id} className="mt-1 text-[9px]">
-          {payment.payment_method_name} · {Number(payment.amount).toFixed(2)} ·{" "}
-          {formatDateTime(payment.created_at)} · Réf.{" "}
-          {payment.id.slice(0, 8).toUpperCase()}
+        <div className="my-3">
+          <Code128Barcode value={order.accession_number} />
         </div>
-      ))}
-      <div className="my-3">
-        <Code128Barcode value={order.accession_number} />
+        <LabDocumentFooter compact />
       </div>
-      <LabDocumentFooter compact />
     </article>
   )
+
+  if (typeof document === "undefined") return receipt
+
+  return createPortal(receipt, document.body)
 }
 
 function SpecimenLabels({ order }: { order: OrderDetailPublic }) {
-  return (
+  const labels = (
     <section className="specimen-labels print-only">
       {(order.specimens ?? []).map((specimen) => (
         <article key={specimen.id} className="specimen-label">
@@ -649,4 +656,8 @@ function SpecimenLabels({ order }: { order: OrderDetailPublic }) {
       ))}
     </section>
   )
+
+  if (typeof document === "undefined") return labels
+
+  return createPortal(labels, document.body)
 }
