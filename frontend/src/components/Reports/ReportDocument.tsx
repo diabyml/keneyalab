@@ -55,6 +55,26 @@ type CompiledRenderer = {
   css: string
 }
 
+type ReportDocumentUpdatePayload = {
+  sections: Array<
+    | {
+        kind: "category"
+        key: string
+        name: string
+        category: ReportCategory
+        pageBreak: boolean
+        rendererMissing: boolean
+      }
+    | {
+        kind: "interpretation"
+        key: "interpretation"
+        pageBreak: boolean
+      }
+  >
+  footerSpacingMm: number
+  interpretationHtml: string
+}
+
 const REPORT_COMPONENT_TEXT_STYLES = `
   .report-component-content,
   .report-component-content * {
@@ -296,42 +316,20 @@ function rendererRegistrationScript(compiledRenderers: CompiledRenderer[]) {
 }
 
 function buildReportDocumentHtml({
-  sections,
   compiledRenderers,
   header,
   details,
   footer,
-  footerSpacingMm,
   componentCss,
-  interpretationHtml,
   voided,
 }: {
-  sections: SectionRenderEntry[]
   compiledRenderers: CompiledRenderer[]
   header: string
   details: string
   footer: string
-  footerSpacingMm: number
   componentCss: string
-  interpretationHtml: string
   voided: boolean
 }) {
-  const reportSections = sections.map((entry) =>
-    entry.kind === "interpretation"
-      ? {
-          kind: "interpretation",
-          key: entry.key,
-          pageBreak: entry.pageBreak,
-        }
-      : {
-          kind: "category",
-          key: entry.key,
-          name: entry.category.name,
-          category: entry.category,
-          pageBreak: entry.pageBreak,
-          rendererMissing: !entry.renderer,
-        },
-  )
   const rendererCssByKey = Object.fromEntries(
     compiledRenderers.map((renderer) => [renderer.key, renderer.css]),
   )
@@ -341,10 +339,11 @@ function buildReportDocumentHtml({
     const renderers = {};
     const rendererErrors = {};
     const rendererCssByKey = ${safeJson(rendererCssByKey)};
-    const reportSections = ${safeJson(reportSections)};
     const footerHtml = ${safeJson(footer)};
-    const footerSpacingMm = ${safeJson(footerSpacingMm)};
-    let footerRendered = false;
+    const sectionNodes = new Map();
+    let footerNode = null;
+    let interpretationNode = null;
+    let interpretationHtml = "";
 
     function append(parent, child) {
       if (child == null || child === false || child === true) return;
@@ -452,11 +451,21 @@ function buildReportDocumentHtml({
       });
     }
 
-    function renderCategory(entry) {
-      const section = document.createElement("section");
-      section.className = entry.pageBreak
+    function sectionClassName(kind, pageBreak) {
+      if (kind === "interpretation") {
+        return pageBreak
+          ? "report-interpretation report-interpretation-force-break"
+          : "report-interpretation";
+      }
+      return pageBreak
         ? "report-category-section report-category-force-break"
         : "report-category-section";
+    }
+
+    function renderCategory(entry) {
+      const section = document.createElement("section");
+      section.className = sectionClassName("category", entry.pageBreak);
+      section.dataset.sectionKey = entry.key;
 
       if (entry.rendererMissing) {
         section.innerHTML = '<p class="report-missing-renderer">Aucun rendu publié pour ' + entry.name + '.</p>';
@@ -484,45 +493,92 @@ function buildReportDocumentHtml({
       return section;
     }
 
-    function renderInterpretation() {
-      const html = ${safeJson(interpretationHtml)};
-      if (!html) return null;
+    function getCategorySection(entry) {
+      const signature = JSON.stringify({
+        name: entry.name,
+        category: entry.category,
+        rendererMissing: entry.rendererMissing,
+        rendererError: rendererErrors[entry.key] || "",
+      });
+      const existing = sectionNodes.get(entry.key);
+      if (existing && existing.dataset.signature === signature) {
+        existing.className = sectionClassName("category", entry.pageBreak);
+        return existing;
+      }
+      const next = renderCategory(entry);
+      next.dataset.signature = signature;
+      sectionNodes.set(entry.key, next);
+      return next;
+    }
+
+    function getInterpretationSection(entry) {
+      if (!interpretationHtml) return null;
+      if (interpretationNode) {
+        interpretationNode.className = sectionClassName("interpretation", entry.pageBreak);
+        return interpretationNode;
+      }
       const section = document.createElement("section");
-      section.className = "report-interpretation";
-      section.innerHTML = '<h2>Interprétation</h2><div class="report-interpretation-content">' + html + '</div>';
+      section.className = sectionClassName("interpretation", entry.pageBreak);
+      section.dataset.sectionKey = entry.key;
+      section.innerHTML = '<h2>Interprétation</h2><div class="report-interpretation-content">' + interpretationHtml + '</div>';
+      interpretationNode = section;
       return section;
     }
 
-    function renderFooter() {
-      const footer = document.createElement("div");
-      footer.className = "report-component-content";
-      footer.style.marginTop = footerSpacingMm + "mm";
-      footer.innerHTML = footerHtml;
-      footerRendered = true;
-      return footer;
+    function getFooter(spacingMm) {
+      if (!footerNode) {
+        footerNode = document.createElement("div");
+        footerNode.className = "report-component-content";
+        footerNode.innerHTML = footerHtml;
+      }
+      footerNode.style.marginTop = spacingMm + "mm";
+      return footerNode;
     }
 
-    function renderSection(entry) {
-      if (entry.kind === "interpretation") {
-        const interpretation = renderInterpretation();
-        if (!interpretation) return null;
-        if (entry.pageBreak) {
-          interpretation.classList.add("report-interpretation-force-break");
+    function applyReportUpdate(payload) {
+      const main = document.getElementById("report-main");
+      if (!main) throw new Error("La zone principale du rapport est introuvable.");
+
+      interpretationHtml = payload.interpretationHtml || "";
+      const fragment = document.createDocumentFragment();
+      let footerAppended = false;
+      const visibleKeys = new Set();
+
+      payload.sections.forEach((entry) => {
+        if (entry.kind === "interpretation") {
+          const interpretation = getInterpretationSection(entry);
+          if (!interpretation) return;
+          fragment.append(interpretation, getFooter(payload.footerSpacingMm));
+          footerAppended = true;
+          visibleKeys.add(entry.key);
+          return;
         }
-        const group = document.createDocumentFragment();
-        group.append(interpretation, renderFooter());
-        return group;
+
+        const section = getCategorySection(entry);
+        fragment.append(section);
+        visibleKeys.add(entry.key);
+      });
+
+      for (const [key, node] of sectionNodes.entries()) {
+        if (!visibleKeys.has(key)) {
+          node.remove();
+          sectionNodes.delete(key);
+        }
       }
-      return renderCategory(entry);
+      if (!visibleKeys.has("interpretation")) {
+        interpretationNode?.remove();
+        interpretationNode = null;
+      }
+      if (!footerAppended) {
+        fragment.append(getFooter(payload.footerSpacingMm));
+      }
+
+      main.replaceChildren(fragment);
+      scheduleHeightReports();
+      parent.postMessage({ type: "report-document-updated" }, "*");
     }
 
     try {
-      const main = document.getElementById("report-main");
-      reportSections.forEach((entry) => {
-        const section = renderSection(entry);
-        if (section) main.append(section);
-      });
-      if (!footerRendered) main.append(renderFooter());
       if ("ResizeObserver" in window) {
         const observer = new ResizeObserver(scheduleHeightReports);
         observer.observe(document.documentElement);
@@ -531,6 +587,13 @@ function buildReportDocumentHtml({
       }
       window.addEventListener("message", (event) => {
         if (event.data?.type === "report-document-print") printReport();
+        if (event.data?.type === "report-document-update-config") {
+          try {
+            applyReportUpdate(event.data.payload);
+          } catch (error) {
+            reportError(error?.message || String(error));
+          }
+        }
       });
       window.addEventListener("load", scheduleHeightReports);
       reportReady();
@@ -575,6 +638,7 @@ export const ReportDocument = forwardRef<
   >(null)
   const [compileError, setCompileError] = useState("")
   const [renderError, setRenderError] = useState("")
+  const [iframeReady, setIframeReady] = useState(false)
   const [height, setHeight] = useState(980)
 
   const normalizedRenderConfig = useMemo(
@@ -633,6 +697,22 @@ export const ReportDocument = forwardRef<
     renderedSnapshot.interpretation?.html,
     templates.renderers,
   ])
+  const rendererEntries = useMemo(
+    () =>
+      snapshot.categories
+        .map((category) => {
+          const key = reportCategoryKey(category)
+          return {
+            key,
+            renderer:
+              templates.renderers[key] ?? templates.renderers.uncategorized,
+          }
+        })
+        .filter((entry): entry is { key: string; renderer: RendererTemplate } =>
+          Boolean(entry.renderer),
+        ),
+    [snapshot.categories, templates.renderers],
+  )
   const header = useMemo(
     () => interpolate(templates.header.html_source, snapshot),
     [snapshot, templates.header.html_source],
@@ -659,6 +739,29 @@ export const ReportDocument = forwardRef<
     ],
   )
   const interpretationHtml = renderedSnapshot.interpretation?.html ?? ""
+  const updatePayload = useMemo<ReportDocumentUpdatePayload>(
+    () => ({
+      sections: sections.map((entry) =>
+        entry.kind === "interpretation"
+          ? {
+              kind: "interpretation",
+              key: entry.key,
+              pageBreak: entry.pageBreak,
+            }
+          : {
+              kind: "category",
+              key: entry.key,
+              name: entry.category.name,
+              category: entry.category,
+              pageBreak: entry.pageBreak,
+              rendererMissing: !entry.renderer,
+            },
+      ),
+      footerSpacingMm: normalizedRenderConfig.footer_spacing_mm,
+      interpretationHtml,
+    }),
+    [interpretationHtml, normalizedRenderConfig.footer_spacing_mm, sections],
+  )
 
   useImperativeHandle(
     ref,
@@ -676,21 +779,15 @@ export const ReportDocument = forwardRef<
     let active = true
     setCompileError("")
     setRenderError("")
+    setIframeReady(false)
     setCompiledRenderers(null)
     onReadyChange?.(false)
 
-    const rendererJobs = sections
-      .filter(
-        (
-          entry,
-        ): entry is CategoryRenderEntry & { renderer: RendererTemplate } =>
-          entry.kind === "category" && Boolean(entry.renderer),
-      )
-      .map(async (entry) => ({
-        key: entry.key,
-        code: await compileReportRenderer(entry.renderer.jsx_source),
-        css: entry.renderer.css_source,
-      }))
+    const rendererJobs = rendererEntries.map(async (entry) => ({
+      key: entry.key,
+      code: await compileReportRenderer(entry.renderer.jsx_source),
+      css: entry.renderer.css_source,
+    }))
 
     Promise.all(rendererJobs)
       .then((compiled) => {
@@ -705,7 +802,7 @@ export const ReportDocument = forwardRef<
     return () => {
       active = false
     }
-  }, [sections, onReadyChange])
+  }, [rendererEntries, onReadyChange])
 
   useEffect(() => {
     const receive = (event: MessageEvent) => {
@@ -714,10 +811,15 @@ export const ReportDocument = forwardRef<
         setHeight(Math.max(980, Number(event.data.height) + 8))
       }
       if (event.data?.type === "report-document-ready") {
+        setIframeReady(true)
+        setRenderError("")
+      }
+      if (event.data?.type === "report-document-updated") {
         setRenderError("")
         onReadyChange?.(true)
       }
       if (event.data?.type === "report-document-error") {
+        setIframeReady(false)
         setRenderError(event.data.message)
         onReadyChange?.(false)
       }
@@ -731,29 +833,39 @@ export const ReportDocument = forwardRef<
       compileError || !compiledRenderers
         ? ""
         : buildReportDocumentHtml({
-            sections,
             compiledRenderers,
             header,
             details,
             footer,
-            footerSpacingMm: normalizedRenderConfig.footer_spacing_mm,
             componentCss,
-            interpretationHtml,
             voided,
           }),
     [
       compileError,
-      sections,
       compiledRenderers,
       header,
       details,
       footer,
-      normalizedRenderConfig.footer_spacing_mm,
       componentCss,
-      interpretationHtml,
       voided,
     ],
   )
+
+  useEffect(() => {
+    setIframeReady(false)
+    if (srcDoc) {
+      onReadyChange?.(false)
+    }
+  }, [srcDoc, onReadyChange])
+
+  useEffect(() => {
+    const win = frameRef.current?.contentWindow
+    if (!win || !iframeReady || compileError || renderError) return
+    win.postMessage(
+      { type: "report-document-update-config", payload: updatePayload },
+      "*",
+    )
+  }, [compileError, iframeReady, renderError, updatePayload])
 
   if (compileError || renderError) {
     return (
