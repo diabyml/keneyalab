@@ -1000,6 +1000,39 @@ export type NewPassword = {
     new_password: string;
 };
 
+export type NotificationChannel = 'sms' | 'email' | 'whatsapp' | 'in_app';
+
+export type NotificationMarkAllReadPublic = {
+    count: number;
+};
+
+export type NotificationPublic = {
+    id: string;
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    order_id?: (string | null);
+    patient_id?: (string | null);
+    user_id: string;
+    type: NotificationType;
+    channel: NotificationChannel;
+    message: string;
+    status: NotificationStatus;
+    sent_at?: (string | null);
+};
+
+export type NotificationsPublic = {
+    data: Array<NotificationPublic>;
+    count: number;
+};
+
+export type NotificationStatus = 'pending' | 'sent' | 'failed';
+
+export type NotificationType = 'result_ready' | 'order_update' | 'report_released' | 'general';
+
+export type NotificationUnreadCountPublic = {
+    count: number;
+};
+
 export type OrderAnalyteDetailPublic = {
     analyte_id: string;
     analyte_code: string;
@@ -1056,6 +1089,50 @@ export type OrderDetailPublic = {
     specimens?: Array<OrderSpecimenDetailPublic>;
     invoice: InvoicePublic;
     payments?: Array<PaymentTransactionPublic>;
+};
+
+export type OrderEntryAssistantCatalogSuggestion = {
+    catalog: CatalogSummaryPublic;
+    confidence: number;
+    reason?: (string | null);
+    matched_terms?: Array<(string)>;
+    warnings?: Array<(string)>;
+};
+
+export type OrderEntryAssistantDoctorDraft = {
+    first_name?: (string | null);
+    last_name?: (string | null);
+    provenance?: (string | null);
+    phone?: (string | null);
+    title_name?: (string | null);
+    confidence?: number;
+    warnings?: Array<(string)>;
+};
+
+export type OrderEntryAssistantPatientDraft = {
+    identifier?: (string | null);
+    first_name?: (string | null);
+    last_name?: (string | null);
+    date_of_birth?: (string | null);
+    gender?: (GenderType | null);
+    phone?: (string | null);
+    address?: (string | null);
+    confidence?: number;
+    warnings?: Array<(string)>;
+};
+
+export type OrderEntryAssistantRequest = {
+    text: string;
+};
+
+export type OrderEntryAssistantResponse = {
+    patient_draft?: (OrderEntryAssistantPatientDraft | null);
+    patient_matches?: Array<PatientPublic>;
+    doctor_draft?: (OrderEntryAssistantDoctorDraft | null);
+    doctor_matches?: Array<DoctorWithTitlePublic>;
+    catalog_suggestions?: Array<OrderEntryAssistantCatalogSuggestion>;
+    unmatched_phrases?: Array<(string)>;
+    warnings?: Array<(string)>;
 };
 
 export type OrderItemAnalyteCustomizeRequest = {
@@ -3142,6 +3219,24 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
+export type NotificationsReadMyNotificationsData = {
+    limit?: number;
+    skip?: number;
+    unreadOnly?: boolean;
+};
+
+export type NotificationsReadMyNotificationsResponse = (NotificationsPublic);
+
+export type NotificationsReadMyUnreadCountResponse = (NotificationUnreadCountPublic);
+
+export type NotificationsMarkAllMyNotificationsReadResponse = (NotificationMarkAllReadPublic);
+
+export type NotificationsMarkMyNotificationReadData = {
+    notificationId: string;
+};
+
+export type NotificationsMarkMyNotificationReadResponse = (NotificationPublic);
+
 export type OrdersReadOrdersData = {
     createdFrom?: (string | null);
     createdTo?: (string | null);
@@ -3188,6 +3283,12 @@ export type OrdersPreviewOrderData = {
 };
 
 export type OrdersPreviewOrderResponse = (OrderPreviewPublic);
+
+export type OrdersGenerateOrderEntryIntakeData = {
+    requestBody: OrderEntryAssistantRequest;
+};
+
+export type OrdersGenerateOrderEntryIntakeResponse = (OrderEntryAssistantResponse);
 
 export type OrdersReadOrderData = {
     id: string;

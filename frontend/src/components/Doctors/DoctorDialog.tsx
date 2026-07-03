@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import type { DoctorWithTitlePublic } from "@/client"
+import type {
+  DoctorWithTitlePublic,
+  OrderEntryAssistantDoctorDraft,
+} from "@/client"
 import { DoctorsService, TitlesService } from "@/client"
 import {
   SearchSelect,
@@ -88,6 +91,7 @@ interface DoctorDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   doctor: DoctorWithTitlePublic | null
+  initialDraft?: OrderEntryAssistantDoctorDraft | null
   allowCommissionConfig?: boolean
   onSaved?: (doctor: DoctorWithTitlePublic) => void
 }
@@ -96,6 +100,7 @@ export function DoctorDialog({
   open,
   onOpenChange,
   doctor,
+  initialDraft = null,
   allowCommissionConfig = false,
   onSaved,
 }: DoctorDialogProps) {
@@ -125,10 +130,10 @@ export function DoctorDialog({
   useEffect(() => {
     if (!open) return
     form.reset({
-      first_name: doctor?.first_name ?? "",
-      last_name: doctor?.last_name ?? "",
-      provenance: doctor?.provenance ?? "",
-      phone: doctor?.phone ?? "",
+      first_name: doctor?.first_name ?? initialDraft?.first_name ?? "",
+      last_name: doctor?.last_name ?? initialDraft?.last_name ?? "",
+      provenance: doctor?.provenance ?? initialDraft?.provenance ?? "",
+      phone: doctor?.phone ?? initialDraft?.phone ?? "",
       title_id: doctor?.title_id ?? null,
       configure_commission: false,
       commission_rate_percent: "",
@@ -144,7 +149,7 @@ export function DoctorDialog({
           }
         : null,
     )
-  }, [doctor, form, open])
+  }, [doctor, form, initialDraft, open])
 
   const loadTitleOptions = useCallback(
     async (query: string): Promise<SearchSelectOption[]> => {

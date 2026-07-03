@@ -4,10 +4,11 @@ import {
   redirect,
   useRouterState,
 } from "@tanstack/react-router"
-import { Activity, FlaskConical } from "lucide-react"
+import { FlaskConical } from "lucide-react"
 
 import { Footer } from "@/components/Common/Footer"
 import { GlobalSearch } from "@/components/Common/GlobalSearch"
+import { NotificationBell } from "@/components/Common/NotificationBell"
 import AppSidebar from "@/components/Sidebar/AppSidebar"
 import {
   SidebarInset,
@@ -62,10 +63,7 @@ function Layout() {
           </div>
           <div className="ml-auto flex min-w-0 items-center gap-2">
             <GlobalSearch />
-            <div className="hidden items-center gap-2 rounded-full border border-success/20 bg-success/8 px-2.5 py-1 text-[0.65rem] font-semibold text-success xl:flex">
-              <Activity className="size-3.5" />
-              Système opérationnel
-            </div>
+            <NotificationBell />
           </div>
         </header>
         <main className="scrollbar-hide flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">

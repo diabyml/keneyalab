@@ -3,8 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import type { PatientPublic } from "@/client"
+import type { OrderEntryAssistantPatientDraft, PatientPublic } from "@/client"
 import { PatientsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -56,6 +55,7 @@ interface PatientDialogProps {
   onOpenChange: (open: boolean) => void
   patient: PatientPublic | null
   initialIdentifier?: string
+  initialDraft?: OrderEntryAssistantPatientDraft | null
   onSaved?: (patient: PatientPublic) => void
 }
 
@@ -64,6 +64,7 @@ export function PatientDialog({
   onOpenChange,
   patient,
   initialIdentifier = "",
+  initialDraft = null,
   onSaved,
 }: PatientDialogProps) {
   const queryClient = useQueryClient()
@@ -86,15 +87,17 @@ export function PatientDialog({
   useEffect(() => {
     if (!open) return
     form.reset({
-      identifier: patient?.identifier ?? initialIdentifier,
-      first_name: patient?.first_name ?? "",
-      last_name: patient?.last_name ?? "",
-      date_of_birth: patient?.date_of_birth ?? "",
-      gender: patient?.gender ?? "male",
-      phone: patient?.phone ?? "",
-      address: patient?.address ?? "",
+      identifier:
+        patient?.identifier ?? initialDraft?.identifier ?? initialIdentifier,
+      first_name: patient?.first_name ?? initialDraft?.first_name ?? "",
+      last_name: patient?.last_name ?? initialDraft?.last_name ?? "",
+      date_of_birth:
+        patient?.date_of_birth ?? initialDraft?.date_of_birth ?? "",
+      gender: patient?.gender ?? initialDraft?.gender ?? "male",
+      phone: patient?.phone ?? initialDraft?.phone ?? "",
+      address: patient?.address ?? initialDraft?.address ?? "",
     })
-  }, [form, initialIdentifier, open, patient])
+  }, [form, initialDraft, initialIdentifier, open, patient])
 
   const mutation = useMutation({
     mutationFn: (data: PatientFormData) => {

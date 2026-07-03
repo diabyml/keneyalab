@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type {
   CatalogDetailPublic,
   DoctorWithTitlePublic,
+  OrderEntryAssistantDoctorDraft,
+  OrderEntryAssistantPatientDraft,
   OrderLineOverride,
   OrderPreviewRequest,
   OrderUpdate,
@@ -45,6 +47,7 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { usePermission } from "@/hooks/usePermission"
 import { handleError } from "@/utils"
 import { CatalogPicker } from "./CatalogPicker"
+import { OrderEntryAssistant } from "./OrderEntryAssistant"
 import { TestAnalyteEditor } from "./TestAnalyteEditor"
 import { formatMoney } from "./utils"
 
@@ -101,6 +104,10 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
   const [paymentMethodId, setPaymentMethodId] = useState("")
   const [patientDialogOpen, setPatientDialogOpen] = useState(false)
   const [doctorDialogOpen, setDoctorDialogOpen] = useState(false)
+  const [patientDraft, setPatientDraft] =
+    useState<OrderEntryAssistantPatientDraft | null>(null)
+  const [doctorDraft, setDoctorDraft] =
+    useState<OrderEntryAssistantDoctorDraft | null>(null)
   const [insuranceDialogOpen, setInsuranceDialogOpen] = useState(false)
   const [correctionReason, setCorrectionReason] = useState("")
   const [revisionConfirmed, setRevisionConfirmed] = useState(false)
@@ -402,6 +409,26 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
 
   const preview = previewQuery.data
 
+  const updateSelectedCatalogs = (next: Map<string, CatalogDetailPublic>) => {
+    setSelected(next)
+    const selectedIds = new Set(next.keys())
+    setAnalyteOverrides((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(([catalogId]) => {
+          const previewItem = preview?.items.find(
+            (item) => item.catalog_id === catalogId,
+          )
+          return (
+            !previewItem ||
+            (previewItem.source_catalog_ids ?? []).some((sourceId) =>
+              selectedIds.has(sourceId),
+            )
+          )
+        }),
+      ),
+    )
+  }
+
   useEffect(() => {
     if (!preview || isPaymentAmountEdited) return
     setPaymentAmount(preview.net_amount)
@@ -461,7 +488,10 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => setPatientDialogOpen(true)}
+                      onClick={() => {
+                        setPatientDraft(null)
+                        setPatientDialogOpen(true)
+                      }}
                       aria-label="Créer un patient"
                     >
                       <Plus className="size-4" />
@@ -490,7 +520,10 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => setDoctorDialogOpen(true)}
+                      onClick={() => {
+                        setDoctorDraft(null)
+                        setDoctorDialogOpen(true)
+                      }}
                       aria-label="Créer un médecin"
                     >
                       <Plus className="size-4" />
@@ -571,27 +604,25 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
                 Recherchez les tests ou ajoutez plusieurs résultats avec Entrée.
               </p>
             </div>
+            <OrderEntryAssistant
+              selected={selected}
+              onCatalogsChange={updateSelectedCatalogs}
+              canCreatePatient={canCreatePatient}
+              canCreateDoctor={canCreateDoctor}
+              onSelectPatient={selectPatient}
+              onDraftPatient={(draft) => {
+                setPatientDraft(draft)
+                setPatientDialogOpen(true)
+              }}
+              onSelectDoctor={selectDoctor}
+              onDraftDoctor={(draft) => {
+                setDoctorDraft(draft)
+                setDoctorDialogOpen(true)
+              }}
+            />
             <CatalogPicker
               selected={selected}
-              onChange={(next) => {
-                setSelected(next)
-                const selectedIds = new Set(next.keys())
-                setAnalyteOverrides((current) =>
-                  Object.fromEntries(
-                    Object.entries(current).filter(([catalogId]) => {
-                      const previewItem = preview?.items.find(
-                        (item) => item.catalog_id === catalogId,
-                      )
-                      return (
-                        !previewItem ||
-                        (previewItem.source_catalog_ids ?? []).some(
-                          (sourceId) => selectedIds.has(sourceId),
-                        )
-                      )
-                    }),
-                  ),
-                )
-              }}
+              onChange={updateSelectedCatalogs}
             />
           </section>
         </div>
@@ -1006,17 +1037,31 @@ export function OrderCreateView({ orderId }: { orderId?: string }) {
 
       <PatientDialog
         open={patientDialogOpen}
-        onOpenChange={setPatientDialogOpen}
+        onOpenChange={(open) => {
+          setPatientDialogOpen(open)
+          if (!open) setPatientDraft(null)
+        }}
         patient={null}
         initialIdentifier={identifierQuery.data?.identifier}
-        onSaved={selectPatient}
+        initialDraft={patientDraft}
+        onSaved={(patient) => {
+          selectPatient(patient)
+          setPatientDraft(null)
+        }}
       />
       <DoctorDialog
         open={doctorDialogOpen}
-        onOpenChange={setDoctorDialogOpen}
+        onOpenChange={(open) => {
+          setDoctorDialogOpen(open)
+          if (!open) setDoctorDraft(null)
+        }}
         doctor={null}
+        initialDraft={doctorDraft}
         allowCommissionConfig={canManageCommission}
-        onSaved={selectDoctor}
+        onSaved={(doctor) => {
+          selectDoctor(doctor)
+          setDoctorDraft(null)
+        }}
       />
       {patientId && (
         <PatientInsuranceDialog

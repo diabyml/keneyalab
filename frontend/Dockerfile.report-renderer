@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/playwright:v1.58.2-noble
+
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends unzip \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
+
+COPY package.json bun.lock /app/
+COPY frontend/package.json /app/frontend/
+
+RUN bun install --frozen-lockfile
+
+COPY ./frontend /app/frontend
+
+WORKDIR /app/frontend
+
+EXPOSE 3100
+
+CMD ["bun", "src/report-renderer/server.ts"]

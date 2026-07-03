@@ -5750,6 +5750,158 @@ export const NewPasswordSchema = {
     title: 'NewPassword'
 } as const;
 
+export const NotificationChannelSchema = {
+    type: 'string',
+    enum: ['sms', 'email', 'whatsapp', 'in_app'],
+    title: 'NotificationChannel'
+} as const;
+
+export const NotificationMarkAllReadPublicSchema = {
+    properties: {
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['count'],
+    title: 'NotificationMarkAllReadPublic'
+} as const;
+
+export const NotificationPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        order_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Order Id'
+        },
+        patient_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Patient Id'
+        },
+        user_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'User Id'
+        },
+        type: {
+            '$ref': '#/components/schemas/NotificationType'
+        },
+        channel: {
+            '$ref': '#/components/schemas/NotificationChannel'
+        },
+        message: {
+            type: 'string',
+            title: 'Message'
+        },
+        status: {
+            '$ref': '#/components/schemas/NotificationStatus'
+        },
+        sent_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Sent At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'user_id', 'type', 'channel', 'message', 'status'],
+    title: 'NotificationPublic'
+} as const;
+
+export const NotificationStatusSchema = {
+    type: 'string',
+    enum: ['pending', 'sent', 'failed'],
+    title: 'NotificationStatus'
+} as const;
+
+export const NotificationTypeSchema = {
+    type: 'string',
+    enum: ['result_ready', 'order_update', 'report_released', 'general'],
+    title: 'NotificationType'
+} as const;
+
+export const NotificationUnreadCountPublicSchema = {
+    properties: {
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['count'],
+    title: 'NotificationUnreadCountPublic'
+} as const;
+
+export const NotificationsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/NotificationPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'NotificationsPublic'
+} as const;
+
 export const OrderAnalyteDetailPublicSchema = {
     properties: {
         analyte_id: {
@@ -6137,6 +6289,307 @@ export const OrderDetailPublicSchema = {
     type: 'object',
     required: ['id', 'accession_number', 'patient_id', 'status', 'created_by', 'patient_identifier', 'patient_name', 'patient_date_of_birth', 'patient_gender', 'invoice'],
     title: 'OrderDetailPublic'
+} as const;
+
+export const OrderEntryAssistantCatalogSuggestionSchema = {
+    properties: {
+        catalog: {
+            '$ref': '#/components/schemas/CatalogSummaryPublic'
+        },
+        confidence: {
+            type: 'number',
+            maximum: 1,
+            minimum: 0,
+            title: 'Confidence'
+        },
+        reason: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reason'
+        },
+        matched_terms: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Matched Terms'
+        },
+        warnings: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Warnings'
+        }
+    },
+    type: 'object',
+    required: ['catalog', 'confidence'],
+    title: 'OrderEntryAssistantCatalogSuggestion'
+} as const;
+
+export const OrderEntryAssistantDoctorDraftSchema = {
+    properties: {
+        first_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'First Name'
+        },
+        last_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Name'
+        },
+        provenance: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Provenance'
+        },
+        phone: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Phone'
+        },
+        title_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Title Name'
+        },
+        confidence: {
+            type: 'number',
+            maximum: 1,
+            minimum: 0,
+            title: 'Confidence',
+            default: 0
+        },
+        warnings: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Warnings'
+        }
+    },
+    type: 'object',
+    title: 'OrderEntryAssistantDoctorDraft'
+} as const;
+
+export const OrderEntryAssistantPatientDraftSchema = {
+    properties: {
+        identifier: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Identifier'
+        },
+        first_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'First Name'
+        },
+        last_name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 100
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Name'
+        },
+        date_of_birth: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Date Of Birth'
+        },
+        gender: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/GenderType'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        phone: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 50
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Phone'
+        },
+        address: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Address'
+        },
+        confidence: {
+            type: 'number',
+            maximum: 1,
+            minimum: 0,
+            title: 'Confidence',
+            default: 0
+        },
+        warnings: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Warnings'
+        }
+    },
+    type: 'object',
+    title: 'OrderEntryAssistantPatientDraft'
+} as const;
+
+export const OrderEntryAssistantRequestSchema = {
+    properties: {
+        text: {
+            type: 'string',
+            maxLength: 5000,
+            minLength: 3,
+            title: 'Text'
+        }
+    },
+    type: 'object',
+    required: ['text'],
+    title: 'OrderEntryAssistantRequest'
+} as const;
+
+export const OrderEntryAssistantResponseSchema = {
+    properties: {
+        patient_draft: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/OrderEntryAssistantPatientDraft'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        patient_matches: {
+            items: {
+                '$ref': '#/components/schemas/PatientPublic'
+            },
+            type: 'array',
+            title: 'Patient Matches'
+        },
+        doctor_draft: {
+            anyOf: [
+                {
+                    '$ref': '#/components/schemas/OrderEntryAssistantDoctorDraft'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        },
+        doctor_matches: {
+            items: {
+                '$ref': '#/components/schemas/DoctorWithTitlePublic'
+            },
+            type: 'array',
+            title: 'Doctor Matches'
+        },
+        catalog_suggestions: {
+            items: {
+                '$ref': '#/components/schemas/OrderEntryAssistantCatalogSuggestion'
+            },
+            type: 'array',
+            title: 'Catalog Suggestions'
+        },
+        unmatched_phrases: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Unmatched Phrases'
+        },
+        warnings: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Warnings'
+        }
+    },
+    type: 'object',
+    title: 'OrderEntryAssistantResponse'
 } as const;
 
 export const OrderItemAnalyteCustomizeRequestSchema = {

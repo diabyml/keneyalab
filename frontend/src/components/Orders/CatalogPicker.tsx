@@ -1,5 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
-import { ChevronDown, ChevronRight, FlaskConical, Search } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronRight,
+  FlaskConical,
+  Search,
+  X,
+} from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 
 import type { CatalogDetailPublic, CatalogSummaryPublic } from "@/client"
@@ -93,7 +99,14 @@ export function CatalogPicker({ selected, onChange }: CatalogPickerProps) {
     }
   }
 
+  const removeSelected = (catalogId: string) => {
+    const next = new Map(selected)
+    next.delete(catalogId)
+    onChange(next)
+  }
+
   const visible = query.data?.data ?? []
+  const selectedRows = [...selected.values()]
 
   return (
     <section className="space-y-3">
@@ -139,6 +152,43 @@ export function CatalogPicker({ selected, onChange }: CatalogPickerProps) {
             searchPlaceholder="Rechercher une catégorie…"
           />
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm">
+        <span className="text-xs font-medium text-muted-foreground">
+          Sélectionnés:
+        </span>
+        {selectedRows.length === 0 ? (
+          <span className="text-xs text-muted-foreground">
+            Aucun examen sélectionné.
+          </span>
+        ) : (
+          selectedRows.map((entry, index) => (
+            <span key={entry.id} className="inline-flex items-center gap-1">
+              <Badge
+                variant="secondary"
+                className="max-w-64 gap-1 rounded-full px-2 py-1 font-normal"
+              >
+                <span className="truncate">
+                  {entry.code} · {entry.name}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="-mr-1 size-4 rounded-full p-0 hover:bg-background/80"
+                  onClick={() => removeSelected(entry.id)}
+                  aria-label={`Retirer ${entry.name}`}
+                >
+                  <X className="size-3" />
+                </Button>
+              </Badge>
+              {index < selectedRows.length - 1 && (
+                <span className="text-muted-foreground">,</span>
+              )}
+            </span>
+          ))
+        )}
       </div>
 
       <div className="overflow-hidden rounded-md border">
