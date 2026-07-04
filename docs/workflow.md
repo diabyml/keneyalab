@@ -1,7 +1,7 @@
 # Development Workflows
 
 <!-- Rebuild project -->
-docker compose up -d --build --force-recreate backend frontend prestart
+docker compose up -d --build --force-recreate backend frontend report-renderer prestart
 
 
 # on leneovo fix start

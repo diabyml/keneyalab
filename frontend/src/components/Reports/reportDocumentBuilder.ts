@@ -242,6 +242,29 @@ export const RENDERER_BASE_STYLES = `
     max-height: 100px;
   }
 
+  .report-reference-range {
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    white-space: pre-line;
+  }
+
+  .report-reference-range p,
+  .report-reference-range ul,
+  .report-reference-range ol {
+    margin: 0 0 3px;
+  }
+
+  .report-reference-range p:last-child,
+  .report-reference-range ul:last-child,
+  .report-reference-range ol:last-child {
+    margin-bottom: 0;
+  }
+
+  .report-reference-range ul,
+  .report-reference-range ol {
+    padding-left: 14px;
+  }
+
   .result-abnormal,
   .result-abnormal *,
   .result-critical,
@@ -351,25 +374,90 @@ export function buildReportDocumentHtml({
       return element;
     }
 
-    function referenceText(value) {
+    const referenceAllowedTags = new Set([
+      "a", "blockquote", "div", "span", "p", "strong", "b", "em", "i",
+      "u", "s", "small", "ul", "ol", "li", "table", "thead", "tbody",
+      "tr", "th", "td", "br", "hr"
+    ]);
+    const referenceVoidTags = new Set(["br", "hr"]);
+    const referenceAllowedAttrs = new Set([
+      "class", "colspan", "rowspan", "href", "target", "rel", "style"
+    ]);
+    const referenceAllowedAlignments = new Set(["left", "center", "right", "justify"]);
+
+    function safeReferenceAttr(name, value) {
+      const attr = String(name || "").toLowerCase();
+      const raw = String(value || "");
+      if (!referenceAllowedAttrs.has(attr) || attr.startsWith("on")) return null;
+      if (attr === "href" && !/^(https?:|mailto:|tel:)/i.test(raw)) return null;
+      if (attr === "target" && raw !== "_blank") return null;
+      if (attr === "rel") return ["rel", "noopener noreferrer"];
+      if (attr === "style") {
+        const match = raw.match(/^\\s*text-align\\s*:\\s*([a-z]+)\\s*;?\\s*$/i);
+        if (!match) return null;
+        const align = match[1].toLowerCase();
+        if (!referenceAllowedAlignments.has(align)) return null;
+        return ["style", "text-align: " + align];
+      }
+      return [attr, raw];
+    }
+
+    function sanitizeReferenceNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return document.createTextNode(node.textContent || "");
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+      const tag = node.tagName.toLowerCase();
+      if (["script", "style", "iframe", "object"].includes(tag)) return null;
+
+      if (!referenceAllowedTags.has(tag)) {
+        const fragment = document.createDocumentFragment();
+        node.childNodes.forEach((child) => {
+          const sanitized = sanitizeReferenceNode(child);
+          if (sanitized) fragment.append(sanitized);
+        });
+        return fragment;
+      }
+
+      const element = document.createElement(tag);
+      for (const attr of node.attributes) {
+        const safe = safeReferenceAttr(attr.name, attr.value);
+        if (safe) element.setAttribute(safe[0], safe[1]);
+      }
+      if (tag === "a") {
+        element.setAttribute("rel", "noopener noreferrer");
+      }
+      if (!referenceVoidTags.has(tag)) {
+        node.childNodes.forEach((child) => {
+          const sanitized = sanitizeReferenceNode(child);
+          if (sanitized) element.append(sanitized);
+        });
+      }
+      return element;
+    }
+
+    function referenceContent(value) {
       const raw = String(value || "").trim();
       if (!raw) return "—";
-      if (!/<[a-z][\\s\\S]*>/i.test(raw)) return raw;
 
-      const template = document.createElement("template");
-      template.innerHTML = raw
-        .replace(/<\\s*br\\s*\\/?>/gi, "\\n")
-        .replace(/<\\/\\s*(p|div|li|tr|h[1-6])\\s*>/gi, "\\n");
-      template.content.querySelectorAll("script,style").forEach((node) => node.remove());
-      const text = template.content.textContent || "";
-      return (
-        text
+      if (!/<[a-z][\\s\\S]*>/i.test(raw)) {
+        return raw
           .replace(/\\u00a0/g, " ")
           .split("\\n")
           .map((line) => line.trim())
           .filter(Boolean)
-          .join(" ") || "—"
-      );
+          .join("\\n") || "—";
+      }
+
+      const template = document.createElement("template");
+      template.innerHTML = raw;
+      const fragment = document.createDocumentFragment();
+      template.content.childNodes.forEach((child) => {
+        const sanitized = sanitizeReferenceNode(child);
+        if (sanitized) fragment.append(sanitized);
+      });
+      return fragment.childNodes.length ? fragment : "—";
     }
 
     const ReportKit = {
@@ -395,7 +483,7 @@ export function buildReportDocumentHtml({
                     : analyte.result_value || "—"
                 ),
                 h("td", null, analyte.unit_name || "—"),
-                h("td", null, referenceText(analyte.reference_text))
+                h("td", { className: "report-reference-range" }, referenceContent(analyte.reference_text))
               ))
             ]))
           )
