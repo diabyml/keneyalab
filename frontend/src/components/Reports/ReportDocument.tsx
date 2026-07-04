@@ -56,6 +56,21 @@ export const ReportDocument = forwardRef<
     () => buildReportDocumentModel({ snapshot, templates, renderConfig }),
     [snapshot, templates, renderConfig],
   )
+  const rendererSignature = useMemo(
+    () =>
+      JSON.stringify(
+        documentModel.rendererEntries.map((entry) => ({
+          key: entry.key,
+          jsx: entry.renderer.jsx_source,
+          css: entry.renderer.css_source,
+        })),
+      ),
+    [documentModel.rendererEntries],
+  )
+  const rendererEntries = useMemo(
+    () => documentModel.rendererEntries,
+    [rendererSignature],
+  )
 
   useImperativeHandle(
     ref,
@@ -73,11 +88,9 @@ export const ReportDocument = forwardRef<
     let active = true
     setCompileError("")
     setRenderError("")
-    setIframeReady(false)
-    setCompiledRenderers(null)
     onReadyChange?.(false)
 
-    const rendererJobs = documentModel.rendererEntries.map(async (entry) => ({
+    const rendererJobs = rendererEntries.map(async (entry) => ({
       key: entry.key,
       code: await compileReportRenderer(entry.renderer.jsx_source),
       css: entry.renderer.css_source,
@@ -96,7 +109,7 @@ export const ReportDocument = forwardRef<
     return () => {
       active = false
     }
-  }, [documentModel.rendererEntries, onReadyChange])
+  }, [onReadyChange, rendererEntries])
 
   useEffect(() => {
     const receive = (event: MessageEvent) => {
@@ -132,6 +145,7 @@ export const ReportDocument = forwardRef<
             details: documentModel.details,
             footer: documentModel.footer,
             componentCss: documentModel.componentCss,
+            initialUpdatePayload: documentModel.updatePayload,
             voided,
           }),
     [
@@ -141,6 +155,7 @@ export const ReportDocument = forwardRef<
       documentModel.details,
       documentModel.footer,
       documentModel.componentCss,
+      documentModel.updatePayload,
       voided,
     ],
   )

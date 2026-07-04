@@ -9,6 +9,7 @@ from app.core.db import engine, init_db
 from app.main import app
 from app.models import (
     Item,
+    Notification,
     Reagent,
     ReagentLot,
     ReagentSettings,
@@ -30,6 +31,7 @@ def db() -> Generator[Session, None, None]:
         session.execute(delete(ReagentLot))
         session.execute(delete(Reagent))
         session.execute(delete(ReagentSettings))
+        session.execute(delete(Notification))
         session.execute(delete(UserRole))
         session.execute(delete(RolePermission))
         session.execute(delete(Item))

@@ -11,13 +11,15 @@ from app.api.deps import (
     require_any_permission,
     require_permission,
 )
-from app.models import (
+from app.models.lis import (
     CatalogDetailPublic,
     CatalogSummariesPublic,
     CatalogType,
     OrderCancelRequest,
     OrderCreate,
     OrderDetailPublic,
+    OrderEntryAssistantRequest,
+    OrderEntryAssistantResponse,
     OrderItemAnalyteCustomizeRequest,
     OrderListPublic,
     OrderPreviewPublic,
@@ -33,6 +35,7 @@ from app.models import (
     SortOrder,
     SuggestedIdentifierPublic,
 )
+from app.services import ai_order_entry as ai_order_entry_service
 from app.services import catalog as catalog_service
 from app.services import order as order_service
 from app.services import permission as permission_service
@@ -214,6 +217,29 @@ def create_order(
         can_collect_payment=_can(session, current_user, "payments", "collect"),
     )
     return order_service.get_order_detail(session=session, order_id=order.id)
+
+
+@router.post(
+    "/entry-assistant/intake",
+    dependencies=[
+        Depends(
+            require_any_permission(
+                ("orders", "create"),
+                ("orders", "edit"),
+            )
+        )
+    ],
+    response_model=OrderEntryAssistantResponse,
+)
+def generate_order_entry_intake(
+    *,
+    session: SessionDep,
+    request_in: OrderEntryAssistantRequest,
+) -> Any:
+    return ai_order_entry_service.generate_order_entry_intake(
+        session=session,
+        request=request_in,
+    )
 
 
 @router.get(

@@ -17,6 +17,7 @@ from app.models.lis import (
     Category,
     CategoryReportRendererUpdate,
     DeliveryStatus,
+    NotificationType,
     Report,
     ReportChannel,
     ReportComponent,
@@ -48,6 +49,8 @@ from app.models.lis import (
 )
 from app.repositories import report as report_repo
 from app.services import lab_settings as lab_settings_service
+from app.services import notification as notification_service
+from app.services import report_pdf as report_pdf_service
 from app.services import result as result_service
 from app.utils import send_email, send_whatsapp_document, upload_whatsapp_media
 
@@ -1376,6 +1379,42 @@ def _report_email_html(report: Report, recipient_note: str | None = None) -> str
 </html>"""
 
 
+def _report_delivery_email_html(
+    report: Report, recipient_note: str | None = None
+) -> str:
+    snapshot = dict(report.snapshot or {})
+    order = dict(snapshot.get("order") or {})
+    patient = dict(snapshot.get("patient") or {})
+    lab = dict(snapshot.get("lab") or {})
+    lab_name = escape(str(lab.get("display_name") or settings.PROJECT_NAME))
+    accession = escape(str(order.get("accession_number") or ""))
+    patient_name = escape(str(patient.get("name") or ""))
+    note_html = (
+        "<p><strong>Message :</strong> "
+        f"{escape(recipient_note.strip())}</p>"
+        if recipient_note and recipient_note.strip()
+        else ""
+    )
+    return f"""<!doctype html>
+<html lang="fr">
+<body style="font-family:Arial,sans-serif;color:#172033;line-height:1.5">
+  <p>Bonjour,</p>
+  <p>Veuillez trouver en pièce jointe le compte rendu d'analyses médicales.</p>
+  <p>
+    <strong>Laboratoire :</strong> {lab_name}<br>
+    <strong>Patient :</strong> {patient_name or "—"}<br>
+    <strong>Demande :</strong> {accession or "—"}<br>
+    <strong>Version :</strong> {report.version}
+  </p>
+  {note_html}
+  <p style="font-size:12px;color:#64748b">
+    Ce message contient des données médicales confidentielles. S'il ne vous est
+    pas destiné, veuillez le supprimer et prévenir l'expéditeur.
+  </p>
+</body>
+</html>"""
+
+
 def _send_report_email(
     *,
     session: Session,
@@ -1385,6 +1424,7 @@ def _send_report_email(
 ) -> ReportPublic:
     metadata = dict(report.delivery_metadata or {})
     attempts = list(metadata.get("attempts", []))
+    filename = _report_pdf_filename(report)
     attempt: dict[str, Any] = {
         "channel": ReportChannel.email.value,
         "recipient": recipient,
@@ -1392,15 +1432,24 @@ def _send_report_email(
         "status": DeliveryStatus.pending.value,
         "requested_at": datetime.now(timezone.utc).isoformat(),
         "provider": "smtp",
+        "filename": filename,
     }
     attempts.append(attempt)
     snapshot = dict(report.snapshot or {})
     accession = str((snapshot.get("order") or {}).get("accession_number") or "")
     try:
+        pdf_data = report_pdf_service.render_report_pdf(report=report)
         send_email(
             email_to=recipient,
             subject=f"Compte rendu d'analyses {accession}".strip(),
-            html_content=_report_email_html(report, recipient_note),
+            html_content=_report_delivery_email_html(report, recipient_note),
+            attachments=[
+                {
+                    "filename": filename,
+                    "data": pdf_data,
+                    "mime_type": "application/pdf",
+                }
+            ],
         )
     except Exception as exc:
         attempt["status"] = DeliveryStatus.failed.value
@@ -1586,10 +1635,11 @@ def _send_report_whatsapp(
     attempts.append(attempt)
     try:
         filename = _report_pdf_filename(report)
+        pdf_data = report_pdf_service.render_report_pdf(report=report)
         upload_response = upload_whatsapp_media(
             filename=filename,
             content_type="application/pdf",
-            data=_render_report_pdf(report),
+            data=pdf_data,
         )
         media_id = str(upload_response.get("id") or "")
         if not media_id:
@@ -1691,6 +1741,18 @@ def release_report(
         delivery_metadata={},
     )
     session.add(report)
+    subject = report_repo.get_report_subject(session=session, order_id=order_id)
+    if subject is not None:
+        order, _, _, _ = subject
+        if order.created_by and order.created_by != user_id:
+            notification_service.create_in_app_notification(
+                session=session,
+                user_id=order.created_by,
+                type=NotificationType.report_released,
+                message=f"Rapport de la demande {order.accession_number} publié.",
+                order_id=order.id,
+                patient_id=order.patient_id,
+            )
     session.commit()
     session.refresh(report)
     if request.channel == ReportChannel.email and recipient:

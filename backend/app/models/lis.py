@@ -1650,6 +1650,52 @@ class OrderCancelRequest(SQLModel):
     expected_revision: int = Field(ge=1)
 
 
+class OrderEntryAssistantRequest(SQLModel):
+    text: str = Field(min_length=3, max_length=5000)
+
+
+class OrderEntryAssistantPatientDraft(SQLModel):
+    identifier: str | None = Field(default=None, max_length=100)
+    first_name: str | None = Field(default=None, max_length=100)
+    last_name: str | None = Field(default=None, max_length=100)
+    date_of_birth: date | None = None
+    gender: GenderType | None = None
+    phone: str | None = Field(default=None, max_length=50)
+    address: str | None = None
+    confidence: float = Field(default=0, ge=0, le=1)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class OrderEntryAssistantDoctorDraft(SQLModel):
+    first_name: str | None = Field(default=None, max_length=100)
+    last_name: str | None = Field(default=None, max_length=100)
+    provenance: str | None = Field(default=None, max_length=255)
+    phone: str | None = Field(default=None, max_length=50)
+    title_name: str | None = Field(default=None, max_length=100)
+    confidence: float = Field(default=0, ge=0, le=1)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class OrderEntryAssistantCatalogSuggestion(SQLModel):
+    catalog: CatalogSummaryPublic
+    confidence: float = Field(ge=0, le=1)
+    reason: str | None = None
+    matched_terms: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class OrderEntryAssistantResponse(SQLModel):
+    patient_draft: OrderEntryAssistantPatientDraft | None = None
+    patient_matches: list[PatientPublic] = Field(default_factory=list)
+    doctor_draft: OrderEntryAssistantDoctorDraft | None = None
+    doctor_matches: list[DoctorWithTitlePublic] = Field(default_factory=list)
+    catalog_suggestions: list[OrderEntryAssistantCatalogSuggestion] = Field(
+        default_factory=list
+    )
+    unmatched_phrases: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class Order(OrderBase, table=True):
     __tablename__ = "orders"
     __table_args__ = (
@@ -2684,6 +2730,14 @@ class NotificationPublic(NotificationBase, TimestampPublic):
 
 class NotificationsPublic(SQLModel):
     data: list[NotificationPublic]
+    count: int
+
+
+class NotificationUnreadCountPublic(SQLModel):
+    count: int
+
+
+class NotificationMarkAllReadPublic(SQLModel):
     count: int
 
 

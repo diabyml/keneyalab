@@ -36,6 +36,7 @@ def send_email(
     email_to: str,
     subject: str = "",
     html_content: str = "",
+    attachments: list[dict[str, Any]] | None = None,
 ) -> None:
     assert settings.emails_enabled, "no provided configuration for email variables"
     message = emails.Message(
@@ -43,7 +44,10 @@ def send_email(
         html=html_content,
         mail_from=(settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL),
     )
-    smtp_options = {"host": settings.SMTP_HOST, "port": settings.SMTP_PORT}
+    smtp_options: dict[str, Any] = {
+        "host": settings.SMTP_HOST,
+        "port": settings.SMTP_PORT,
+    }
     if settings.SMTP_TLS:
         smtp_options["tls"] = True
     elif settings.SMTP_SSL:
@@ -52,6 +56,8 @@ def send_email(
         smtp_options["user"] = settings.SMTP_USER
     if settings.SMTP_PASSWORD:
         smtp_options["password"] = settings.SMTP_PASSWORD
+    for attachment in attachments or []:
+        message.attach(**attachment)
     response = message.send(to=email_to, smtp=smtp_options)
     logger.info(f"send email result: {response}")
     if response.status_code != 250:
@@ -142,7 +148,7 @@ def send_whatsapp_document(
 ) -> dict[str, Any]:
     if not settings.whatsapp_enabled:
         raise RuntimeError("Configuration WhatsApp manquante")
-    payload = {
+    payload: dict[str, Any] = {
         "messaging_product": "whatsapp",
         "to": recipient,
         "type": "document",

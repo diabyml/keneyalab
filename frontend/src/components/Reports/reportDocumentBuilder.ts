@@ -299,6 +299,7 @@ export function buildReportDocumentHtml({
   details,
   footer,
   componentCss,
+  initialUpdatePayload,
   voided,
 }: {
   compiledRenderers: CompiledRenderer[]
@@ -306,6 +307,7 @@ export function buildReportDocumentHtml({
   details: string
   footer: string
   componentCss: string
+  initialUpdatePayload: ReportDocumentUpdatePayload
   voided: boolean
 }) {
   const rendererCssByKey = Object.fromEntries(
@@ -314,6 +316,7 @@ export function buildReportDocumentHtml({
   const registrationScript = rendererRegistrationScript(compiledRenderers)
   const runtime = `
     const Fragment = Symbol("Fragment");
+    const initialUpdatePayload = ${safeJson(initialUpdatePayload)};
     const renderers = {};
     const rendererErrors = {};
     const rendererCssByKey = ${safeJson(rendererCssByKey)};
@@ -348,6 +351,27 @@ export function buildReportDocumentHtml({
       return element;
     }
 
+    function referenceText(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "—";
+      if (!/<[a-z][\\s\\S]*>/i.test(raw)) return raw;
+
+      const template = document.createElement("template");
+      template.innerHTML = raw
+        .replace(/<\\s*br\\s*\\/?>/gi, "\\n")
+        .replace(/<\\/\\s*(p|div|li|tr|h[1-6])\\s*>/gi, "\\n");
+      template.content.querySelectorAll("script,style").forEach((node) => node.remove());
+      const text = template.content.textContent || "";
+      return (
+        text
+          .replace(/\\u00a0/g, " ")
+          .split("\\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .join(" ") || "—"
+      );
+    }
+
     const ReportKit = {
       ClinicalTable({ category }) {
         return h("section", { className: "report-category" },
@@ -371,7 +395,7 @@ export function buildReportDocumentHtml({
                     : analyte.result_value || "—"
                 ),
                 h("td", null, analyte.unit_name || "—"),
-                h("td", null, analyte.reference_text || "—")
+                h("td", null, referenceText(analyte.reference_text))
               ))
             ]))
           )
@@ -574,6 +598,7 @@ export function buildReportDocumentHtml({
         }
       });
       window.addEventListener("load", scheduleHeightReports);
+      applyReportUpdate(initialUpdatePayload);
       reportReady();
     } catch (error) {
       reportError(error?.message || String(error));

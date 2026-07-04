@@ -67,6 +67,26 @@ function createDocument(code: string, css: string, category: ReportCategory) {
       children.forEach(child => append(element, child));
       return element;
     }
+    function referenceText(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "—";
+      if (!/<[a-z][\\s\\S]*>/i.test(raw)) return raw;
+
+      const template = document.createElement("template");
+      template.innerHTML = raw
+        .replace(/<\\s*br\\s*\\/?>/gi, "\\n")
+        .replace(/<\\/\\s*(p|div|li|tr|h[1-6])\\s*>/gi, "\\n");
+      template.content.querySelectorAll("script,style").forEach((node) => node.remove());
+      const text = template.content.textContent || "";
+      return (
+        text
+          .replace(/\\u00a0/g, " ")
+          .split("\\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .join(" ") || "—"
+      );
+    }
     const ReportKit = {
       ClinicalTable({ category }) {
         const section = h("section", { className: "report-category" },
@@ -91,7 +111,7 @@ function createDocument(code: string, css: string, category: ReportCategory) {
                   ...(analyte.comments || []).map(comment => h("small", { className: "result-comment" }, comment.comment))
                 ),
                 h("td", null, analyte.unit_name || "—"),
-                h("td", null, analyte.reference_text || "—")
+                h("td", null, referenceText(analyte.reference_text))
               ))
             ]))
           )

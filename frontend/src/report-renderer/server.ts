@@ -86,6 +86,7 @@ async function renderReportPdf(payload: RenderReportRequest) {
     details: model.details,
     footer: model.footer,
     componentCss: model.componentCss,
+    initialUpdatePayload: model.updatePayload,
     voided: payload.voided === true,
   })
   const browser = await getBrowser()

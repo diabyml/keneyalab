@@ -24,6 +24,9 @@ venv/
 # Docker
 .docker/
 
+# Local encrypted backups
+backups/
+
 # OS
 .DS_Store
 Thumbs.db

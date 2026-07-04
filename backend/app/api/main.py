@@ -20,6 +20,7 @@ from app.api.routes import (
     items,
     lab_settings,
     login,
+    notifications,
     orders,
     patient_contexts,
     patients,
@@ -66,6 +67,7 @@ api_router.include_router(lab_settings.router)
 api_router.include_router(analytes.router)
 api_router.include_router(audit_logs.router)
 api_router.include_router(catalog.router)
+api_router.include_router(notifications.router)
 api_router.include_router(orders.router)
 api_router.include_router(invoices.router)
 api_router.include_router(results.router)

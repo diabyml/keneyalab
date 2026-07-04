@@ -12,6 +12,9 @@ docker compose up
 ## Clear db except rbac system
 docker compose exec backend python scripts/clear_data.py
 
+<!-- clear catalog -->
+docker compose exec backend python scripts/clear_catalog_data.py
+
 ## To access adminer: http://adminer.localhost/
 
 ## Mailcatcher  http://localhost:1080

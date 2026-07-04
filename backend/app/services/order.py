@@ -26,6 +26,7 @@ from app.models.lis import (
     InsuranceProvider,
     Invoice,
     InvoiceBalanceTransfer,
+    NotificationType,
     Order,
     OrderAnalyteDetailPublic,
     OrderCancelRequest,
@@ -67,6 +68,7 @@ from app.models.lis import (
 from app.repositories import order as order_repo
 from app.services import commission as commission_service
 from app.services import finance_settings as finance_settings_service
+from app.services import notification as notification_service
 
 MONEY = Decimal("0.01")
 
@@ -1305,6 +1307,15 @@ def cancel_order(
             performed_by_id=performed_by_id,
         )
     )
+    if order.created_by and order.created_by != performed_by_id:
+        notification_service.create_in_app_notification(
+            session=session,
+            user_id=order.created_by,
+            type=NotificationType.order_update,
+            message=f"Demande {order.accession_number} annulée.",
+            order_id=order.id,
+            patient_id=order.patient_id,
+        )
     session.commit()
     return get_order_detail(session=session, order_id=order.id)
 
@@ -1627,6 +1638,15 @@ def update_order(
             performed_by_id=performed_by_id,
         )
     )
+    if order.created_by and order.created_by != performed_by_id:
+        notification_service.create_in_app_notification(
+            session=session,
+            user_id=order.created_by,
+            type=NotificationType.order_update,
+            message=f"Demande {order.accession_number} révisée.",
+            order_id=order.id,
+            patient_id=order.patient_id,
+        )
     session.commit()
     return get_order_detail(session=session, order_id=order.id)
 

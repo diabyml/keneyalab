@@ -1,0 +1,34 @@
+services:
+  backup:
+    build:
+      context: .
+      dockerfile: backup/Dockerfile
+    command: /usr/local/bin/keneyalab-backup/backup-loop.sh
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      - TZ=${TZ:-Africa/Bamako}
+      - POSTGRES_SERVER=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY?Variable not set}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY?Variable not set}
+      - MINIO_BUCKET=${MINIO_BUCKET?Variable not set}
+      - BACKUP_ROOT=/backups
+      - BACKUP_ENCRYPTION_PASSPHRASE=${BACKUP_ENCRYPTION_PASSPHRASE?Variable not set}
+      - BACKUP_RUN_HOUR=${BACKUP_RUN_HOUR:-2}
+      - BACKUP_RUN_MINUTE=${BACKUP_RUN_MINUTE:-0}
+      - BACKUP_RUN_ON_START=${BACKUP_RUN_ON_START:-false}
+      - STACK_NAME=${STACK_NAME:-}
+      - TAG=${TAG:-latest}
+    volumes:
+      - ${BACKUP_HOST_PATH:-./backups}:/backups

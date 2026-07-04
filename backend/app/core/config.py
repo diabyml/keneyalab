@@ -65,9 +65,17 @@ class Settings(BaseSettings):
     MINIO_SECURE: bool = False
     RESULT_IMAGE_MAX_BYTES: int = 10 * 1024 * 1024
     RESULT_IMAGE_URL_EXPIRE_SECONDS: int = 900
+    REPORT_RENDERER_URL: str | None = None
     WHATSAPP_API_VERSION: str = "v21.0"
     WHATSAPP_PHONE_NUMBER_ID: str | None = None
     WHATSAPP_ACCESS_TOKEN: str | None = None
+    AI_PROVIDER: Literal["none", "openai_compatible"] = "none"
+    AI_MODEL: str = "gpt-5.5"
+    AI_API_KEY: str | None = None
+    AI_BASE_URL: str = "https://api.openai.com"
+    AI_API_STYLE: Literal["responses", "chat_completions"] = "responses"
+    AI_ORDER_ASSISTANT_CATALOG_LIMIT: int = 500
+    AI_ORDER_ASSISTANT_CONFIDENCE_THRESHOLD: float = 0.65
 
     @computed_field  # type: ignore[prop-decorator]
     @property
